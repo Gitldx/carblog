@@ -44,7 +44,6 @@ class ProfilePhotoComponent extends React.Component<ProfilePhotoProps> {
 export const ProfilePhoto = withStyles(ProfilePhotoComponent, (theme: ThemeType) => ({
   avatar: {
     alignSelf: 'center',
-    tintColor: 'lightgrey'
   },
   editButton: {
     position: 'absolute',

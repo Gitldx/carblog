@@ -20,6 +20,9 @@ import { SearchPlaceholder, PopupMenu } from '@src/components';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome'
 import { AskParkList } from './park/askParkList.component';
 import { ParkRank } from './park/parkRank.component';
+import { MessageLooper } from '@src/core/uitls/messageLooper';
+import ScrollableTabView,{DefaultTabBar,ScrollableTabBar} from 'react-native-scrollable-tab-view';
+import {ScrollTabBar} from '@src/components'
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -62,15 +65,15 @@ class Home extends React.Component<Props, State> {
 
     const items: OverflowMenuItemType[] = [
       {
-        text: '挪车电话',
+        title: '挪车电话',
         icon: (styles) => MaterialCommunityIcons({ name: "phone", size: 20, color: styles.tintColor }) as any
       },
       {
-        text: '找停车位',
+        title: '找停车位',
         icon: (styles) => MaterialCommunityIcons({ name: "magnify", size: 20, color: styles.tintColor }) as any
       },
       {
-        text: "分享停车位",
+        title: "分享停车位",
         icon: (styles) => MaterialCommunityIcons({ name: "share", size: 20, color: styles.tintColor }) as any
       }
     ];
@@ -113,7 +116,7 @@ class Home extends React.Component<Props, State> {
 
   public state: State = {
     selectedIndex: 0,
-    blogListLoaded: true
+    blogListLoaded: false
   }
 
   private onSelect = (selectedIndex: number) => {
@@ -157,11 +160,23 @@ class Home extends React.Component<Props, State> {
   }
 
 
+  private onChangeTab = (index) =>{
+    if(index == 1){
+      if(this.state.blogListLoaded == false){
+        this.setState({blogListLoaded:true})
+      }
+    }
+  }
+
+
   public componentWillMount() {
 
     this.props.navigation.setParams({
       "onSearchPressed": this.onSearchPressed, "park": this.park,
       "sharePark": this.sharePark, "searchPark": this.searchPark
+    })
+    this.props.navigation.addListener("didFocus",()=>{
+      MessageLooper.instance.readParkMsg()
     })
   }
 
@@ -207,21 +222,36 @@ class Home extends React.Component<Props, State> {
           </View>
         </TouchableOpacity> */}
 
-        <TabView style={{ flex: 1, paddingBottom: 32 }}
+        {/* <TabView style={{ flex: 1, paddingBottom: 32 }}
           selectedIndex={this.state.selectedIndex}
           onSelect={this.onSelect}
-        >
+        > */}
           {/* <Tab title="后车箱">
             <ShopList navigation={this.props.navigation} />
           </Tab> */}
-           <Tab title="同城车币榜">
+           {/* <Tab title="同城车币榜">
             <ParkRank navigation={this.props.navigation}/>
           </Tab>
          
           <Tab title="博客">
             <BlogList load={this.state.blogListLoaded} navigation={this.props.navigation} />
           </Tab>
-        </TabView>
+        </TabView> */}
+       
+        <ScrollableTabView style={{marginTop:10,flex:1}}
+        // renderTabBar={() => <ScrollableTabBar textStyle={{color:'#666666'}}/>}
+        renderTabBar={() => <ScrollTabBar textStyle={{ fontSize: 14 }} style={{ height: 30 }} />}
+        // renderTabBar={() => <DefaultTabBar textStyle={{ fontSize: 12, color: '#666666'  }} style={{ height: 30 }} />}
+        onChangeTab={(obj) => { this.onChangeTab(obj.i) }}
+        >       
+            <ParkRank tabLabel="同城车币榜" navigation={this.props.navigation}/>
+          
+            <BlogList tabLabel="博客"  load={this.state.blogListLoaded} navigation={this.props.navigation} />
+
+            <View tabLabel="同道中人"></View>
+          
+          
+        </ScrollableTabView>
 
       </PageView>
 

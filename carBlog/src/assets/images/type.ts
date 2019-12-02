@@ -1,4 +1,5 @@
 import { ImageSourcePropType } from 'react-native';
+import { qiniuImgUrl, qiniuThumbImgUrl } from '@src/core/uitls/httpService';
 
 export interface ImageSource {
   imageSource: ImageSourcePropType;
@@ -18,3 +19,12 @@ export class RemoteImage implements ImageSource {
 
 
 export class LocalImage extends RemoteImage{}
+
+
+export function imageUri(path:string){
+  return {uri:qiniuImgUrl(path)}
+}
+
+export function thumbnailUri(path:string){
+  return {uri:qiniuThumbImgUrl(path)}
+}

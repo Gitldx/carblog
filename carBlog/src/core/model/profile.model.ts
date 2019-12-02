@@ -6,7 +6,8 @@ export enum Gender {
 }
 
 export interface Profile {
-  avatar?: ImageSource;
+  id : string
+  image?: string;
   // about?: string;
   // accountName? : string;
   // accountPwd?:string;

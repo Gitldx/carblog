@@ -25,6 +25,7 @@ import { Comment as CommentModel } from '@src/core/model';
 import {ActivityAuthoring} from './activityAuthoring.component'
 import { CommentsButton } from '../commentsButton.component';
 import { LikeButton } from '../likeButton.component';
+import { thumbnailUri } from '@src/assets/images/type';
 
 interface ComponentProps {
   comment: CommentModel;
@@ -100,7 +101,7 @@ class CommentListItemComponent extends React.Component<CommentListItemProps, Sta
         <View style={themedStyle.authorContainer}>
           <ActivityAuthoring
             style={themedStyle.activityAuthoring}
-            photo={comment.authorProfile.avatar.imageSource}
+            photo={comment.authorProfile.image ? thumbnailUri(comment.authorProfile.image) : null}
             name={comment.authorProfile.nickname}
             date={comment.dateString}
           />

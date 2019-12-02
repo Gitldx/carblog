@@ -205,7 +205,7 @@ export class ChatPage extends React.Component<NavigationScreenProps, State> {
 
 
   private onProfilePress = (profile: Profile): void => {
-    this.props.navigation.setParams({ 'interlocutor': { firstName: "ldx", lastName: "jyh", photo: author1.avatar } })
+    this.props.navigation.setParams({ 'interlocutor': { firstName: "ldx", lastName: "jyh", photo: author1.image } })
     this.props.navigation.navigate('Test Profile');
   };
 
@@ -262,7 +262,7 @@ export class ChatPage extends React.Component<NavigationScreenProps, State> {
     this.listMessages()
     //this.setInitId()
     this.props.navigation.setParams({
-      interlocutor: { nickname: "ldx", accountName: "jyh", photo: author1.avatar },
+      interlocutor: { nickname: "ldx", accountName: "jyh", photo: author1.image },
       // lastSeen: this.state.conversation.lastSeen,
       onBack: this.onBackPress,
       onProfile: this.onProfilePress,

@@ -25,6 +25,10 @@ import { PermissionsAndroid } from "react-native";
 import { init, Geolocation } from "@src/components/amap/location";
 import { Park } from '@src/core/model';
 import { UserAccount } from '@src/core/userAccount/userAccount';
+import { ParkItem } from './type';
+import ActionSheet from 'react-native-actionsheet'
+import MapLinking from '@src/core/uitls/mapLinking';
+import { simpleAlert } from '@src/core/uitls/alertActions';
 
 
 
@@ -78,7 +82,82 @@ class ParkDetail extends React.Component<Props, State> {
 
     private parkId: string
 
+    private ActionSheet: ActionSheet
 
+    private openActionSheet = () => {
+        this.ActionSheet.show()
+    }
+
+
+    private trylinkAMap = async () => {
+        const info = this.info
+
+        const canopen = await MapLinking.isInstallAmap()
+        console.warn(`canopen:${canopen}`)
+        if (!canopen) {
+            simpleAlert("温馨提示", "您的手机可能没有安装高德地图app")
+            return
+        }
+
+        const result = await MapLinking.openAmap({ lat: info.gcjLocation[1], lng: info.gcjLocation[0] })
+        console.warn(result)
+        // const result = await MapLinking.openBaiDuMap({ lat: item.gcjLocation[1], lng: item.gcjLocation[0] })
+        // console.warn(result)
+    }
+
+
+    private trylinkBaiduMap = async () => {
+        const info = this.info
+
+        const canopen = await MapLinking.isInstallBaiDuMap()
+
+        if (!canopen) {
+            simpleAlert("温馨提示", "您的手机可能没有安装百度地图app")
+            return
+        }
+
+        const result = await MapLinking.openBaiDuMap({ lat: info.gcjLocation[1], lng: info.gcjLocation[0] })
+        // console.warn(result)
+        // const result = await MapLinking.openBaiDuMap({ lat: item.gcjLocation[1], lng: item.gcjLocation[0] })
+        // console.warn(result)
+    }
+
+
+    private trylinkQQMap = async () => {
+        const info = this.info
+
+        const canopen = await MapLinking.isInstallQQMap()
+
+        if (!canopen) {
+            simpleAlert("温馨提示", "您的手机可能没有安装腾讯地图app")
+            return
+        }
+
+        const result = await MapLinking.openQQMap(
+            {
+                slat: this.state.currentLatitude, slng: this.state.currentLongitude,
+                dlat: info.gcjLocation[1], dlng: info.gcjLocation[0]
+            })
+        // console.warn(result)
+        // const result = await MapLinking.openBaiDuMap({ lat: item.gcjLocation[1], lng: item.gcjLocation[0] })
+        // console.warn(result)
+    }
+
+    private tryOpenMap = (index: number) => {
+
+        switch (index) {
+            case 0:
+                this.trylinkAMap()
+                break;
+            case 1:
+                this.trylinkBaiduMap()
+                break;
+            case 2:
+                this.trylinkQQMap()
+                break;
+        }
+
+    }
 
     private onMapPressed = (e) => {
         // let { longitude, latitude, } = e.nativeEvent
@@ -102,21 +181,8 @@ class ParkDetail extends React.Component<Props, State> {
         this.setState({ selectedItem: info.index, currentLatitude: 22.538853, currentLongitude: 114.057108 })
     }
 
-    private renderItem = (info: ListRenderItemInfo<any>) => {
-        const { selectedItem } = this.state
-        const style = info.index == selectedItem ? { borderWidth: 1, borderRadius: 5, borderColor: getThemeValue("color-warning-default", themes['App Theme']) } : null
-        return (
-            <ListItem style={{ flex: 1 }} onPress={() => this.onItemPressed(info)}>
-                <ContentBox style={[{ flex: 1, marginTop: 5 }, style]}
-                    titleLabel="福田路xx停车场" titleInfo="5分钟前 2车位 免费 200米" subTitle={this.renderSubTitle}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-                        <Button size="small" onPress={() => console.warn("go go go")}>更多详情</Button>
-                        <Button size="small" onPress={() => console.warn("go go go")}>导航至此处</Button>
-                    </View>
-                </ContentBox>
-            </ListItem>
-        )
-    }
+   
+    private info: ParkItem
 
     public componentWillMount() {
         // if (Platform.OS == "android") {
@@ -125,15 +191,17 @@ class ParkDetail extends React.Component<Props, State> {
 
         init();
 
-
+        this.info = this.props.navigation.getParam("info")
     }
 
-    public async componentDidMount() {
+    public componentDidMount() {
 
 
         setTimeout(() => {
             this.setState({
-                mapShow: true
+                mapShow: true,
+                currentLatitude: this.info.gcjLocation[1],
+                currentLongitude: this.info.gcjLocation[0]
             },
 
                 () => {
@@ -164,8 +232,8 @@ class ParkDetail extends React.Component<Props, State> {
                 showsCompass={true}
                 zoomLevel={18}
                 coordinate={{
-                    latitude: 22.536853,
-                    longitude: 114.057108
+                    latitude: this.state.currentLatitude,
+                    longitude: this.state.currentLongitude
                 }}
 
                 {...props}
@@ -196,7 +264,14 @@ class ParkDetail extends React.Component<Props, State> {
         return (
             <PageView style={themedStyle.container}>
 
-
+                <ActionSheet
+                    ref={o => this.ActionSheet = o}
+                    title={'使用以下地图导航'}
+                    options={['高德地图', '百度地图', '腾讯地图', '取消']}
+                    cancelButtonIndex={3}
+                    // destructiveButtonIndex={1}
+                    onPress={this.tryOpenMap}
+                />
 
                 <View style={{ marginBottom: 20, height: 400 }}>
                     {this.state.mapShow ? this.renderMapview() : null}
@@ -205,25 +280,38 @@ class ParkDetail extends React.Component<Props, State> {
 
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row' }}>
-                        <Text>xx热心人</Text>
-                        <LicensePlate carNumber="粤B·A8J67"/>
-                        <Text>{"  2分钟前  3车位  免费  300米"}</Text>
+                        {this.info.publisher && <Text>{this.info.publisher.nickname}</Text>}
+                        {
+                            this.info.publisher ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={this.info.publisher.carNumber} />
+                                : null
+                        }
+
+                        <View style={{ flexDirection: 'row', marginLeft: 10 }}>
+                            <Text category="c2" appearance="hint">
+                                {
+                                    this.info.publisher ?
+                                        `${this.info.duration}分钟前 ${this.info.parkNumber}车位 ${this.info.forFree ? "免费" : "收费"} ${(this.info.distance * 1000).toFixed(0)}米`
+                                        :
+                                        `${this.info.forFree ? "免费" : "收费"} ${(this.info.distance * 1000).toFixed(0)}米`
+                                }
+                            </Text>
+                        </View>
                     </View>
                     <Text>
-                        福田区XXX路星河广场
+                        {this.info.streetName}
                     </Text>
                     <Text>
-                        大中华国际广场停车场
+                        {this.info.parkName}
                     </Text>
                     <Text>
-                        消费免车费
+                        {this.info.note}
                     </Text>
 
 
 
                     <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
                         <View style={{ marginTop: 10 }}>
-                        <Button size="small" onPress={() => console.warn("go go go")}>导航至此处</Button>
+                            <Button size="small" onPress={this.openActionSheet}>导航至此处</Button>
                         </View>
 
                     </View>

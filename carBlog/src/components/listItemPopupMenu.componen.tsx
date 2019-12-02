@@ -70,7 +70,7 @@ class ListItemPopupMenuComponent extends React.Component<Props, State> {
         style={themedStyle.container}
         placement={placement}
         visible={this.state.menuVisible}
-        items={items}
+        data={items}
         onSelect={this.onItemSelect}
         onBackdropPress={this.onBackdropPress}>
         <Button appearance="ghost" status={iconColor} icon={orientaion == "horizontal" ? MoreHorizontalIconFill : MoreVerticalIconFill} onPress={this.onButtonPress}></Button>

@@ -20,6 +20,7 @@ import { DriverState } from './driverState';
 import { EmptyState } from './emptyState';
 import { string } from 'prop-types';
 import { updateGlobalUserAccount, saveUserAccountLocally } from './functions';
+import { ImageSource } from '@src/assets/images';
 
 
 declare var global: globalFields
@@ -31,17 +32,19 @@ export class UserAccount {
     id: string = ''
     deviceId = ''
     accountName = ''
-    
+
     password = ''
     accountHasLogined = false //标识已注册用户是否登录
     role: AccountRoleType = 0
 
     nickname = ""
-    phone:string=""
-    carNumber:string=""
+    phone: string = ""
+    carNumber: string = ""
+    image : string = null
 
-    totalPrducedMoney;
-    totalGiftMoney;
+    totalProducedMoney: number;
+    totalGiftMoney: number;
+    parkMoney: number;
 
     constructor(id?: string, deviceId?: string, accountName?: string, password?: string, accountHasLogined?: boolean, role?: AccountRoleType) {
         if (!arguments.length) {//无参构造通过本地存储数据创建实例后赋予全局user
@@ -58,13 +61,13 @@ export class UserAccount {
     }
 
 
-    initInfo({nickname,phone,carNumber}){
+    initInfo({ nickname, phone, carNumber }) {
         this.nickname = nickname
         this.phone = phone
         this.carNumber = carNumber
     }
 
-    setInfo({nickname,phone,carNumber,role}){
+    setInfo({ nickname, phone, carNumber, role }) {
         this.nickname = nickname
         this.phone = phone
         this.carNumber = carNumber
@@ -102,16 +105,16 @@ export class UserAccount {
         try {
             const rj: RestfulJson = await postService(userAccountLoginUrl(), { accountName, password }) as any;
             // console.warn(`rj:${JSON.stringify(rj)}`)
-  
-            
+
+
             if (rj.ok) {
 
                 if (rj.code == 0) {
                     const data = rj.data
 
-                    const role : AccountRoleType = data.role
-                    const ua = new UserAccount(data.id, null, accountName, password, true,role)
-                    ua.initInfo({nickname:data.nickname,phone:data.phone,carNumber:data.carNumber})
+                    const role: AccountRoleType = data.role
+                    const ua = new UserAccount(data.id, null, accountName, password, true, role)
+                    ua.initInfo({ nickname: data.nickname, phone: data.phone, carNumber: data.carNumber })
 
                     let newState = undefined
                     if (role == 1) {
@@ -212,11 +215,11 @@ export class UserAccount {
         try {
             const rj: RestfulJson = await postService(userAccountRegisterUrl(), { accountName, password, role }) as any
             console.warn(`rj:${JSON.stringify(rj)}`)
-           
+
             if (rj.ok) {
                 if (rj.code == 0) {
                     const id = rj.data;
-                    const ua = new UserAccount(id,null,accountName,password,true,role)
+                    const ua = new UserAccount(id, null, accountName, password, true, role)
                     let newState = undefined
                     if (role == 2) {
                         newState = new PedestrianState(ua)
@@ -230,6 +233,9 @@ export class UserAccount {
 
 
                     successcallback(ua);
+                }
+                else if(rj.code == 1){
+                    simpleAlert(null,rj.message)
                 }
 
             }

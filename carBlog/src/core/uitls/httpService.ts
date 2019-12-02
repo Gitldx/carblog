@@ -284,7 +284,7 @@ export function setIp(ip) {
 export function getIp() {
     // return getJIP()
     return '129.28.152.138:8082'
-    return '192.168.0.102:8082'
+    // return '192.168.0.101:8082'
     //return global.ip;
 }
 
@@ -295,7 +295,7 @@ function getNodeIp() {
 }
 
 function getImgIp() {
-    return 'http://pufg0dptp.bkt.clouddn.com/' //'http://psnuywep3.bkt.clouddn.com/'
+    return 'http://q1opwedmp.bkt.clouddn.com/' //'http://psnuywep3.bkt.clouddn.com/'
 }
 
 
@@ -368,7 +368,7 @@ function qiniuThumbImgUrl(path) {
     // console.warn(`qiniuThumbImgUrl${getImgIp() + arr[0] + "/t_" + arr[1]}`)
 
     // return getImgIp() + `${arr[0]}/t_${arr[1]}`
-    return getImgIp() + `${arr[0]}/${arr[1]}?imageView2/` + "0/w/500/h/500"
+    return getImgIp() + `${path}?imageView2/` + "0/w/300/h/300"
 }
 
 function qiniuImgUrl(path) {
@@ -377,8 +377,8 @@ function qiniuImgUrl(path) {
         return ""
     }
 
-    const arr = path.split("/")
-    return getImgIp() + `${arr[0]}/${arr[1]}`
+    // const arr = path.split("/")
+    return getImgIp() + path //`${arr[0]}/${arr[1]}`
 }
 
 
@@ -387,8 +387,9 @@ function qiniuDeleteImgUrl() {
 }
 
 
-function getQiniuTokenUrl(userId, key) {
-    return http() + `/kdNum/qiniuImgToken?userId=${userId}&key=${key}`
+function getQiniuTokenUrl(key) {
+    
+    return http() + `/account/getQiniuImgKey?key=${key}`
 }
 
 
@@ -426,7 +427,9 @@ function getProfilesUrl(){
 }
 
 
-
+function getProfileUrl(uid:string){
+    return http() + `/account/getProfile?uid=${uid}`
+}
 
 
 function kdNumRegisterUrl(isAnonymous) {
@@ -650,6 +653,12 @@ function parkUrl(minutes) {
     return http() + `/park/doPark/${minutes}`
 }
 
+
+function searchParkByCarNumberUrl(carNumber){
+    return http() + `/park/searchCarNumber/${carNumber}`
+}
+
+
 function parkGetUrl(uid:string){
     return http() + `/park/get/${uid}`
 }
@@ -680,8 +689,8 @@ function searchNearParkUrl(lng,lat,page:number,uid:string){
 }
 
 
-function thankForParkUrl(uid,parkId){
-    return http() + `/park/thank?uid=${uid}&parkId=${parkId}`
+function thankForParkUrl(){
+    return http() + `/park/thank`
 }
 
 
@@ -691,7 +700,7 @@ function driveUrl(id:string,uid:string) {
 
 
 function searchCarNumberUrl(carNumber) {
-    return http() + `/account/findByCarNumber/${carNumber}`
+    return http() + `/account/getProfileByCarNumber?carNumber=${carNumber}`
 }
 
 
@@ -716,10 +725,19 @@ function readArticleUrl(id: string) {
     return http() + `/article/read/${id}`
 }
 
+function addArticleVisitCountUrl(id:string){
+    return http() + `/article/readInc/${id}`
+}
+
 function listArticleUrl(page: number) {
     return http() + `/article/list/${page}`
 }
 
+
+function getProfileByCarNumberUrl(carNumber:string){
+    
+    return http() + `/account/getProfileByCarNumber?carNumber=${carNumber}`
+}
 
 
 function listNearbyArticleUrl(lng:number,lat:number,page:number){
@@ -738,13 +756,13 @@ function commentUrl(articleId: string) {
 
 
 function likeArticleUrl(uid: string, articleId: string) {
-    return http() + `/article/like/${uid}/${articleId}`
+    return http() + `/article/likeArticle/${articleId}/${uid}`
 }
 
 
 
 function likeCommentUrl(uid: string, articleId: string, index: number) {
-    return http() + `/article/likeComment/${uid}/${articleId}/${index}`
+    return http() + `/article/likeComment/${articleId}/${index}?liker=${uid}`
 }
 
 
@@ -819,7 +837,7 @@ function productListUrl(uid:string){
 
 export {
     uploadImgUrl, uploadAvatarUrl, uploadRowImgUrl, imgUrl, avatarUrl, bigHeadUrl, qiniuThumbImgUrl, qiniuImgUrl, qiniuDeleteImgUrl, getQiniuTokenUrl, getQiniuAvatarTokenUrl,
-    userAccountLoginUrl, userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl,setUserInfoUrl,setUserCityCodeUrl,getProfilesUrl,
+    userAccountLoginUrl, userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl,setUserInfoUrl,setUserCityCodeUrl,getProfilesUrl,getProfileUrl,
     kdNumRegisterUrl, kdNumEditUrl, sellerConfigUrl, extendServiceUrl, visitKdNumUrl, existsKdNumCodeUrl,
     setTextRowTemplateUrl, setImgRowTemplateUrl, deleteRowTemplateUrl,
     getKdNumsUrl, getPrimaryKdNumUrl, searchByTags, geoSearchUrl, searchForDeal, listForDealUrl, getKdNumByMachineId, searchKdNumUrl, searchKdNumInArrayUrl,
@@ -830,9 +848,10 @@ export {
     inviteDecodeUrl, inviteGetCodeUrl, getInviteCodeUrl, setInviteCodeUrl, setInvitorUrl, addSharedCountUrl, decrSharedCountUrl, decrSharedCountByUrl,
     existInvitorUrl, getSharedFriendsUrl, totalSharedUrl,
     commitReportUrl, geoMapUrl, getHelpUrl,
-    parkUrl, driveUrl,parkGetUrl, searchCarNumberUrl, extendParkUrl,shareParkUrl,getNearestPointUrl,searchNearParkUrl,
+    parkUrl, searchParkByCarNumberUrl,driveUrl,parkGetUrl, searchCarNumberUrl, extendParkUrl,shareParkUrl,getNearestPointUrl,searchNearParkUrl,
     thankForParkUrl,matchShareParkPointUrl,rankParkUrl,
 
-    writeArticleUrl,updateArticleUrl,deleteArticleUrl,listArticleUrl,listNearbyArticleUrl,listMyArticlesUrl,readArticleUrl,commentUrl,likeArticleUrl,likeCommentUrl,
+    writeArticleUrl,updateArticleUrl,deleteArticleUrl,listArticleUrl,getProfileByCarNumberUrl,listNearbyArticleUrl,listMyArticlesUrl,
+    readArticleUrl,addArticleVisitCountUrl,commentUrl,likeArticleUrl,likeCommentUrl,
     shopListUrl,shopGetUrl,productListUrl,shopGetByUid,shopEditUrl,productEditUrl,productCloseUrl,productOpenUrl
 }

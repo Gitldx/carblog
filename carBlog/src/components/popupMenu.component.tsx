@@ -62,7 +62,7 @@ class PopupMenuComponent extends React.Component<LikeButtonProps, State> {
         style={themedStyle.container}
         placement={placement}
         visible={this.state.menuVisible}
-        items={items}
+        data={items}
         onSelect={this.onItemSelect}
         onBackdropPress={this.onBackdropPress}>
         {
@@ -72,6 +72,7 @@ class PopupMenuComponent extends React.Component<LikeButtonProps, State> {
         }
 
       </OverflowMenu>
+     
     );
   }
 }

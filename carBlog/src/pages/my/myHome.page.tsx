@@ -117,17 +117,18 @@ export class MyHome extends React.Component<Props, State> {
       <PageView style={themedStyle.container}>
 
         <ButtonBar style={{ marginTop: 5 }} leftText="我的后车箱" onPress={this.gotoShop} />
-        <ButtonBar leftText="我的博客" rightKit={() => <View style={{ backgroundColor: 'red', width: 8, height: 8, borderRadius: 4 }} />}
+        <ButtonBar style={{ marginTop: 5 }} leftText="我的博客" 
+        /* rightKit={() => <View style={{ backgroundColor: 'red', width: 8, height: 8, borderRadius: 4 }} />} */
           onPress={() => this.props.navigation.navigate({ routeName: "MyBlogs" })}
         />
 
-        <ButtonBar leftText="我的收藏" style={{ marginTop: 5 }}
+        {/* <ButtonBar leftText="我的收藏" style={{ marginTop: 5 }}
           onPress={() => this.props.navigation.navigate({ routeName: "MyCollection" })}
-        />
+        /> */}
         <ButtonBar leftText="用户信息"
           onPress={() => this.props.navigation.navigate({ routeName: "MyInfo" })}
         />
-        <ButtonBar leftText="我的成就"
+        <ButtonBar leftText="积分，游戏规则"
           onPress={() => this.props.navigation.navigate({ routeName: "MyScore" })}
         />
 
@@ -140,6 +141,10 @@ export class MyHome extends React.Component<Props, State> {
             />
           )}
         </ThemeContext.Consumer>
+
+        <ButtonBar leftText="意见，投诉，商务沟通"
+          onPress={() => this.props.navigation.navigate({ routeName: "MyScore" })}
+        />
 
         <View style={{ marginHorizontal: 10, marginVertical: 18, paddingHorizontal: 8, paddingVertical: 4 }}>
           {!!!this.state.hasLogin ?

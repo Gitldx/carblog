@@ -77,7 +77,7 @@ export class AskParkListComponent extends React.Component<Props,State> {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {item.authorProfile.avatar ? <Avatar source={item.authorProfile.avatar.imageSource} style={{width:30,height:30}}/> :
+                {item.authorProfile.image ? <Avatar source={item.authorProfile.image.imageSource} style={{width:30,height:30}}/> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.authorProfile.nickname}</Text>
@@ -161,7 +161,7 @@ export class AskParkListComponent extends React.Component<Props,State> {
             
             m.date = getTimeDiff(date).toFixed(0)+"小时前"
             const profile : Profile = {nickname:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname
-                ,avatar : author1.avatar,carNumber : author1.carNumber}
+                ,image : author1.image,carNumber : author1.carNumber}
             m.authorProfile = profile
             m.image = this.testimage
            

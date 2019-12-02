@@ -15,6 +15,7 @@ import { MESSAGETYPE } from '../model';
 import { HomeMessage } from '../model';
 
 import { isEmpty } from './common';
+import { WebMessage } from '../model/message.model';
 
 declare var global: globalFields
 
@@ -56,6 +57,7 @@ export class MessageLooper {
 
     looper = null;
 
+    lastMessageTime : Date
 
 
     static get timeSpan() {
@@ -117,9 +119,9 @@ export class MessageLooper {
 
         this.readLoopJob()
 
-        this.looper = setInterval(() => {
-            this.readLoopJob()
-        }, MessageLooper.timeSpan)
+        // this.looper = setInterval(() => {
+        //     this.readLoopJob()
+        // }, MessageLooper.timeSpan)
     }
 
     startChat() {
@@ -153,9 +155,9 @@ export class MessageLooper {
         this.debounce()
     }
 
-    static _unReadMsgs : HomeMessage[];
+    static _unReadMsgs: HomeMessage[];
     static get unReadMessage(): HomeMessage[] {
-        if(isEmpty(MessageLooper._unReadMsgs)){
+        if (isEmpty(MessageLooper._unReadMsgs)) {
             MessageLooper.unReadMessage = []//conversations
         }
         return MessageLooper._unReadMsgs;
@@ -167,9 +169,9 @@ export class MessageLooper {
 
 
 
-    static _readMsgs : HomeMessage[];
+    static _readMsgs: HomeMessage[];
     static get readMessage(): HomeMessage[] {
-        if(isEmpty(MessageLooper._readMsgs)){
+        if (isEmpty(MessageLooper._readMsgs)) {
             MessageLooper.readMessage = []//conversations
         }
         return MessageLooper._readMsgs;
@@ -184,7 +186,7 @@ export class MessageLooper {
     async readLoopJob() {
 
         if (networkConnected() == false) { return; }
-
+        this.lastMessageTime = new Date()
 
         const receiverId = this.getMsgIdentifier()
         if (receiverId == null) {
@@ -193,14 +195,14 @@ export class MessageLooper {
         }
         // console.warn("readLoopJob:"+this.server)
         let msgs = null
-        try{
+        try {
             msgs = await loopService(this.server + "/readMsg/" + receiverId)
         }
-        catch(err){
+        catch (err) {
             return;
         }
-        
-        if(isEmpty(msgs)){
+
+        if (isEmpty(msgs)) {
             return;
         }
         // console.warn(`msgs:${JSON.stringify(msgs)}`)
@@ -215,7 +217,7 @@ export class MessageLooper {
 
 
 
-        const messages : HomeMessage[] = []
+        const messages: HomeMessage[] = []
 
 
 
@@ -233,6 +235,19 @@ export class MessageLooper {
 
                 messages.push(info)
             }
+            else if (item.type == MESSAGETYPE.user_web) {
+                const info = this.toWebMessage(item, key)
+                messages.push(info)
+            }
+            else if(item.type == MESSAGETYPE.user_park){
+                const info = this.toPark(item,key)
+                messages.push(info)
+            }
+            // else if(item.type == MESSAGETYPE.sys_bulletinWeb){
+            //     const info = this.toWebBulletin(item,key)
+
+            //     messages.push(info)
+            // }
         })
 
         if (messages.length != 0) {
@@ -274,7 +289,8 @@ export class MessageLooper {
 
                     const title = b.title
                     const content = b.content
-                    const temp = this.toBulletin({ title, content }, key)
+                    const url = b.url
+                    const temp = this.toBulletin({ title, content,url }, key)
                     bulletins.push(temp)
                 }
 
@@ -288,7 +304,7 @@ export class MessageLooper {
 
 
 
-    toChat(item, key) : HomeMessage{
+    toChat(item, key): HomeMessage {
         //console.warn("toemergency:"+JSON.stringify(item))
         const content = item.content
         return {
@@ -297,33 +313,77 @@ export class MessageLooper {
             senderId: item.senderId,
             // sender: item.sender,
             // senderKid: content.senderKid,
-            senderName : item.sender,
+            senderName: item.sender,
             content,
             title: item.sender,
             strContent: content.strContent,
             chatType: content.chatType,
+            read: false
+        }
+    }
+
+
+    toPark(item,key):HomeMessage{
+        const content = item.content
+        return {
+            id: key,
+            type: item.type,
+            senderId: item.senderId,
+            senderName: item.sender,
+            content,
+            title: `你收到了${item.sender}的1个车位币`,
+            strContent: content.strContent,
+            read: false
+        }
+    }
+
+
+
+    toBulletin(item, key): HomeMessage {
+        return {
+            id: key,
+            type: MESSAGETYPE.sys_bulletin,
+            url: item.url,
+            title: item.title,
+            content: item.content,
+            read : false
+        }
+    }
+
+
+    // toWebBulletin(item,key) : HomeMessage {
+    //     return {
+    //         id:key,
+    //         type:MESSAGETYPE.sys_bulletinWeb,
+    //         url:item.url,
+    //         title:item.title,
+    //         content:item.content
+    //     }
+    // }
+
+
+    toSysEmail(item, key): HomeMessage {
+
+        return {
+            id: key,
+            type: MESSAGETYPE.user_sysEmail,
+            title: '系统邮件',
+            content: item.content,
             read:false
         }
     }
 
 
-
-    toBulletin(item, key) : HomeMessage {
+    toWebMessage(item, key): WebMessage {
+        console.warn(`toWebMessage:${JSON.stringify(item)}`)
         return {
             id: key,
-            type: MESSAGETYPE.sys_bulletin,
+            type: MESSAGETYPE.user_web,
+            url: item.url,
+            img: item.img,
             title: item.title,
-            content: item.content
-        }
-    }
-
-
-    toSysEmail(item, key):HomeMessage {
-        return {
-            id: key,
-            type: MESSAGETYPE.user_sysEmail,
-            title: '系统邮件',
-            content: item.content
+            content: item.content,
+            read : false
         }
     }
 
@@ -368,6 +428,21 @@ export class MessageLooper {
     }
 
 
+    readParkMsg(){
+        const now = new Date()
+        if(!this.lastMessageTime){
+            this.lastMessageTime = new Date()
+        }
+        const m = (now.getTime() - this.lastMessageTime.getTime())/(1000*60)
+        
+        if(m>=30){
+            this.lastMessageTime = new Date()
+            this.readLoopJob()
+        }
+        
+    }
+
+
 
     msgRead(receiverId) { //设置信息已经阅读了
 
@@ -391,6 +466,7 @@ export function launchMessageLooper() {
 
     // let looper = null;
     const ml = MessageLooper.instance//new MessageLooper();
+    
     ml.flag = "global"
     // looper = setInterval(() => {
     //     if (allComponentsHasMounted()) {

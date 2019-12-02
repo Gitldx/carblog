@@ -56,7 +56,7 @@ export function toDate(timestamp : any, format1 : string = 'yyyy-MM-dd hh:mm:ss'
 
 export function getTimeDiff(timeStamp : Date){
     const d = new Date();
-    return Math.abs((d.getTime() - timeStamp.getTime()))/(3600*1000);
+    return Math.abs((d.getTime() - timeStamp.getTime()))/(60*1000);
 }
 
 
@@ -219,7 +219,9 @@ export function formatTimeStampStr(timeStamp,displayYear = false,displaySeconds 
 
 
 export function timeDiffInSeconds(time1:Date,time2:Date){
-    return Math.abs(time1.getTime()-time2.getTime())/1000
+    const diff = Math.abs(time1.getTime()-time2.getTime())
+    // console.warn(`diff:${diff/1000}`)
+    return diff/1000
 }
 
 

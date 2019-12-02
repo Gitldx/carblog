@@ -21,19 +21,51 @@ import { MESSAGETYPE } from './messageType.enum';
 
 
 
-export class HomeMessage {
+// export class HomeMessage {
+//   public key?: string
+//   constructor(public id: string, public type: MESSAGETYPE, public title: string,
+//     public content: any, public senderId?: string, public senderName?: string,
+//     public strContent?: string, public chatType?: number, public read?: boolean) {
+
+//     this.key = id
+//   }
+// }
+
+
+
+export class ChatMessage {
+  public date?: string
   public key?: string
   constructor(public id: string, public type: MESSAGETYPE, public title: string,
     public content: any, public senderId?: string, public senderName?: string,
     public strContent?: string, public chatType?: number, public read?: boolean) {
-    
-      this.key = id
+
+    this.key = id
   }
 }
 
 
-
-export interface ChatMessage extends HomeMessage {
-  date?: string
+export interface WebMessage {
+  id: string
+  type: MESSAGETYPE
+  url: string
+  img: string
+  title: string
+  content: string
+  read?: boolean
 }
 
+
+export interface ParkMessage{
+  id: string
+  type: MESSAGETYPE
+  senderId: string,
+  senderName: string,
+  title: string
+  content: any
+  strContent:string
+  read?: boolean
+}
+
+
+export type HomeMessage = WebMessage | ChatMessage

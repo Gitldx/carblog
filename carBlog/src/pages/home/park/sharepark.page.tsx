@@ -30,6 +30,9 @@ import { ParkItem } from './type';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { NEARDEVIATION } from '@src/core/uitls/constants';
 import { saveLastLocation, getLastLocation, LocationStorage } from '@src/core/uitls/storage/locationStorage';
+import { showMessage } from 'react-native-flash-message';
+import {Toast,DURATION,COLOR} from '@src/components'
+import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 
 
 
@@ -116,6 +119,7 @@ class SharePark extends React.Component<Props, State> {
 
     private parkId: string
 
+    private toast : Toast
 
 
     private onSearchPressed = () => {
@@ -144,14 +148,17 @@ class SharePark extends React.Component<Props, State> {
 
     private publish = async () => {
         const lastLocation: LocationStorage = await getLastLocation()
+        
         if (lastLocation) {
             const distance = await getDistance({ latitude: this.state.initLatitude, longitude: this.state.initLongitude },
                 { latitude: lastLocation.lat, longitude: lastLocation.lng })
-            // console.warn(timeDiffInSeconds(new Date(),new Date(lastLocation.time)))
-            if (distance * 1000 < NEARDEVIATION && (timeDiffInSeconds(new Date(), new Date(lastLocation.time)) / 60) <= 5) {
-                simpleAlert(null, "你已经在此地点发布过信息，请移步到其他地点发布，或者5分钟后再刷新")
-                return;
-            }
+
+            // console.warn(`distance:${distance},lasttime:${lastLocation.time}`)
+
+            // if (distance < NEARDEVIATION && (timeDiffInSeconds(new Date(), new Date(lastLocation.time)) / 60) <= 5) {
+            //     simpleAlert(null, "你已经在此地点发布过信息，请移步到其他地点发布，或者5分钟后再刷新")
+            //     return;
+            // }//todo:记得去掉注释
         }
 
         // return;
@@ -164,7 +171,9 @@ class SharePark extends React.Component<Props, State> {
         let shareParkId = null
         // console.warn(JSON.stringify(this.currentPark))
         if (this.currentPark) {
-            const diffMinutes = timeDiffInSeconds(new Date(), new Date(this.currentPark.publishTime)) / 60
+            const serverTimeDiff = await getSevertimeDiff()
+            const diffMinutes = serverTimeDiff + timeDiffInSeconds(new Date(), new Date(this.currentPark.publishTime)) / 60
+            console.warn(`diffMinutes:${diffMinutes}`)
             if (diffMinutes <= 5) {
                 simpleAlert(null, "该停车点刚才已有人发布，请5分钟后再刷新信息")
                 return;
@@ -199,13 +208,24 @@ class SharePark extends React.Component<Props, State> {
         }
         const rj: RestfulJson = await postService(shareParkUrl(), data) as RestfulJson
 
-        console.warn("操作结果：" + JSON.stringify(rj))
+        
 
         const rjData: { sharePark: ShareParkModel, offStreetPark: OffStreetPark } = rj.data
         this.currentPark = rjData.sharePark;
         this.currentOffStreetPark = rjData.offStreetPark;
 
-        saveLastLocation({ lat: this.state.initLatitude, lng: this.state.initLongitude, time: new Date() })
+        saveLastLocation({ lat: this.state.initLatitude, lng: this.state.initLongitude, time: toDate(new Date(),"yyyy/MM/dd hh:mm:ss") })
+
+        this.toast.show("分享成功",DURATION.LENGTH_SHORT,()=>{
+            this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+        })
+        // showMessage({
+        //     message : "分享成功",
+        //     type : "success",
+        //     floating : true,
+        //     position : "center"
+        // })
+        
     }
 
 
@@ -271,7 +291,7 @@ class SharePark extends React.Component<Props, State> {
 
                 const offStreetPark: ParkItem = offStreets[0]
                 const { forFree, parkName } = offStreetPark
-                this.setState({ forfree: forFree, parkName })
+                this.setState({ forfree: forFree, parkName ,parkType : 1})
                 this.currentOffStreetPark = offStreetPark
             }
             else {
@@ -292,7 +312,7 @@ class SharePark extends React.Component<Props, State> {
             // console.warn("---->" + JSON.stringify(coords));
             // this.setState({ initLongitude: coords.longitude, initLatitude: coords.latitude })
             const { latitude, longitude } = coords
-            this.setState({ mapShow: true, initLongitude: longitude, initLatitude: latitude })
+            // this.setState({ mapShow: true, initLongitude: longitude, initLatitude: latitude })
 
             this.selectedPoint = { lat: latitude, lng: longitude }
 
@@ -303,13 +323,18 @@ class SharePark extends React.Component<Props, State> {
                 this.setState({ selectedAddress: result.address })
             });
 
+            setTimeout(() => {
+                this.setState({ mapShow: true, initLongitude: longitude, initLatitude: latitude }, () => {
+                    setTimeout(() => this.setState({
+                        limitRegion: {
+                            latitude: this.state.initLatitude,
+                            longitude: this.state.initLongitude, latitudeDelta: 0.004, longitudeDelta: 0.004
+                        }
+                    }), 1000)//todo:记得取消注释
+                })
+            }, 500);
 
-            setTimeout(() => this.setState({
-                limitRegion: {
-                    latitude: this.state.initLatitude,
-                    longitude: this.state.initLongitude, latitudeDelta: 0.004, longitudeDelta: 0.004
-                }
-            }), 1000)
+
 
             this.matchPoint(longitude, latitude)
 
@@ -462,6 +487,7 @@ class SharePark extends React.Component<Props, State> {
 
             <ScrollableAvoidKeyboard style={themedStyle.container} extraScrollHeight={this.keyboardOffset}>
                 {/* {this.renderSearchBar()} */}
+                <Toast ref={elm=>this.toast = elm} style={{backgroundColor:COLOR.success}}/>
 
                 <View style={{ paddingHorizontal: 16 }}>
                     <Text style={{ marginVertical: 10 }}>
@@ -508,7 +534,7 @@ class SharePark extends React.Component<Props, State> {
                             checked={this.state.parkType == 1}
                             onChange={() => this.setState({ parkType: 1 })}
                         />
-                        <Tooltip textStyle={{ fontSize: 14 }} text="路外停车场一般指社会公共停车场，商场专用停车场，建筑物室内停车场等" placement="left" style={{ width: 220 }}
+                        <Tooltip textStyle={{ fontSize: 14 }} text="路外停车场一般指社会公共停车场，商场专用停车场，建筑物室内停车场等,通常有专人管理" placement="left" style={{ width: 220 }}
                             visible={this.state.tooltipVisible} onBackdropPress={() => this.setState({ tooltipVisible: false })}>
                             <TouchableOpacity onPress={() => this.setState({ tooltipVisible: true })}>
                                 <MaterialCommunityIcons name="help-circle" size={20} color={getThemeValue("color-warning-default", themes['App Theme'])} />

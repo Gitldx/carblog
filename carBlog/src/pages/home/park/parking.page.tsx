@@ -18,7 +18,7 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow, ContentBox, LicensePlate } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, getNearestPointUrl, searchNearParkUrl, thankForParkUrl, matchShareParkPointUrl } from '@src/core/uitls/httpService';
+import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, getNearestPointUrl, searchNearParkUrl, thankForParkUrl, matchShareParkPointUrl, searchParkByCarNumberUrl } from '@src/core/uitls/httpService';
 import { toDate, isEmpty, gcj2wgs } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
@@ -28,8 +28,20 @@ import { UserAccount } from '@src/core/userAccount/userAccount';
 import { NEARDEVIATION } from '@src/core/uitls/constants';
 import { ParkItem } from './type';
 import { SharePark } from '@src/core/model/park';
+import Dialog from 'react-native-dialog'
+import { showMessage } from 'react-native-flash-message';
+import { hasThanked } from './parkUtils';
+import { Toast, DURATION, COLOR } from '@src/components'
 
 
+
+type ThankDTO = {
+    parkId: string
+    senderName: string
+    senderUid: string,
+    thankText: string,
+    uid: string
+}
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -43,8 +55,11 @@ type State = {
     mapHeight: number,
     initLatitude: number,
     initLongitude: number,
-    nearParks: ParkItem[]
-
+    nearParks: ParkItem[],
+    searchResult: Park,
+    searchText: string,
+    dialogVisible: boolean,
+    thankText: string
 }
 
 const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
@@ -87,6 +102,8 @@ class Parking extends React.Component<Props, State> {
         android: 30,
     });
 
+    private toast: Toast
+
 
     public state: State = {
         selectedIndex: 0,
@@ -101,14 +118,17 @@ class Parking extends React.Component<Props, State> {
         mapHeight: 0,
         initLatitude: null,
         initLongitude: null,
-        nearParks: null
-
+        nearParks: null,
+        searchResult: undefined,
+        searchText: "",
+        dialogVisible: false,
+        thankText: ''
     }
 
 
     private parkId: string
 
-    private currentPosition : {longitude:number,latitude:number}
+    private currentPosition: { longitude: number, latitude: number }
 
     private onSearchPressed = () => {
 
@@ -124,11 +144,25 @@ class Parking extends React.Component<Props, State> {
         return (
             <View style={themedStyle.searchBar}>
                 <Button size="giant" appearance="ghost" icon={ArrowIosBackFill} onPress={this.goBack} />
-                <Input style={{ flex: 1 }} placeholder="输入车牌号，通知车主挪车" />
-                <Button appearance="ghost">搜索</Button>
+                <Input value={this.state.searchText} onChangeText={val => this.setState({ searchText: val })} style={{ flex: 1 }} placeholder="输入车牌号，通知车主挪车" />
+                <Button appearance="ghost" onPress={this.searchCarNumber}>搜索</Button>
             </View>
 
         )
+    }
+
+
+    private searchCarNumber = async () => {
+        if (isEmpty(this.state.searchText)) {
+            return
+        }
+        else {
+
+            const rj: RestfulJson = await getService(searchParkByCarNumberUrl(this.state.searchText)) as any
+            const park: Park = rj.data
+            this.setState({ searchResult: park })
+
+        }
     }
 
 
@@ -147,10 +181,10 @@ class Parking extends React.Component<Props, State> {
 
     park = async () => {
         const c = this.currentPosition
-        const {lng,lat} = gcj2wgs(c.longitude,c.latitude)
+        const { lng, lat } = gcj2wgs(c.longitude, c.latitude)
         const data: Park = {
             uid: UserAccount.getUid(), carNumber: this.state.carNumber, carPhone: this.state.phone,
-            location: { coordinates: [lng, lat] },gcjLocation : [c.longitude,c.latitude]
+            location: { coordinates: [lng, lat] }, gcjLocation: [c.longitude, c.latitude]
         }
         const res = await postService(parkUrl(this.state.stayTime), data) as RestfulJson
 
@@ -164,7 +198,7 @@ class Parking extends React.Component<Props, State> {
     }
 
     drive = async () => {
-        await deleteService(driveUrl(this.parkId,UserAccount.getUid()), null)
+        await deleteService(driveUrl(this.parkId, UserAccount.getUid()), null)
         // EventRegister.emit(parkingEvent, 0)
         this.setState({ status: 0, btnText: '停车', leaveTime: '', stayTime: null, delayTime: null })
     }
@@ -201,10 +235,7 @@ class Parking extends React.Component<Props, State> {
     }
 
 
-    private thank = async (uid, parkId) => {
-        const rj: RestfulJson = await postService(thankForParkUrl(uid, parkId), null) as any
-        console.warn(JSON.stringify(rj))
-    }
+
 
 
     private searchPark = async (longitude, latitude) => {
@@ -214,21 +245,23 @@ class Parking extends React.Component<Props, State> {
 
         console.warn(`matchShareParkPoint:${JSON.stringify(rj)}`)
 
-        
+
         const uas: UserAccount[] = rj.data.uas
         const shareParks: any[] = rj.data.sharePark || []
         // const OffStreetPark : any[] = rj.data.offStreet
-        console.warn(JSON.stringify(shareParks))
+        // console.warn(JSON.stringify(shareParks))
         if (shareParks) {
             shareParks.forEach((element: ParkItem) => {
                 const ua = uas.find(u => u.id == element.uid)
                 element.publisher = ua;
             });
 
+            const temp = shareParks //.filter((s: ParkItem) => s.uid != UserAccount.getUid())
+
 
             this.setState(
                 {
-                    nearParks: shareParks,
+                    nearParks: temp,
                 }
             )
             // console.warn(JSON.stringify(shareParks))
@@ -245,7 +278,7 @@ class Parking extends React.Component<Props, State> {
 
         Geolocation.getCurrentPosition(({ coords }) => {
             const { longitude, latitude } = coords
-            this.currentPosition = {longitude,latitude}
+            this.currentPosition = { longitude, latitude }
             // this.setState({ initLongitude: longitude, initLatitude: latitude })
             this.searchPark(longitude, latitude)
         });
@@ -386,7 +419,7 @@ class Parking extends React.Component<Props, State> {
                         customTitleBox={() => this.renderItemTitle(p)} subTitle={() => this.renderSubTitle(p)}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
                             {/* <Button size="small" onPress={() => console.warn("go go go")}>打赏</Button> */}
-                            <Button size="small" onPress={() => this.thank(p.uid, p.id)}>感谢</Button>
+                            <Button size="small" onPress={() => this.showDialog(p.uid, p.id)}>感谢</Button>
                         </View>
                     </ContentBox>
                 )
@@ -395,6 +428,62 @@ class Parking extends React.Component<Props, State> {
 
 
     }
+
+
+    private thank = async () => {
+
+        const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
+        const rj: RestfulJson = await postService(thankForParkUrl(), param) as any
+        console.warn(JSON.stringify(rj))
+        this.setState({ dialogVisible: false, thankText: '' },()=>{
+            this.toast.show("赠人玫瑰，手留余香",DURATION.LENGTH_LONG)
+        })
+
+        // showMessage({
+        //     message: "赠人玫瑰，手留余香",
+        //     position: 'center',
+        //     type: 'info'
+        // })
+    }
+
+    private toThankUid = null
+    private toThankParkId = null
+
+    private showDialog = async (uid, parkId) => {
+
+        const flag = await hasThanked(parkId)
+
+        if (flag == true) {
+            this.toast.show("一次就够了",DURATION.LENGTH_LONG)
+            // showMessage({
+            //     message: "一次就够了",
+            //     position: "center",
+            //     type: 'warning'
+            // })
+
+            return;
+        }
+
+        this.toThankParkId = parkId
+        this.toThankUid = uid
+        this.setState({ dialogVisible: true })
+    }
+
+
+
+    private renderPopup = () => {
+        const { dialogVisible, thankText } = this.state
+        return (
+            <Dialog.Container visible={dialogVisible}>
+                <Dialog.Title>感谢留言</Dialog.Title>
+                <Dialog.Input placeholder='感谢你的热心帮助！' value={thankText}
+                    onChangeText={(txt) => { this.setState({ thankText: txt }) }} />
+                <Dialog.Button label="取消" onPress={() => { this.setState({ dialogVisible: false }) }} />
+                <Dialog.Button label="发送" onPress={this.thank} />
+            </Dialog.Container>
+        )
+    }
+
 
     public render2() {
         return (
@@ -432,8 +521,10 @@ class Parking extends React.Component<Props, State> {
     }
 
 
+
     public render(): React.ReactNode {
         const { themedStyle } = this.props
+        const { searchResult } = this.state
 
         // return (
         //     <ScrollableAvoidKeyboard style={themedStyle.container}>
@@ -449,6 +540,10 @@ class Parking extends React.Component<Props, State> {
 
 
             <ScrollableAvoidKeyboard style={themedStyle.container} extraScrollHeight={this.keyboardOffset}>
+
+                <Toast ref={elm => this.toast = elm} style = {{backgroundColor:COLOR.success}}/>
+
+                {this.renderPopup()}
                 {this.renderSearchBar()}
 
                 {/* <View style={{ paddingHorizontal: 16 }}>
@@ -458,7 +553,22 @@ class Parking extends React.Component<Props, State> {
                     {this.renderMapview()}
                 </View> */}
 
-                <View>
+                {searchResult === undefined ? null
+                    :
+                    (searchResult === null ? <Text appearance="hint" style={{ textAlign: 'center' }}>无此车停车记录</Text>
+                        : <View style={{ padding: 10, justifyContent: 'center' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                                {/* <Text>{searchResult.carNumber}</Text> */}
+                                <LicensePlate category="p1" carNumber={searchResult.carNumber} />
+                            </View>
+                            <Text style={{ marginBottom: 5 }}>{`预计开车时间：${searchResult.leaveTime}`}</Text>
+                            <Button size="small">电话通知车主挪车</Button>
+                        </View>)
+                }
+
+
+                <View style={{ borderRadius: 5, borderWidth: 1, borderColor: "lightgrey", paddingTop: 5, marginHorizontal: 5 }}>
+                    <Text style={{ textAlign: 'center' }} appearance="hint" category="p1">我的停车</Text>
                     <FormRow title="车牌号">
                         <View style={styles.form}>
                             <Input style={{ width: '100%' }} value={this.state.carNumber} onChangeText={(val) => this.setState({ carNumber: val.toUpperCase() })} placeholder="填写车牌号" />

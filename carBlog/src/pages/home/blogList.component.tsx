@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -14,11 +14,13 @@ import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile } from '@src/core/model';
-import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, listNearbyArticleUrl } from '@src/core/uitls/httpService';
+import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, listNearbyArticleUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
 import { toDate, getTimeDiff, gcj2wgs } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
+import { imageUri, thumbnailUri } from '@src/assets/images/type';
+import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 
 
 interface BlogListItemData {
@@ -36,51 +38,45 @@ interface BlogListItemData {
 
 type ListItemElementInfo = ListRenderItemInfo<Article>;
 
-type Props = { load: boolean } & ThemedComponentProps & NavigationScreenProps
+type Props = { load: boolean, tabLabel: string } & ThemedComponentProps & NavigationScreenProps
 
 interface State {
     list: Article[],
     sortType: 0 | 1
+    /**
+     * 0:默认状态，1:正在加载，2:已到末尾
+     */
+    loading: 0 | 1 | 2
 }
 
 export class BlogListComponent extends React.Component<Props, State> {
 
-    // private data: BlogListItemData[] = [
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 }
-    // ]
 
     public state: State = {
         list: [],
-        sortType : 1
+        sortType: 1,
+        loading: 0
     }
 
-    // private data: BlogListItemData[] = blogList.map<BlogListItemData>(elm => { return { id:elm.id,authorName: elm.author.nickname, authorAvatar: elm.author.photo, blogTime: elm.date, carNumber: elm.author.carNumber, blogTitle: elm.title, commentCount: elm.comments.length, likesCount: elm.likes, visitCount: elm.visitCounts, image: elm.image } })
     private articles: Article[];
+    private currentHotPage: number = 0
+    private currentNearPage: number = 0
+
+    private currentLatitude_wgs: number = null
+    private currentLongitude_wgs: number = null
+
+    private onPressed = (article: Article) => {
+        this.props.navigation.navigate({
+            routeName: 'Article',
+            params: { title: article.authorProfile.nickname, article/* : this.articles.find(i => i.id == article.id) */ }
+        })
+    }
 
     private renderItemHeader(item: Article): React.ReactElement {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {item.authorProfile.avatar ? <Avatar source={item.authorProfile.avatar.imageSource} style={{ width: 30, height: 30 }} /> :
+                {item.authorProfile.image ? <Avatar source={thumbnailUri(item.authorProfile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.authorProfile.nickname}</Text>
@@ -88,69 +84,139 @@ export class BlogListComponent extends React.Component<Props, State> {
                     <Text>{item.carNumber}</Text>
                 </View> */}
                 <LicensePlate carNumber={item.authorProfile.carNumber} category="c1" style={{ marginLeft: 5 }} />
-                <Text appearance="hint" category="c1" style={{ marginLeft: 20 }}>{item.date}</Text>
+
             </View>
         )
     }
 
+    // private renderItem1 = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
+    //     const { item } = info
+    //     const d = item.distance
+
+    //     return (
+    //         <ListItem onPress={() => {
+    //             this.onPressed(item)
+    //         }}>
+    //             <AvatarContentBox imagePosition="right" customTitleBox={() => this.renderItemHeader(item)} textParagraph={item.title}
+    //                 paragraphApparent="default" paragraphCategory="s1" imageSource={item.image ? item.image.imageSource : null}
+    //                 imageSize={80} imageShape="square"
+    //             >
+    //                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: this.state.sortType == 0 ? "space-between" : 'flex-end', paddingTop: 5 }}>
+
+    //                     {this.state.sortType == 0 && <Text category="c1">{d >= 1 ? d.toFixed(2) + "公里" : (d * 1000).toFixed(0) + "米"}</Text>}
+
+    //                     <View style={{ flexDirection: 'row' }}>
+    //                         <VisitCounts rKTextProps={{ category: "c1", appearance: "default" }}>
+    //                             {item.visitCounts.toString()}
+    //                         </VisitCounts>
+
+    //                         <CommentsButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
+    //                             {item.comments ? item.comments.length.toString() : "0"}
+    //                         </CommentsButton>
+    //                         <LikeButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
+    //                             {item.likes ? item.likes.length.toString() : "0"}
+    //                         </LikeButton>
+    //                     </View>
+    //                 </View>
+    //             </AvatarContentBox>
+    //         </ListItem>
+    //     )
+    // }
+
+
+    private renderFooter = (): React.ReactElement => {
+
+        const { loading } = this.state
+
+        if (loading == 2) {
+            return (
+                <View style={{ marginVertical: 10 }}>
+                    <Text style={{ textAlign: 'center' }} appearance="hint">到底了</Text>
+                </View>
+            )
+        }
+
+        return (
+            <TouchableOpacity style={{ marginVertical: 10 }} onPress={this.pressMore}>
+                <Text style={{ textAlign: 'center' }} appearance="hint">{loading == 1 ? '正在加载...' : '点击加载更多'}</Text>
+            </TouchableOpacity>
+            // <Button style={{marginVertical:5}} appearance="ghost" textStyle={{color:'grey'}} onPress={this.props.pressMore}>{this.props.loading ? '正在加载...' :'点击加载更多'}</Button>
+        )
+    }
+
+
     private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
         const { item } = info
+        const d = item.distance
+
         return (
-            <ListItem onPress={() => {
-                this.props.navigation.navigate({
-                    routeName: 'Article',
-                    params: { title: item.authorProfile.nickname, article: this.articles.find(i => i.id == item.id) }
-                })
+            <ListItem style={{ flexDirection: 'row', height: 120 }} onPress={() => {
+                this.onPressed(item)
             }}>
-                <AvatarContentBox imagePosition="right" customTitleBox={() => this.renderItemHeader(item)} textParagraph={item.title}
-                    paragraphApparent="default" paragraphCategory="s1" imageSource={item.image ? item.image.imageSource : null}
-                    imageSize={80} imageShape="square"
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingTop: 5 }}>
 
-                        <VisitCounts rKTextProps={{ category: "c1", appearance: "default" }}>
-                            {item.visitCounts.toString()}
-                        </VisitCounts>
-
-                        <CommentsButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
-                            {item.comments ? item.comments.length.toString() : "0"}
-                        </CommentsButton>
-                        <LikeButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
-                            {item.likes ? item.likes.length.toString() : "0"}
-                        </LikeButton>
+                <View style={{ flex: 1 }}>
+                    {this.renderItemHeader(item)}
+                    <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1, justifyContent: 'center' }}>
+                        <Text appearance="default" category="s1" >{item.title}</Text>
                     </View>
-                </AvatarContentBox>
+                    <View style={{ paddingLeft: 16, paddingBottom: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: this.state.sortType == 0 ? "space-between" : 'flex-end', paddingTop: 5 }}>
+
+                            {this.state.sortType == 0 && <Text category="c1">{d >= 1 ? d.toFixed(2) + "公里" : (d * 1000).toFixed(0) + "米"}</Text>}
+
+                            <View style={{ flexDirection: 'row' }}>
+                                <Text appearance="default" category="c1" style={{ marginRight: 10 }}>{item.date}</Text>
+                                <VisitCounts rKTextProps={{ category: "c1", appearance: "default" }}>
+                                    {item.visitCounts.toString()}
+                                </VisitCounts>
+
+                                <CommentsButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
+                                    {item.comments ? item.comments.length.toString() : "0"}
+                                </CommentsButton>
+                                <LikeButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
+                                    {item.likes ? item.likes.length.toString() : "0"}
+                                </LikeButton>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+
+                {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
+                    <Avatar shape="square" source={/* (item.image as ImageSource).imageSource */thumbnailUri(item.image)} style={{ width: 80, height: 80 }} />
+                </View>}
+
             </ListItem>
         )
     }
 
 
-    private sort = (sortType : 0 | 1)=>{
-        this.setState({sortType})
+    private sort = (sortType: 0 | 1) => {
+        // this.setState({ sortType })
 
-        if(sortType == 0){
+        if (sortType == 0) {
             this.listNear()
         }
-        else{
+        else {
             this.listHottest()
         }
     }
 
 
-    private renderHeader = ()=>{
-        const {sortType} = this.state
-        const textStyle0 = sortType == 0 ? {color : "white"} : null
-        const style0 = sortType == 0 ? {backgroundColor:getThemeValue("color-success-default",themes["App Theme"])} : null
+    private renderHeader = () => {
 
-        const textStyle1 = sortType == 1 ? {color : "white"} : null
-        const style1= sortType == 1 ? {backgroundColor:getThemeValue("color-success-default",themes["App Theme"])} : null
+        const { sortType } = this.state
+        const textStyle0 = sortType == 0 ? { color: "white" } : null
+        const style0 = sortType == 0 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
+
+        const textStyle1 = sortType == 1 ? { color: "white" } : null
+        const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
         return (
-            <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-around',paddingVertical:10}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingVertical: 10 }}>
                 <Text appearance="hint" category="p2">排序方式</Text>
-                <Button textStyle={textStyle0} size="small" appearance="ghost" onPress={()=>this.sort(0)}
-                style={style0}>附近</Button>
-                <Button textStyle = {textStyle1} size="small" style ={style1} appearance="ghost" onPress={()=>this.sort(1)}>热门</Button>
+                <Button textStyle={textStyle0} size="small" appearance="ghost" onPress={() => this.sort(0)}
+                    style={style0}>附近</Button>
+                <Button textStyle={textStyle1} size="small" style={style1} appearance="ghost" onPress={() => this.sort(1)}>热门</Button>
             </View>
         )
     }
@@ -163,42 +229,181 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
 
-    public componentWillUpdate(nextProps: Props, nextState) {
-        const { load } = nextProps
-        if (this.props.load && load) {
 
-            return false
+
+    private displayTime(minutes) {
+
+        if (minutes < 60) {
+            return minutes + "分钟前"
+        }
+        const hours = (Number(minutes) / 60).toFixed(0)
+        if (Number(hours) < 24) {
+            return hours + '小时前'
+        }
+        const day = (Number(hours) / 24).toFixed(0)
+        if (Number(day) < 30) {
+            return day + "天前"
+        }
+        else {
+            return (Number(day) / 30).toFixed(0) + "月前"
         }
     }
 
     private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
-    private listNear = async ()=>{
+    private pressMore = () => {
+        this.setState({ loading: 1 })
+        if (this.state.sortType == 0) {
+            this.getMore_near()
+        }
+        else {
+            this.getMore_hot()
+        }
+    }
+
+    private getMore_near = async () => {
+        this.currentNearPage++;
+        const rj: RestfulJson = await getService(listNearbyArticleUrl(this.currentLongitude_wgs, this.currentLatitude_wgs, this.currentNearPage)) as any
+        // console.warn(`rj:${JSON.stringify(rj)}`)
+
+        const articles: Article[] = rj.data.articles
+        const profiles: Profile[] = rj.data.profiles
+
+        const temp: Article[] = articles.map(m => {
+            const date = new Date(m.date)
+
+            m.date = this.displayTime(getTimeDiff(date).toFixed(0))
+            // const profile: Profile = {
+            //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
+            //     , image: author1.image, carNumber: author1.carNumber
+            // }
+            const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
+            profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+            // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
+            m.authorProfile = profile
+            // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
+
+            return m;
+
+            // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
+            //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
+            //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
+        })
+
+
+        this.articles = this.articles.concat(temp)
+
+
+        const loading = rj.data.articles.length > 0 ? 0 : 2
+        this.setState({ list: this.articles, sortType: 0, loading })
+
+
+    }
+
+    private listNear = async () => {
+
         await init();
 
-        Geolocation.getCurrentPosition(async (position : Position)=>{
-            const {longitude,latitude} = position.coords
-            const {lng,lat} = gcj2wgs(longitude,latitude)
+        Geolocation.getCurrentPosition(async (position: Position) => {
+            const { longitude, latitude } = position.coords
+            const { lng, lat } = gcj2wgs(longitude, latitude)
 
-            const rj : RestfulJson = await getService(listNearbyArticleUrl(lng,lat,0)) as any
+            this.currentLatitude_wgs = lat
+            this.currentLongitude_wgs = lng
 
-            console.warn(JSON.stringify(rj))
+            const rj: RestfulJson = await getService(listNearbyArticleUrl(lng, lat, 0)) as any
+
+            console.warn(`lng:${lng},data:${JSON.stringify(rj)}`)
+            const articles: Article[] = rj.data.articles
+            const profiles: Profile[] = rj.data.profiles
+            // console.warn(`profiles:${JSON.stringify(profiles)}`)
+            const temp: Article[] = articles.map(m => {
+                const date = new Date(m.date)
+
+                m.date = this.displayTime(getTimeDiff(date).toFixed(0))
+                // const profile: Profile = {
+                //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
+                //     , image: author1.image, carNumber: author1.carNumber
+                // }
+                const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
+                profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+                // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
+                m.authorProfile = profile
+                // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
+
+                return m;
+
+                // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
+                //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
+                //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
+            })
+
+
+            this.articles = temp
+            this.currentNearPage = 0
+
+
+            this.setState({ list: temp, sortType: 0, loading: 0 })
+
         })
     }
 
 
-    private listHottest = async ()=>{
+    private getMore_hot = async () => {
+        this.currentHotPage++;
+
+        const rj: RestfulJson = await getService(listArticleUrl(this.currentHotPage)) as any
+        const articles: Article[] = rj.data.articles
+        const profiles: Profile[] = rj.data.profiles
+
+        const temp: Article[] = articles.map(m => {
+            const date = new Date(m.date)
+
+            m.date = this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
+            // const profile: Profile = {
+            //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
+            //     , image: author1.image, carNumber: author1.carNumber
+            // }
+            const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
+            // console.warn(`profile:${JSON.stringify(profile)}`)
+            profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+            // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
+            m.authorProfile = profile
+            // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
+
+            return m;
+
+            // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
+            //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
+            //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
+        })
+        // console.warn(JSON.stringify(new Date("2019/10/27 16:30:23"))) 
+
+        this.articles = this.articles.concat(temp)
+
+        const loading = temp.length > 0 ? 0 : 2
+
+
+        this.setState({ list: this.articles, loading })
+    }
+
+
+
+
+
+
+    private listHottest = async () => {
         const rj: RestfulJson = await getService(listArticleUrl(0)) as any
         const articles: Article[] = rj.data.articles
         const profiles: Profile[] = rj.data.profiles
 
-        const ids = new Set()
-        articles.forEach(d => {
+        // const ids = new Set()
+        // articles.forEach(d => {
 
-            ids.add(d.uid)
-            // d.image = this.testimage
-            // d.comments = []
-        })
+        //     ids.add(d.uid)
+        //     // d.image = this.testimage
+        //     // d.comments = []
+        // })
 
 
 
@@ -207,15 +412,19 @@ export class BlogListComponent extends React.Component<Props, State> {
         // console.warn(JSON.stringify(profiles))
 
         const temp: Article[] = articles.map(m => {
-            const date = new Date(m.date)  
+            const date = new Date(m.date)
 
-            m.date = getTimeDiff(date).toFixed(0) + "小时前"
-            const profile: Profile = {
-                nickname: author1.nickname.length > 6 ? author1.nickname.substr(0, 5) + "..." : author1.nickname
-                , avatar: author1.avatar, carNumber: author1.carNumber
-            }
+            m.date = this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
+            // const profile: Profile = {
+            //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
+            //     , image: author1.image, carNumber: author1.carNumber
+            // }
+            const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
+            // console.warn(`profile:${JSON.stringify(profile)}`)
+            profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+            // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
             m.authorProfile = profile
-            m.image = this.testimage
+            // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
 
             return m;
 
@@ -226,8 +435,19 @@ export class BlogListComponent extends React.Component<Props, State> {
         // console.warn(JSON.stringify(new Date("2019/10/27 16:30:23"))) 
 
         this.articles = temp
+        this.currentHotPage = 0
 
-        this.setState({ list: temp })
+        this.setState({ list: temp, sortType: 1, loading: 0 })
+    }
+
+
+    private canGetNext: boolean
+    private onEndReached = () => {
+        if (this.canGetNext) { this.pressMore(); this.canGetNext = false; }
+    }
+
+    private onMomentumScrollBegin = () => {
+        this.canGetNext = true;
     }
 
     public async componentWillMount() {
@@ -243,6 +463,24 @@ export class BlogListComponent extends React.Component<Props, State> {
     }
 
 
+    // public componentWillUpdate(nextProps: Props, nextState) {
+    //     const { load } = nextProps
+    //     if (this.props.load && load) {
+
+    //         return false
+    //     }
+    // }
+
+    private hasLoaded: boolean = false
+    componentWillReceiveProps(nextProps) {
+        if (!this.props.load && nextProps.load == true && !this.hasLoaded) {//todo:和initAppOnlineCompleteEvent协调
+            this.hasLoaded = true;
+            this.listHottest()
+        }
+
+    }
+
+
     public render(): React.ReactNode {
         if (this.props.load == false) {
             return null
@@ -253,10 +491,17 @@ export class BlogListComponent extends React.Component<Props, State> {
             // <View style={{ height: '100%' }}>
             <React.Fragment>
                 <List
-                    // data={this.data}
+
                     data={this.state.list}
                     renderItem={this.renderItem}
-                    ListHeaderComponent = {this.renderHeader}
+                    ListHeaderComponent={this.renderHeader}
+                    ListFooterComponent={this.renderFooter}
+                    getItemLayout={(data, index) => (
+                        { length: 120, offset: 120 * index, index }
+                    )}
+                    onEndReached={this.onEndReached}
+                    onEndReachedThreshold={0.2}
+                    onMomentumScrollBegin={this.onMomentumScrollBegin}
                 />
                 <TouchableOpacity style={themedStyle.addButton} onPress={this.writeBlog}>
                     <MaterialCommunityIcons name="tooltip-edit" size={30} color="white" />

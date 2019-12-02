@@ -10,6 +10,7 @@ export interface SignUpFormData {
   accountName: string;
   // email: string;
   password: string;
+  password2: string;
   // termsAccepted: boolean;
   role : AccountRoleType;
 }

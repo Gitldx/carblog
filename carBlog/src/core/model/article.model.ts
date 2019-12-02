@@ -11,7 +11,7 @@ export interface Article {
   // description: string;
   content: string;
   // images?: ImageSource[];
-  image: ImageSource;
+  image: string;
   //author?: Profile;
   date: string;
   // tips: number;
@@ -20,4 +20,5 @@ export interface Article {
   visitCounts?: number;
   location?: Location;
   gcjLocation? : number[];
+  distance? : number;
 }

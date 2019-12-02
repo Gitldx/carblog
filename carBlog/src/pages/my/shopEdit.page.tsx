@@ -195,17 +195,17 @@ class ShopEdit extends React.Component<Props, State> {  //todo:店铺和商品�
 
   private items: OverflowMenuItemType[] = [
     {
-      text: '开通商品展示',
+      title: '开通商品展示',
     },
     {
-      text: '上架',
+      title: '上架',
     },
     {
-      text: '下架',
+      title: '下架',
       disabled: true
     },
     {
-      text: "删除"
+      title: "删除"
     }
   ];
 
@@ -246,10 +246,10 @@ class ShopEdit extends React.Component<Props, State> {  //todo:店铺和商品�
   }
 
   private renderMenuItems(product: Product): OverflowMenuItemType[] {
-    const item1: OverflowMenuItemType = { text: '开通商品展示' }
-    const item2: OverflowMenuItemType = { text: '上架' }
-    const item3: OverflowMenuItemType = { text: '下架' }
-    const item4: OverflowMenuItemType = { text: "删除" }
+    const item1: OverflowMenuItemType = { title: '开通商品展示' }
+    const item2: OverflowMenuItemType = { title: '上架' }
+    const item3: OverflowMenuItemType = { title: '下架' }
+    const item4: OverflowMenuItemType = { title: "删除" }
 
     if (product.openService) {
       item1.disabled = true

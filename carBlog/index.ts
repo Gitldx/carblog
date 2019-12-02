@@ -34,7 +34,7 @@ function* initAppState() {
     // yield afterLocalLaunch()
 
     launchMessageLooper()
-    // readBulletin()
+    readBulletin()
     global.hasInitOnlineState = true
     EventRegister.emitEvent(initAppOnlineCompleteEvent)
     RegNetworkConnChangedListener();
@@ -144,7 +144,7 @@ function* reInitOnlineAppState() {
     EventRegister.emitEvent(initAppOnlineCompleteEvent)
 
 
-    // launchMessageLooper()
-    // readBulletin()
+    launchMessageLooper()
+    readBulletin()
     global.hasInitOnlineState = true;
 }

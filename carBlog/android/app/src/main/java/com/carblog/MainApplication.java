@@ -2,9 +2,11 @@ package com.carblog;
 
 import android.app.Application;
 
+import com.carblog.biz.BizPackage;
 import com.carblog.rctmodule.amap3d.AMap3DPackage;
 import com.carblog.rctmodule.amap3d.AMapGeolocationPackage;
 import com.facebook.react.ReactApplication;
+import com.reactnativecommunity.viewpager.RNCViewPagerPackage;
 import com.imagepicker.ImagePickerPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.swmansion.rnscreens.RNScreensPackage;
@@ -30,14 +32,15 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
             return Arrays.<ReactPackage>asList(
                     new MainReactPackage(),
+                    new RNCViewPagerPackage(),
                     new ImagePickerPackage(),
                     new VectorIconsPackage(),
                     new RNScreensPackage(),
                     new RNGestureHandlerPackage(),
                     new ReanimatedPackage(),
                     new AMap3DPackage(),
-                    new AMapGeolocationPackage()
-
+                    new AMapGeolocationPackage(),
+                    new BizPackage()
             );
         }
 

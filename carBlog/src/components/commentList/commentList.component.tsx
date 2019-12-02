@@ -59,7 +59,7 @@ class CommentList1Component extends React.Component<CommentsList1Props> {
       <CommentList1Item
         style={[themedStyle.item,this.isLastItem(index) ? null : themedStyle.itemBorder]}
         comment={comment}
-        onLikePress={this.onItemLikePress}
+        onLikePress={()=>this.onItemLikePress(comment.index)}
         // onMorePress={this.onItemMorePress}
         onReplyMorePress={this.onItemReplyMorePress}
       />

@@ -50,17 +50,17 @@ class ProductEdit extends React.Component<Props, State> {
 
     const items: OverflowMenuItemType[] = [
       {
-        text: '开通商品展示',
+        title: '开通商品展示',
       },
       {
-        text: '上架',
+        title: '上架',
       },
       {
-        text: '下架',
+        title: '下架',
         disabled: true
       },
       {
-        text: "删除"
+        title: "删除"
       }
     ];
 

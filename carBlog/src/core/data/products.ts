@@ -1,8 +1,8 @@
 import { Article, Profile, Product, Shop } from "../model";
 import { RemoteImage } from "@src/assets/images";
 
-const profile1 : Profile = { nickname: "小李飞刀",carNumber:'粤A·56GQT9',location:'350米',avatar:new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567666184592&di=121d2dc4e8e6ef5c21d8065b25f327c1&imgtype=0&src=http%3A%2F%2Fimg.xinxic.com%2Fimg%2F9ef89c23839b7664.jpg") }
-const profile2 : Profile = { nickname: "极速漂移",carNumber:'粤B·I578CV',location:'120米',avatar:new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567666184589&di=821d15540a52302a74174968d522a5f2&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201511%2F06%2F20151106233720_ALJMe.jpeg") }
+const profile1 : Profile = { nickname: "小李飞刀",carNumber:'粤A·56GQT9',location:'350米',image:new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567666184592&di=121d2dc4e8e6ef5c21d8065b25f327c1&imgtype=0&src=http%3A%2F%2Fimg.xinxic.com%2Fimg%2F9ef89c23839b7664.jpg") }
+const profile2 : Profile = { nickname: "极速漂移",carNumber:'粤B·I578CV',location:'120米',image:new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567666184589&di=821d15540a52302a74174968d522a5f2&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201511%2F06%2F20151106233720_ALJMe.jpeg") }
 
 export const shops : Shop[] = [
   {

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View,
-  ListRenderItemInfo,
+  ListRenderItemInfo
 } from 'react-native';
 import {
   ThemedComponentProps,
@@ -12,6 +12,7 @@ import {
   List,
   Input,
   InputProps,
+  Text
 } from 'react-native-ui-kitten/ui';
 import {
   MessageItem,
@@ -20,7 +21,8 @@ import {
 
 import { SearchIconOutline } from '@src/assets/icons';
 import { textStyle } from '@src/components/common';
-import { HomeMessage } from '@src/core/model/message.model';
+import { HomeMessage, WebMessage } from '@src/core/model/message.model';
+import { MESSAGETYPE } from '@src/core/model';
 
 
 interface ComponentProps {
@@ -28,7 +30,7 @@ interface ComponentProps {
   searchText: string,
   messages: HomeMessage[]//ConversationModel[];
   onSearchStringChange: (text: string) => void;
-  onConversation: (index: number) => void;
+  onPressed: (index: number) => void;
   deleteItem(index: number);
   onSearchInputBlur: () => void
 }
@@ -39,8 +41,8 @@ class MessageListComponent extends React.Component<MessageListProps> {
 
   private input: React.Component;
 
-  private onConversation = (index: number): void => {
-    this.props.onConversation(index);
+  private onPressed = (index: number): void => {
+    this.props.onPressed(index);
   };
 
   private deleteItem = (index: number) => {
@@ -53,17 +55,29 @@ class MessageListComponent extends React.Component<MessageListProps> {
 
   private renderItem = (info: ListRenderItemInfo<HomeMessage>): React.ReactElement<MessageProps> => {
     const { themedStyle } = this.props;
+    const {item} = info
+    // if(info.item.type == MESSAGETYPE.user_chat){
+      
+      return (
+        <MessageItem
+          style={themedStyle.item}
+          message={item}
+          index={info.index}
+          onPressed={this.onPressed}
+          deleteItem={this.deleteItem}
+        // messageStatus = {MessageStatus.UNREAD}
+        />
+      );
+    // }
+    // else if(item.type == MESSAGETYPE.user_web){
+    //   return(
+    //     <View>
+    //       <Text>{(item as WebMessage).url}</Text>
+    //     </View>
+    //   )
+    // }
 
-    return (
-      <MessageItem
-        style={themedStyle.item}
-        message={info.item}
-        index={info.index}
-        onConversation={this.onConversation}
-        deleteItem={this.deleteItem}
-      // messageStatus = {MessageStatus.UNREAD}
-      />
-    );
+
   };
 
   // private renderReadItem = (info: ListRenderItemInfo<HomeMessage>): React.ReactElement<MessageProps> => {

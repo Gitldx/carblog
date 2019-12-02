@@ -25,6 +25,7 @@ import {
 } from '@src/core/validators';
 import { SignUpFormData } from './type';
 import { AccountRoleType } from '@src/core/userAccount/type';
+import { isEmpty } from '@src/core/uitls/common';
 
 
 interface ComponentProps {
@@ -41,6 +42,8 @@ interface State {
   accountName: string | undefined;
   email: string | undefined;
   password: string | undefined;
+  password2 :string | undefined;
+  passwordIdentical: boolean | undefined;
   termsAccepted: boolean;
   role : AccountRoleType;
   roleHint : string
@@ -52,6 +55,8 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
     accountName: undefined,
     email: undefined,
     password: undefined,
+    password2: undefined,
+    passwordIdentical: undefined,
     termsAccepted: false,
     role : 0,
     roleHint : ""
@@ -83,14 +88,43 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
 
 
   private onPasswordInputValidationResult = (password: string) => {
-    this.setState({ password });
+    const { password2 } = this.state
+    let identical = undefined
+    if (!isEmpty(password2)) {
+      if (password == password2) {
+        identical == true
+      }
+      else {
+        identical = false
+      }
+    }
+    this.setState({ password, passwordIdentical: identical });
   };
 
+
+
+  private onPassword2InputValidationResult = (password2: string) => {
+    const { password } = this.state
+    let identical = undefined
+    if (!isEmpty(password)) {
+      if (password == password2) {
+        identical == true
+      }
+      else {
+        identical = false
+      }
+    }
+    this.setState({ password2, passwordIdentical: identical });
+  };
+
+
   private isValid = (value: SignUpFormData): boolean => {
-    const { accountName, password ,role} = value;
+    const { accountName, password ,password2,role} = value;
 
     return accountName !== undefined
       && password !== undefined
+      && password2 !== undefined
+      && password == password2
       && role !=0
     // && email !== undefined
     // && termsAccepted;
@@ -98,8 +132,8 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
 
 
   private onRadioChecked = (value:AccountRoleType) => {
-    const hint1 = "车主可以写博客，留停车电话，开小汽车摆摊子"
-    const hint2 = "行人可以读博客，勾搭车主，买东西"
+    const hint1 = "车主可以写博客，留停车电话,寻找和分享空车位"
+    const hint2 = "行人可以读博客，勾搭车主，分享车位"
     this.setState({ role: value,roleHint : value == 1 ? hint1 : hint2 })
   }
 
@@ -107,7 +141,7 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
   public render(): React.ReactNode {
     const { style, themedStyle, ...restProps } = this.props;
 
-    const {role,roleHint} = this.state
+    const {role,roleHint,passwordIdentical} = this.state
 
     return (
       <View
@@ -133,15 +167,28 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
             onChangeText={this.onEmailInputTextChange}
           /> */}
           <ValidationInput
+            caption={passwordIdentical == false ? "密码不相同" : null}
             style={themedStyle.passwordInput}
             textStyle={textStyle.paragraph}
             autoCapitalize='none'
             secureTextEntry={true}
-            placeholder='密码'
+            placeholder='请输入密码,至少6位数字和字母的组合'
             icon={EyeOffIconFill}
             validator={PasswordValidator}
             onChangeText={this.onPasswordInputValidationResult}
           />
+
+          <ValidationInput
+            style={themedStyle.passwordInput}
+            textStyle={textStyle.paragraph}
+            autoCapitalize='none'
+            secureTextEntry={true}
+            placeholder='请再次输入密码'
+            icon={EyeOffIconFill}
+            validator={PasswordValidator}
+            onChangeText={this.onPassword2InputValidationResult}
+            returnKeyType="done"
+          /> 
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', paddingVertical: 15 }}>
             <Radio status = "success"

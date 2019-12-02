@@ -14,12 +14,14 @@ import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile } from '@src/core/model';
-import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, rankParkUrl, setUserCityCodeUrl } from '@src/core/uitls/httpService';
+import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, rankParkUrl, setUserCityCodeUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
 import { toDate, getTimeDiff, isEmpty } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init } from '@src/components/amap/location';
-import { getLastLocationCityCode, saveLastCityCode } from '@src/core/uitls/storage/locationStorage';
+import { getLastLocationCityCode, saveLastCityCode, removeCityCode } from '@src/core/uitls/storage/locationStorage';
+import { onlineAccountState } from '@src/core/userAccount/functions';
+import { thumbnailUri } from '@src/assets/images/type';
 
 
 interface BlogListItemData {
@@ -33,16 +35,20 @@ interface BlogListItemData {
     likesCount: number,
     visitCount: number,
     image: ImageSource,
-
+    
 }
 
 type ListItemElementInfo = ListRenderItemInfo<UserAccount>;
 
-type Props = { load?: boolean } & ThemedComponentProps & NavigationScreenProps
+type Props = { load?: boolean ,tabLabel:string} & ThemedComponentProps & NavigationScreenProps
 
 interface State {
     list: UserAccount[],
-    rankSort: 0 | 1  //0:生产，1赠送
+    rankSort: 0 | 1 , //0:生产，1赠送
+    /**
+    * 0:默认状态，1:正在加载，2:已到末尾
+    */
+   loading: number
 }
 
 export class ParkRankComponent extends React.Component<Props, State> {
@@ -51,17 +57,17 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
     public state: State = {
         list: [],
-        rankSort: 0
+        rankSort: 0,
+        loading : 0
     }
 
     // private data: BlogListItemData[] = blogList.map<BlogListItemData>(elm => { return { id:elm.id,authorName: elm.author.nickname, authorAvatar: elm.author.photo, blogTime: elm.date, carNumber: elm.author.carNumber, blogTitle: elm.title, commentCount: elm.comments.length, likesCount: elm.likes, visitCount: elm.visitCounts, image: elm.image } })
     private articles: Article[];
 
     private renderItemHeader(item: UserAccount): React.ReactElement {
-
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5, }}>
-                {item.avatar ? <Avatar source={item.authorProfile.avatar.imageSource} style={{ width: 30, height: 30 }} /> :
+                {item.image ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
@@ -74,14 +80,15 @@ export class ParkRankComponent extends React.Component<Props, State> {
         )
     }
 
-    private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
+    private renderItem1 = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
         const { item } = info
         return (
             <ListItem onPress={() => {
-                this.props.navigation.navigate({
-                    routeName: 'Article',
-                    params: { title: item.nickname, article: this.articles.find(i => i.id == item.id) }
-                })
+                this.gotoUserPage(item)
+                // this.props.navigation.navigate({
+                //     routeName: 'Article',
+                //     params: { title: item.nickname, article: this.articles.find(i => i.id == item.id) }
+                // })
             }}>
                 <ContentBox style={{ flex: 1 }} customTitleBox={() => this.renderItemHeader(item)} /* textParagraph={item.title} */
                 /* paragraphApparent="default" paragraphCategory="s1" */
@@ -101,7 +108,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
                         </LikeButton> */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                             <MaterialCommunityIcons name="medal" size={18} color="green" />
-                            <Text>{item.totalPrducedMoney}</Text>
+                            <Text>{item.totalProducedMoney}</Text>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -115,8 +122,44 @@ export class ParkRankComponent extends React.Component<Props, State> {
     }
 
 
-    private writeBlog = () => {
-        this.props.navigation.navigate("myBlog")
+
+    private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
+        const { item } = info
+        // console.warn(`mondey:${JSON.stringify(item)}`)
+        const { themedStyle } = this.props
+        return (
+            <ListItem style={{ height: 100 }} onPress={() => {
+                this.gotoUserPage(item)
+
+            }}>
+
+                <View style={{ flex: 1, ...themedStyle.listItemContainer }}>
+                    {this.renderItemHeader(item)}
+
+                    <View style={{
+                        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 16,
+                        paddingTop: 16,
+                    }}>
+
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <MaterialCommunityIcons name="medal" size={18} color="green" />
+                            <Text>{item.totalProducedMoney}</Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <MaterialCommunityIcons name="medal" size={18} color="red" />
+                            <Text>{item.totalGiftMoney}</Text>
+                        </View>
+                    </View>
+                </View>
+
+            </ListItem>
+        )
+    }
+
+    private gotoUserPage = (userAccount: UserAccount) => {
+        this.props.navigation.navigate("UserBlog", { ua: userAccount })
     }
 
 
@@ -133,7 +176,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
     private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
 
-    private sort = (sortType:0|1)=>{
+    private sort = (sortType: 0 | 1) => {
         this.setState({ rankSort: sortType })
         this.rank(sortType)
     }
@@ -158,14 +201,15 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
 
     private async getcitycode(callback: (oldcode: string, newcode: string) => void) {
-        
+
         await init();
 
         const citycode: string = await getLastLocationCityCode()
         
+
         Geolocation.getCurrentPosition(({ coords }) => {
             const { longitude, latitude } = coords
-            
+          
             Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
                 // console.warn(JSON.stringify(reGeocode))
                 callback(citycode, reGeocode.citycode)
@@ -173,25 +217,83 @@ export class ParkRankComponent extends React.Component<Props, State> {
         })
     }
 
+    private currentPage : number = 0
 
-    private rank = (sort = 0)=>{
-        
-        this.getcitycode(async (oldcode,newcode) => {
+    private rank = (sort = 0) => { //todo:没有定位权限时，数据为空的提示,切换用户的时候把本地的citycode 清空，重新设置
+        // removeCityCode()
+        this.currentPage = 0
+        this.getcitycode(async (oldcode, newcode) => {
 
-            
-            const rankrj :RestfulJson = await getService(rankParkUrl(newcode,sort,0)) as any
-            // console.warn("rank"+JSON.stringify(rankrj.data))
-            this.setState({list:rankrj.data})
+
+            const rankrj: RestfulJson = await getService(rankParkUrl(newcode, sort, 0)) as any
+            // console.warn(`old:${oldcode},new:${newcode}`)
+           
+            const loading = rankrj.data.length > 0 ? 0 : 2
+
+            // const temp = (rankrj.data as UserAccount[]).map((u:UserAccount)=>{
+                
+            //     const ua = Object.assign({},u)
+            //     ua.image = !!!isEmpty(u.image) ? new RemoteImage(qiniuImgUrl(u.image)) : null
+            //     return ua
+            // })
+
+           
+
+            this.setState({ list: rankrj.data,loading })
 
             if (isEmpty(oldcode) || oldcode != newcode) {
                 console.warn(`old:${oldcode},new:${newcode}`)
-                saveLastCityCode(newcode)
-                await postService(setUserCityCodeUrl(UserAccount.getUid(),newcode),null)
+                const _us = onlineAccountState()
+                if(_us == 1 || _us == 2){
+                    saveLastCityCode(newcode)  
+                    await postService(setUserCityCodeUrl(UserAccount.getUid(), newcode), null)
+                }
+                
             }
-            
-            
+
+
         })
 
+    }
+
+    private getMore = async ()=>{
+        this.setState({loading:1})
+        this.currentPage++;
+
+        const citycode: string = await getLastLocationCityCode()
+        const rankrj: RestfulJson = await getService(rankParkUrl(citycode, this.state.rankSort, this.currentPage)) as any
+        
+        // const _temp = (rankrj.data as UserAccount[]).map((u:UserAccount)=>{
+                
+        //     const ua = Object.assign({},u)
+        //     ua.image = !!!isEmpty(u.image) ? new RemoteImage(qiniuImgUrl(u.image)) : null
+        //     return ua
+        // })
+        
+        const temp = this.state.list.concat(rankrj.data)
+
+        const loading = rankrj.data.length > 0 ? 0 : 2
+        this.setState({list:temp,loading})
+    }
+
+
+    private renderFooter = (): React.ReactElement => {
+
+        const { loading } = this.state
+
+        if (loading == 2) {
+            return (
+                <View style={{ marginVertical: 10 }}>
+                    <Text style={{ textAlign: 'center' }} appearance="hint">到底了</Text>
+                </View>
+            )
+        }
+
+        return (
+            <TouchableOpacity style={{ marginVertical: 10 }} onPress={this.getMore}>
+                <Text style={{ textAlign: 'center' }} appearance="hint">{loading == 1 ? '正在加载...' : '点击加载更多'}</Text>
+            </TouchableOpacity>
+        )
     }
 
 
@@ -201,10 +303,10 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
 
         EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
-           
+
             this.rank()
 
-            
+
             // const rj: RestfulJson = await getService(listArticleUrl(0)) as any
             // const articles: Article[] = rj.data.articles
             // const profiles: Profile[] = rj.data.profiles
@@ -267,7 +369,11 @@ export class ParkRankComponent extends React.Component<Props, State> {
                     // data={this.data}
                     data={this.state.list}
                     renderItem={this.renderItem}
+                    getItemLayout={(data, index) => (
+                        { length: 100, offset: 100 * index, index }
+                    )}
                     ListHeaderComponent={this.renderHeader}
+                    ListFooterComponent={this.renderFooter}
                 />
 
             </React.Fragment>
@@ -290,5 +396,9 @@ export const ParkRank = withStyles(ParkRankComponent, (theme: ThemeType) => ({
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         backgroundColor: theme["color-success-400"]
-    }
+    },
+    listItemContainer: {
+        paddingTop: 5,
+        backgroundColor: theme['background-basic-color-1'],
+    },
 }))

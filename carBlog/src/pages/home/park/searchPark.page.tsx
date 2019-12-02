@@ -30,7 +30,9 @@ import { ParkItem } from './type';
 import MapLinking from '@src/core/uitls/mapLinking';
 import ActionSheet from 'react-native-actionsheet'
 import { simpleAlert } from '@src/core/uitls/alertActions';
-
+import { calculateSearchScore } from './parkUtils';
+import { showMessage } from 'react-native-flash-message';
+import {Toast,DURATION,COLOR} from '@src/components'
 
 
 
@@ -47,7 +49,11 @@ type State = {
     currentLongitude: number,
     nearParks: ParkItem[],
     selectedLatitude: number,
-    selectedLongitude: number
+    selectedLongitude: number,
+    /**
+    * 0:默认状态，1:正在加载，2:已到末尾
+    */
+    loading: number
 }
 
 const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
@@ -90,10 +96,10 @@ class SearchPark extends React.Component<Props, State> {
     }
 
 
-    private keyboardOffset: number = Platform.select({
-        ios: 40,
-        android: 30,
-    });
+
+    private currentPage: number = 0
+
+    private toast : Toast
 
 
     public state: State = {
@@ -104,9 +110,10 @@ class SearchPark extends React.Component<Props, State> {
         initLongitude: null,
         currentLatitude: null,//22.536853,
         currentLongitude: null,//114.057108
-        nearParks: null,
+        nearParks: [],
         selectedLatitude: null,
-        selectedLongitude: null
+        selectedLongitude: null,
+        loading: 0
 
     }
 
@@ -141,8 +148,8 @@ class SearchPark extends React.Component<Props, State> {
     }
 
 
-    private gotoDetail = () => {
-        this.props.navigation.navigate("ParkDetail")
+    private gotoDetail = (info: ListRenderItemInfo<ParkItem>) => {
+        this.props.navigation.navigate("ParkDetail", { info: info.item })
     }
 
 
@@ -270,6 +277,31 @@ class SearchPark extends React.Component<Props, State> {
 
     }
 
+    private pressMore = () => {
+        this.setState({ loading: 1 })
+
+        this.getMore()
+
+    }
+
+    private renderFooter = (): React.ReactElement => {
+
+        const { loading } = this.state
+
+        if (loading == 2) {
+            return (
+                <View style={{ marginVertical: 10 }}>
+                    <Text style={{ textAlign: 'center' }} appearance="hint">到底了</Text>
+                </View>
+            )
+        }
+
+        return (
+            <TouchableOpacity style={{ marginVertical: 10 }} onPress={this.pressMore}>
+                <Text style={{ textAlign: 'center' }} appearance="hint">{loading == 1 ? '正在加载...' : '点击加载更多'}</Text>
+            </TouchableOpacity>
+        )
+    }
 
     private renderItem = (info: ListRenderItemInfo<ParkItem>) => {
         const { selectedItem } = this.state
@@ -280,7 +312,7 @@ class SearchPark extends React.Component<Props, State> {
                 >
                     {this.renderSubTitle(info)}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-                        <Button size="small" onPress={this.gotoDetail}>更多详情</Button>
+                        <Button size="small" onPress={() => this.gotoDetail(info)}>更多详情</Button>
                         <Button size="small" onPress={() => this.openActionSheet(info)}>导航至此处</Button>
                     </View>
                 </ContentBox>
@@ -289,47 +321,151 @@ class SearchPark extends React.Component<Props, State> {
     }
 
 
+    private netRequest = async (wgsLongitude, wgsLatitude) => {
+        const rj: RestfulJson = await getService(searchNearParkUrl(wgsLongitude, wgsLatitude, this.currentPage, UserAccount.getUid())) as any
+        const uas: UserAccount[] = rj.data.uas
+        const shareParks: any[] = rj.data.park || []
+        // console.warn(`shareparks:${JSON.stringify(shareParks)}`)
+        const OffStreetPark: any[] = rj.data.offStreet || []
+
+        shareParks.forEach((element: ParkItem) => {
+            const ua = uas.find(u => u.id == element.uid)
+            element.publisher = ua;
+        });
+
+        const score = await calculateSearchScore(shareParks)
+
+        if (score > 0) {
+            this.toast.show("- " + (score * 0.1),DURATION.LENGTH_SHORT)
+            // showMessage({
+            //     message: "- " + (score * 0.1),
+            //     position: 'center',
+            //     // type : 'danger',
+            //     backgroundColor: "#FF003390",
+            //     floating: true
+            // })
+        }
+
+        if (OffStreetPark.length > 0) {
+            OffStreetPark.forEach((osp: OffStreetPark) => {
+                if (!shareParks.some((sp: SharePark) => sp.offStreetParkId == osp.id)) {
+                    shareParks.push(osp)
+                }
+            })
+        }
+
+
+        let currentLatitude, currentLongitude = null
+        let selectedItem = this.state.selectedItem
+        if (shareParks.length > 0) {
+            const first: SharePark = shareParks[0]
+            currentLatitude = first.gcjLocation[1]
+            currentLongitude = first.gcjLocation[0]
+            selectedItem = this.state.nearParks.length
+        }
+
+        const loading = shareParks.length > 0 ? 0 : 2
+
+        return { shareParks, currentLatitude, currentLongitude, selectedItem, loading }
+
+    }
+
+
+    private getMore = async () => {
+        this.currentPage++;
+        const { initLongitude, initLatitude, selectedLatitude, selectedLongitude } = this.state
+        let _lat = initLatitude
+        let _lng = initLongitude
+        if (selectedLatitude != null) {
+            _lat = selectedLatitude
+            _lng = selectedLongitude
+        }
+        const { lng, lat } = gcj2wgs(_lng, _lat)
+        const { shareParks, loading } = await this.netRequest(lng, lat)
+        // const rj: RestfulJson = await getService(searchNearParkUrl(lng, lat, this.currentPage, UserAccount.getUid())) as any
+        // const uas: UserAccount[] = rj.data.uas
+        // const shareParks: any[] = rj.data.park || []
+        // const OffStreetPark: any[] = rj.data.offStreet || []
+
+        // shareParks.forEach((element: ParkItem) => {
+        //     const ua = uas.find(u => u.id == element.uid)
+        //     element.publisher = ua;
+        // });
+
+        // if (OffStreetPark.length > 0) {
+        //     OffStreetPark.forEach((osp: OffStreetPark) => {
+        //         if (!shareParks.some((sp: SharePark) => sp.offStreetParkId == osp.id)) {
+        //             shareParks.push(osp)
+        //         }
+        //     })
+        // }
+
+
+        // let currentLatitude, currentLongitude = null
+        // let selectedItem = this.state.selectedItem
+        // if (shareParks.length > 0) {
+        //     const first: SharePark = shareParks[0]
+        //     currentLatitude = first.gcjLocation[1]
+        //     currentLongitude = first.gcjLocation[0]
+        //     selectedItem = this.state.nearParks.length
+        // }
+
+        // const loading = shareParks.length > 0 ? 0 : 2
+        const temp = this.state.nearParks.concat(shareParks)
+
+        this.setState(
+            {
+                nearParks: temp,
+                loading
+            }
+        )
+    }
+
+
     private searchPark = async (longitude, latitude) => {
         const { lng, lat } = gcj2wgs(longitude, latitude)
 
-        const rj: RestfulJson = await getService(searchNearParkUrl(lng, lat, 0, UserAccount.getUid())) as any
+        this.currentPage = 0
+
+        const { shareParks, currentLongitude, currentLatitude, loading } = await this.netRequest(lng, lat)
+
+        // const rj: RestfulJson = await getService(searchNearParkUrl(lng, lat, this.currentPage, UserAccount.getUid())) as any
 
 
-        const uas: UserAccount[] = rj.data.uas
-        const shareParks: any[] = rj.data.park || []
-        const OffStreetPark: any[] = rj.data.offStreet
-        console.warn(JSON.stringify(shareParks))
-        if (shareParks) {
-            shareParks.forEach((element: ParkItem) => {
-                const ua = uas.find(u => u.id == element.uid)
-                element.publisher = ua;
-            });
+        // const uas: UserAccount[] = rj.data.uas
+        // const shareParks: any[] = rj.data.park || []
+        // const OffStreetPark: any[] = rj.data.offStreet || []
+        // if (shareParks) {
+        //     shareParks.forEach((element: ParkItem) => {
+        //         const ua = uas.find(u => u.id == element.uid)
+        //         element.publisher = ua;
+        //     });
 
-            if (OffStreetPark.length > 0) {
-                OffStreetPark.forEach((osp: OffStreetPark) => {
-                    if (!shareParks.some((sp: SharePark) => sp.offStreetParkId == osp.id)) {
-                        shareParks.push(osp)
-                    }
-                })
+        //     if (OffStreetPark.length > 0) {
+        //         OffStreetPark.forEach((osp: OffStreetPark) => {
+        //             if (!shareParks.some((sp: SharePark) => sp.offStreetParkId == osp.id)) {
+        //                 shareParks.push(osp)
+        //             }
+        //         })
+        //     }
+
+
+        //     let currentLatitude, currentLongitude = null
+        //     if (shareParks.length > 0) {
+        //         const first: SharePark = shareParks[0]
+        //         currentLatitude = first.gcjLocation[1]
+        //         currentLongitude = first.gcjLocation[0]
+        //     }
+
+
+        this.setState(
+            {
+                selectedItem: 0, nearParks: shareParks,
+                currentLatitude, currentLongitude, loading
             }
-
-
-            let currentLatitude, currentLongitude = null
-            if (shareParks.length > 0) {
-                const first: SharePark = shareParks[0]
-                currentLatitude = first.gcjLocation[1]
-                currentLongitude = first.gcjLocation[0]
-            }
-
-
-            this.setState(
-                {
-                    selectedItem: 0, nearParks: shareParks,
-                    currentLatitude, currentLongitude
-                }
-            )
-            // console.warn(JSON.stringify(shareParks))
-        }
+        )
+        // console.warn(JSON.stringify(shareParks))
+        // }
     }
 
     public async componentWillMount() {
@@ -342,9 +478,11 @@ class SearchPark extends React.Component<Props, State> {
         Geolocation.getCurrentPosition(async ({ coords }) => {
             const { latitude, longitude } = coords
 
-            this.setState({ mapShow: true, initLatitude: latitude, initLongitude: longitude })
+            setTimeout(() => {
+                this.setState({ mapShow: true, initLatitude: latitude, initLongitude: longitude })
 
-            this.searchPark(longitude, latitude)
+                this.searchPark(longitude, latitude)
+            }, 500);
 
             // const {lng,lat} = gcj2wgs(longitude,latitude)
 
@@ -457,6 +595,7 @@ class SearchPark extends React.Component<Props, State> {
 
         return (
             <PageView style={themedStyle.container}>
+                <Toast ref={elm=>this.toast=elm} opacity={0.8} style={{backgroundColor:COLOR.warning}}/>
                 <ActionSheet
                     ref={o => this.ActionSheet = o}
                     title={'使用以下地图导航'}
@@ -480,6 +619,7 @@ class SearchPark extends React.Component<Props, State> {
                     <List style={{ flex: 1 }}
                         data={this.state.nearParks}
                         renderItem={this.renderItem}
+                        ListFooterComponent={this.renderFooter}
                     />
 
 

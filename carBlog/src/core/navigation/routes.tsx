@@ -16,11 +16,11 @@ import {
 
 import { HomePage, MyHomePage } from '@src/pages';
 import { MenuPage } from '@src/pages/menu';
-import { ArticlePage, ProductListPage, ProductDetailsPage, ParkingPage, ShareParkPage, SearchParkPage, ParkDetailPage } from '@src/pages/home';
+import { ArticlePage, ProductListPage, ProductDetailsPage, ParkingPage, ShareParkPage, SearchParkPage, ParkDetailPage, UserBlogsPage } from '@src/pages/home';
 import { getCurrentStateName, getCurrentRouteIndex } from './util';
 import { ImageGallaryPage } from '@src/components/common';
 import { SignInPage, SignUpPage } from '@src/pages/login';
-import { ChatPage, MessagesPage } from '@src/pages/message';
+import { ChatPage, MessagesPage, WebPage } from '@src/pages/message';
 import { ProductEditPage, ShopEditPage, BlogEditPage, MyBlogsPage, MyInfoPage, MyCollectionPage, ArticlePreviewPage, MyScorePage } from '@src/pages/my';
 import { SearchCarPage } from '@src/pages/home/searchCar.page';
 import { PayPage } from '@src/pages/my/pay.page';
@@ -115,7 +115,7 @@ HomeNavigator.navigationOptions = ({ navigation }) => {
 
 const MenuNavigator: NavigationContainer = createBottomTabNavigator({
   ['Home']: HomeNavigator,
-  ['Messages']: Jigsaw,//MessagesPage,
+  ['Messages']: MessagesPage,//Jigsaw,//MessagesPage,
   ['MyHome']: MyHomeNavigator,
 
 },
@@ -143,8 +143,16 @@ const NavigationMap: NavigationRouteConfigMap = {
     screen: ChatPage,
     // navigationOptions: MenuNavigationOptions
   },
+  ["Web"]:{
+    screen : WebPage,
+    navigationOptions: TopNavigationOptions
+  },
   ["myBlog"]: {
     screen: BlogEditPage,
+    navigationOptions: TopNavigationOptions
+  },
+  ["UserBlog"]: {
+    screen: UserBlogsPage,
     navigationOptions: TopNavigationOptions
   },
   ["Article"]: {

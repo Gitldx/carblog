@@ -63,7 +63,7 @@ class ChatHeaderComponent extends React.Component<ChatHeaderProps> {
 
     return (
       // <Avatar source={interlocutor.photo.imageSource}/>
-      <Avatar source={author1.avatar.imageSource}/>
+      <Avatar source={author1.image.imageSource}/>
     );
   };
 

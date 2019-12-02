@@ -15,6 +15,8 @@ import { articles, author2, author1 } from '@src/core/data/articles';
 import { getTimeDiff, toDate } from '@src/core/uitls/common';
 import { postService, writeArticleUrl, commentUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
+import { ImageSource } from '@src/assets/images';
+import { imageUri, LocalImage } from '@src/assets/images/type';
 
 
 
@@ -48,10 +50,10 @@ class ArticleContentComponent extends React.Component<Props> {
           {article.title}
         </Text>
 
-        <ImageBackground
+        {article.image && <ImageBackground
           style={themedStyle.image}
-          source={article.image.imageSource}
-        />
+          source={ article.image.startsWith("file://") ? new LocalImage(article.image).imageSource : imageUri(article.image)}
+        />}
         <Text
           style={themedStyle.contentLabel}
           category='s1'>

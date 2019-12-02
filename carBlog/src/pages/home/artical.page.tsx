@@ -16,10 +16,11 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { CommentsButton, LikeButton, VisitCounts, ArticleContent } from '@src/components';
 import { RemoteImage } from '@src/assets/images';
 import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate } from '@src/core/uitls/common';
-import { postService, writeArticleUrl, commentUrl } from '@src/core/uitls/httpService';
+import { getTimeDiff, toDate, isEmpty } from '@src/core/uitls/common';
+import { postService, writeArticleUrl, commentUrl, addArticleVisitCountUrl, likeArticleUrl, RestfulJson, likeCommentUrl, getService, getProfilesUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
-
+import { showMessage } from 'react-native-flash-message';
+import { Toast, DURATION, COLOR } from '@src/components'
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -27,7 +28,8 @@ type State = {
   currentCommentText: string,
   disableSubmitButton: boolean,
   loadComments: boolean,
-  comments : Comment[]
+  comments: Comment[],
+  articleLikes: string[]
 }
 
 class Article extends React.Component<Props, State> {
@@ -42,7 +44,8 @@ class Article extends React.Component<Props, State> {
     currentCommentText: '',
     disableSubmitButton: true,
     loadComments: false,
-    comments : []
+    comments: [],
+    articleLikes: []
   }
 
   private keyboardOffset: number = Platform.select({
@@ -51,8 +54,31 @@ class Article extends React.Component<Props, State> {
   });
 
 
-  private onLikePress = (index: number) => {
-    console.warn("onLikePress" + index)
+  private onCommentLikePress = (index: number) => {
+    const uid = UserAccount.getUid()
+    postService(likeCommentUrl(uid, this.article.id, index), null).then((rj: RestfulJson) => {
+      console.warn(index)
+      if (rj.ok) {
+        // if(this.article.comments){
+        const comment: Comment = this.article.comments.find(c => c.index == index)
+
+        comment.likes && comment.likes.push(uid)
+        // }
+        // else{
+
+        // }
+
+        this.toast.show('+1', DURATION.LENGTH_SHORT);
+
+        // showMessage({
+        //   position: 'center',
+        //   message: "+1",
+        //   duration: 1000,
+        //   type: 'success',
+        //   // floating: true,
+        // })
+      }
+    })
   }
 
   private onReplyMorePress = () => {
@@ -72,18 +98,18 @@ class Article extends React.Component<Props, State> {
     //   likesCount: 1,
     //   date: 'Today 10:36 pm',
     // });
-    const c : Comment = {author:UserAccount.getUid(),text:this.state.currentCommentText} as any
-    postService(commentUrl(this.article.id),c).then(res=>{
-
-      c.authorProfile = {avatar : author1.avatar,nickname:UserAccount.instance.nickname}
+    const c: Comment = { author: UserAccount.getUid(), text: this.state.currentCommentText } as any
+    postService(commentUrl(this.article.id), c).then(res => {
+      console.warn(`comment:${JSON.stringify(res)}`)
+      c.authorProfile = { image: author1.image, nickname: UserAccount.instance.nickname }
       c.date = new Date()
-      c.dateString = toDate(c.date,"yyyy/MM/dd hh:mm:ss")
-      this.state.comments.push(c) 
+      c.dateString = toDate(c.date, "yyyy/MM/dd hh:mm:ss")
+      this.state.comments.push(c)
 
       this.setState({
         currentCommentText: '',
         disableSubmitButton: true,
-        comments : this.state.comments
+        comments: this.state.comments
       });
     })
 
@@ -126,30 +152,93 @@ class Article extends React.Component<Props, State> {
   //   }
   private article: ArticleModel
 
-  public componentWillMount(){
-    this.article = this.props.navigation.getParam("article")
+  private displayTime(minutes) {
 
-    if(this.article.comments){
-      this.article.comments = this.article.comments.map(c=>{
+    if (minutes < 60) {
+      return minutes + "分钟前"
+    }
+    const hours = (Number(minutes) / 60).toFixed(0)
+    if (Number(hours) < 24) {
+      return hours + '小时前'
+    }
+    const day = (Number(hours) / 24).toFixed(0)
+    if (Number(day) < 30) {
+      return day + "天前"
+    }
+    else {
+      return (Number(day) / 30).toFixed(0) + "月前"
+    }
+  }
+
+  private toast : Toast
+
+  private likeArticle = () => {
+    const uid = UserAccount.getUid()
+    postService(likeArticleUrl(uid, this.article.id), null).then((rj: RestfulJson) => {
+      // console.warn(JSON.stringify(rj))
+      if (rj.ok) {
+        if (this.article.likes) {
+          if (this.article.likes.findIndex(a => a == uid) == -1) {
+            this.article.likes.push(uid)
+          }
+
+        }
+        else {
+          this.article.likes = [uid]
+        }
+
+        this.setState({ articleLikes: this.article.likes })
+        this.toast.show('+1', DURATION.LENGTH_SHORT);
+        // showMessage({
+        //   position: 'center',
+        //   message: "+1",
+        //   duration: 1000,
+        //   type: 'success',
+
+        //   // floating: true,
+        // })
+      }
+    })
+  }
+
+  private listComments = async () => {
+    if (this.article.comments) {
+
+      const uids = this.article.comments.map(c => c.author)
+      const rj: RestfulJson = await postService(getProfilesUrl(), uids) as any//todo:优化，服务器只返回需要的字段即可
+
+      const uas: UserAccount[] = rj.data
+
+      this.article.comments = this.article.comments.map(c => {
         // console.warn(`cdate:${c.date}`)
-        const date =new Date(c.date)
-        c.dateString = getTimeDiff(date).toFixed(0)+"小时前"
-        const profile : Profile = {nickname:author2.nickname,avatar:author2.avatar}
+        const date = new Date(c.date)
+
+        c.dateString = this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0)+"小时前"
+        const ua = uas.find(u => u.id = c.author)
+        const profile: Profile = { nickname: ua.nickname, image: ua.image }
         c.authorProfile = profile
         return c;
       })
     }
-    else{
+    else {
       this.article.comments = []
     }
-    
+
+    setTimeout(() => { this.setState({ loadComments: true, comments: this.article.comments }) }, 0)
+  }
+
+  public componentWillMount() {
+    this.article = this.props.navigation.getParam("article")
+    this.setState({ articleLikes: this.article.likes || [] })
 
   }
 
+
   public componentDidMount() {
     // console.warn(JSON.stringify(this.article))
-    setTimeout(() => { this.setState({ loadComments: true ,comments : this.article.comments}) }, 0)
-    
+
+    postService(addArticleVisitCountUrl(this.article.id), null);
+    this.listComments()
   }
 
   public render(): React.ReactNode {
@@ -172,9 +261,10 @@ class Article extends React.Component<Props, State> {
           category='s1'>
           {article.content}
         </Text> */}
-        <ArticleContent article={article}/>
+        <Toast ref={elm=>this.toast=elm} style={{ backgroundColor: COLOR.success }} opacity={0.8}/>
+        <ArticleContent article={article} />
         <View style={themedStyle.articleAuthorContainer}>
-       
+
           <Text
             style={themedStyle.articleDateLabel}
             appearance='hint'
@@ -186,10 +276,10 @@ class Article extends React.Component<Props, State> {
               {article.visitCounts.toString()}
             </VisitCounts>
             <CommentsButton>
-              {article.comments.length.toString()}
+              {article.comments ? article.comments.length.toString() : "0"}
             </CommentsButton>
-            <LikeButton>
-              {article.likes? article.likes.length.toString() : "0"}
+            <LikeButton onPress={this.likeArticle}>
+              {this.state.articleLikes.length.toString()}
             </LikeButton>
           </View>
         </View>
@@ -218,7 +308,7 @@ class Article extends React.Component<Props, State> {
         {this.state.loadComments ?
           <CommentsList
             data={this.state.comments}
-            onLikePress={this.onLikePress}
+            onLikePress={this.onCommentLikePress}
             // onMorePress={this.onMorePress}
             onReplyMorePress={this.onReplyMorePress}
           />

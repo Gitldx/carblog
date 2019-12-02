@@ -24,6 +24,7 @@ import { SignUpForm } from './signUpForm.component';
 import { NavigationScreenProps } from 'react-navigation';
 import { postService, userAccountRegisterUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
+import { simpleAlert } from '@src/core/uitls/alertActions';
 
 interface ComponentProps {
   // onSignUpPress: (formData: SignUpFormData) => void;
@@ -69,7 +70,7 @@ class SignUp2Component extends React.Component<SignUp2Props, State> {
     const {accountName,password,role} = this.state.formData
 
     UserAccount.instance.register(accountName,password,role,()=>{
-
+      simpleAlert(null,"注册成功")
     })
 
     // const result = await postService(userAccountRegisterUrl(),{accountName,password,role} )
