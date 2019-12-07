@@ -9,6 +9,7 @@ const newFriendEvent: string = 'newFriendEvent'
 const loginEvent: string = 'loginEvent'
 const chatEvent: string = 'chatEvent'
 const chatReadEvent: string = 'chatReadEvent'
+const upgradeEvent:string="upgradeEvent"
 
 
 class EventRegister {//todo:unmount
@@ -94,4 +95,5 @@ export {
   loginEvent,
   chatEvent,
   chatReadEvent,
+  upgradeEvent,
 }

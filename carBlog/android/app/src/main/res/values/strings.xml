@@ -1,3 +1,12 @@
 <resources>
+    <!--production-->
+	<string moduleConfig="true" name="reactNativeCodePush_androidDeploymentKey">
+        U_6W3QJwM96H053p1Y_Gx4IoZf-paedRjKIjHg
+    </string>
+
+    <!--debug-->
+    <!--<string moduleConfig="true" name="reactNativeCodePush_androidDeploymentKey">-->
+        <!--n6lr6Cqg19Mmwm7i-GbEvm7yqUifjeHel_f0Z -->
+    <!--</string>-->
     <string name="app_name">carBlog</string>
 </resources>
