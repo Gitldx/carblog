@@ -16,16 +16,17 @@ import {
 
 import { HomePage, MyHomePage } from '@src/pages';
 import { MenuPage } from '@src/pages/menu';
-import { ArticlePage, ProductListPage, ProductDetailsPage, ParkingPage, ShareParkPage, SearchParkPage, ParkDetailPage, UserBlogsPage } from '@src/pages/home';
+import { ArticlePage, ProductListPage, ProductDetailsPage, ParkingPage, ShareParkPage, SearchParkPage, ParkDetailPage, UserBlogsPage, SelectRoadPage, IssueChatPage } from '@src/pages/home';
 import { getCurrentStateName, getCurrentRouteIndex } from './util';
 import { ImageGallaryPage } from '@src/components/common';
 import { SignInPage, SignUpPage } from '@src/pages/login';
 import { ChatPage, MessagesPage, WebPage } from '@src/pages/message';
-import { ProductEditPage, ShopEditPage, BlogEditPage, MyBlogsPage, MyInfoPage, MyCollectionPage, ArticlePreviewPage, MyScorePage } from '@src/pages/my';
+import { ProductEditPage, ShopEditPage, BlogEditPage, MyBlogsPage, MyInfoPage, MyCollectionPage, ArticlePreviewPage, MyScorePage, MyReportPage } from '@src/pages/my';
 import { SearchCarPage } from '@src/pages/home/searchCar.page';
 import { PayPage } from '@src/pages/my/pay.page';
 
 import Jigsaw from '@src/pages/test/jigsaw'
+import {ModalScreen} from '@src/pages/home'
 
 
 
@@ -39,12 +40,12 @@ const MyHomeNavigator: NavigationContainer = createStackNavigator(
     },
     ["myShop"]: ShopEditPage,
     ["myProduct"]: ProductEditPage,
-    ["MyBlogs"]:MyBlogsPage,
-    ["MyCollection"] : MyCollectionPage,
-    ["MyInfo"] : MyInfoPage,
-    ["MyScore"] : MyScorePage,
-    ["Pay"] : PayPage,
-   
+    ["MyBlogs"]: MyBlogsPage,
+    ["MyCollection"]: MyCollectionPage,
+    ["MyInfo"]: MyInfoPage,
+    ["MyScore"]: MyScorePage,
+    ["Pay"]: PayPage,
+    ["MyReport"]: MyReportPage,
 
   },
   {
@@ -68,7 +69,7 @@ const HomeNavigator: NavigationContainer = createStackNavigator(
       // }),
       navigationOptions: TopNavigationOptions
     },
-    
+
     ["ProductList"]: {
       screen: ProductListPage,
       navigationOptions: TopNavigationOptions//MenuNavigationOptions
@@ -83,7 +84,11 @@ const HomeNavigator: NavigationContainer = createStackNavigator(
 
       // }),
     },
-    
+    ["IssueChat"]: {
+      screen: IssueChatPage,
+      navigationOptions: TopNavigationOptions
+    },
+
 
   },
   {
@@ -143,8 +148,8 @@ const NavigationMap: NavigationRouteConfigMap = {
     screen: ChatPage,
     // navigationOptions: MenuNavigationOptions
   },
-  ["Web"]:{
-    screen : WebPage,
+  ["Web"]: {
+    screen: WebPage,
     navigationOptions: TopNavigationOptions
   },
   ["myBlog"]: {
@@ -162,7 +167,7 @@ const NavigationMap: NavigationRouteConfigMap = {
 
     // }),
   },
-  ["ArticlePreview"] :  {
+  ["ArticlePreview"]: {
     screen: ArticlePreviewPage,
     navigationOptions: TopNavigationOptions
   },
@@ -176,6 +181,10 @@ const NavigationMap: NavigationRouteConfigMap = {
   },
   ["SharePark"]: {
     screen: ShareParkPage,
+    navigationOptions: TopNavigationOptions
+  },
+  ["SelectRoad"]: {
+    screen: SelectRoadPage,
     navigationOptions: TopNavigationOptions
   },
   ["SearchPark"]: {
@@ -211,10 +220,25 @@ const AppNavigator: NavigationContainer = createStackNavigator({
 );
 
 
+const RootStack: NavigationContainer = createStackNavigator({
+  ["Main"]: {
+    screen: AppNavigator
+  },
+  ["UpgradeModel"]: { screen: ModalScreen },
+},
+  {
+
+    mode: 'modal',// 注意这里设置为 modal
+    headerMode: 'none', // 注意这里 none 表示不显示导航头部
+
+  })
+
+
+
 const createAppRouter = (container: NavigationContainer): NavigationContainer => {
   useScreens();
   return createAppContainer(container);
 };
 
 
-export const Router: NavigationContainer = createAppRouter(AppNavigator);
+export const Router: NavigationContainer = createAppRouter(RootStack);

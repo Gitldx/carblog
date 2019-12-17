@@ -1,4 +1,4 @@
-export const APIVERSION = '1.0.0'
+export const JSAPIVERSION = '1.0.0'
 
 /**
  * 误差在该范围内视为同一个地点，单位为米
