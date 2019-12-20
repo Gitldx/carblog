@@ -1,29 +1,26 @@
 package com.carblog;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.RadioGroup;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.amap.api.location.CoordinateConverter;
-import com.amap.api.location.DPoint;
-
-import com.amap.api.maps.AMap;
-import com.amap.api.maps.MapView;
-import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactFragmentActivity;
 import com.facebook.react.ReactRootView;
 import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
+import com.tencent.bugly.Bugly;
+import com.tencent.bugly.beta.Beta;
+
 
 
 public class MainActivity extends ReactFragmentActivity {//ReactActivity {
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
+        String buglyAppId = "5c4a859ffd";
+        Bugly.init(getApplicationContext(),buglyAppId,false);
+
     }
 
     /**
