@@ -11,6 +11,8 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
+
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -42,6 +44,15 @@ public class NativeAPI extends ReactContextBaseJavaModule {
     @Override
     public String getName() {
         return "NativeAPI";
+    }
+
+
+    @ReactMethod
+    public void backToHome() {
+        //启动一个意图,回到桌面
+        Intent backHome = new Intent(Intent.ACTION_MAIN);
+        backHome.addCategory(Intent.CATEGORY_HOME);
+        ActivityCompat.startActivity(getCurrentActivity(), backHome, null);
     }
 
 
@@ -157,6 +168,12 @@ public class NativeAPI extends ReactContextBaseJavaModule {
 
 
 
+    }
+
+
+    @ReactMethod
+    public void exitApp() {
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
 }

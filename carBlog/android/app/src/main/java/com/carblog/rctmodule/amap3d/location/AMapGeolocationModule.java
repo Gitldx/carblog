@@ -259,6 +259,10 @@ public class AMapGeolocationModule extends ReactContextBaseJavaModule implements
         map.putString("address",result.getRegeocodeAddress().getFormatAddress());
         map.putString("city",result.getRegeocodeAddress().getCity());
         map.putString("citycode",result.getRegeocodeAddress().getCityCode());
+        map.putString("road",result.getRegeocodeAddress().getRoads().get(0).getName());
+        map.putString("roadDirection",result.getRegeocodeAddress().getRoads().get(0).getDirection());
+
+
 
         return map;
     }
