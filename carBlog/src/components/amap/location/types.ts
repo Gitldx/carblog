@@ -374,7 +374,7 @@ export interface ReGeocode {
   /**
    * 城市编码
    */
-  citycode?: string;
+  citycode?: number;
 
   /**
    * 地区
@@ -395,6 +395,9 @@ export interface ReGeocode {
    * 兴趣点
    */
   poiName?: string;
+
+  road? : string
+  roadDirection : string
 }
 
 

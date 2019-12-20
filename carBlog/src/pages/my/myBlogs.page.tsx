@@ -11,7 +11,7 @@ import { ThemeContext, ThemeContextType } from '@src/core/themes';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { PageView } from '../pageView';
 import { Article } from '@src/core/model';
-import { RestfulJson, getService, listMyArticlesUrl } from '@src/core/uitls/httpService';
+import { RestfulJson, getService, listMyArticlesUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 
 
@@ -50,9 +50,13 @@ export class MyBlogs extends React.Component<Props, State> {
   }
 
   private listArticles = async ()=>{
-    const rj : RestfulJson = await getService(listMyArticlesUrl(UserAccount.getUid())) as any
+    
+    const rr = await getService(listMyArticlesUrl(UserAccount.getUid()))
+    if(rrnol(rr)){
+      return
+    }
 
-    this.setState({list:rj.data})
+    this.setState({list:rj(rr).data})
   }
 
 

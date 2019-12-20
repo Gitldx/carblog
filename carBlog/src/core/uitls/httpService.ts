@@ -2,13 +2,22 @@ import { Platform, Alert } from 'react-native'
 import { isEmpty, toDate, showNoNetworkAlert } from "./common";
 import { getOnlineOffline, networkConnected } from "./netStatus";
 import { getJIP, getNIP } from "./readParameter";
-import { APIVERSION } from './constants';
+import { JSAPIVERSION_ANDROID } from './constants'; //todo: 统一js访问版本
 
 import { globalFields } from '../model';
 import { simpleAlert } from './alertActions';
 
 declare var global: globalFields
 
+export const NOTONLINE = "notOnline"
+
+export function rj(rr: RestfulResult) {
+    return rr as RestfulJson
+}
+
+export function rrnol(rr: RestfulResult) {
+    return rr == NOTONLINE
+}
 
 export interface RestfulJson {
     ok: boolean,
@@ -46,7 +55,7 @@ const delay = (timeOut: number = 10 * 1000): Promise<RestfulResult> => {//todo:p
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function postService(url: string, body: {}, version: string = APIVERSION): Promise<RestfulResult> {//todo:服务器关闭的情况
+export function postService(url: string, body: {}, version: string = JSAPIVERSION_ANDROID): Promise<RestfulResult> {//todo:服务器关闭的情况
 
 
 
@@ -55,7 +64,7 @@ export function postService(url: string, body: {}, version: string = APIVERSION)
         const isConnected = networkConnected()
         if (!isConnected) {
             showNoNetworkAlert()
-            resolve("notOnline")
+            resolve(NOTONLINE)
             return;
         }
 
@@ -76,7 +85,7 @@ export function postService(url: string, body: {}, version: string = APIVERSION)
                 })
                     .then((response) => {
                         const obj: RestfulJson = response.json() as any
-                        
+
                         //     if (obj.code == -1) {
                         //         simpleAlert(null, obj.message)
 
@@ -86,8 +95,8 @@ export function postService(url: string, body: {}, version: string = APIVERSION)
                         // }
                         return obj
                         //resolve(obj)
-                    }).then((res)=>{
-                        
+                    }).then((res) => {
+
                         resolve(res)
                     })
                     .catch((err) => {
@@ -107,13 +116,13 @@ export function postService(url: string, body: {}, version: string = APIVERSION)
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function putService(url, body, version = APIVERSION): Promise<RestfulResult> {
+export function putService(url, body, version = JSAPIVERSION_ANDROID): Promise<RestfulResult> {
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
         if (!isConnected) {
             showNoNetworkAlert()
-            resolve("notOnline")
+            resolve(NOTONLINE)
             return;
         }
 
@@ -140,13 +149,13 @@ export function putService(url, body, version = APIVERSION): Promise<RestfulResu
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function deleteService(url, body, version = APIVERSION): Promise<RestfulResult> {
+export function deleteService(url, body, version = JSAPIVERSION_ANDROID): Promise<RestfulResult> {
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
         if (!isConnected) {
             showNoNetworkAlert()
-            resolve("notOnline")
+            resolve(NOTONLINE)
             return;
         }
 
@@ -186,7 +195,7 @@ export function deleteService(url, body, version = APIVERSION): Promise<RestfulR
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function getNodeService(url, version = APIVERSION): Promise<NodeSerivceJson> {
+export function getNodeService(url, version = JSAPIVERSION_ANDROID): Promise<NodeSerivceJson> {
 
     return Promise.race([getPromise(url, version), delay()]).then(obj => {
         return obj as any;
@@ -199,7 +208,7 @@ export function getNodeService(url, version = APIVERSION): Promise<NodeSerivceJs
 }
 
 
-export function loopService(url, version = APIVERSION): Promise<NodeSerivceJson> {
+export function loopService(url, version = JSAPIVERSION_ANDROID): Promise<NodeSerivceJson> {
 
     return getPromise(url, version).then(obj => {
         return obj as any;
@@ -218,7 +227,7 @@ export function loopService(url, version = APIVERSION): Promise<NodeSerivceJson>
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function getService(url, version = APIVERSION, headers = {}): Promise<RestfulResult> {
+export function getService(url, version = JSAPIVERSION_ANDROID, headers = {}): Promise<RestfulResult> {
 
     return Promise.race([getPromise(url, version, headers), delay()]).then(obj => {
         return obj as any;
@@ -237,7 +246,7 @@ function getPromise(url, version, headers = {}): Promise<RestfulResult> {
         const isConnected = networkConnected()
         if (!isConnected) {
             showNoNetworkAlert()
-            resolve("notOnline")
+            resolve(NOTONLINE)
             return;
         }
 
@@ -284,7 +293,7 @@ export function setIp(ip) {
 export function getIp() {
     // return getJIP()
     return '129.28.152.138:8082'
-    // return '192.168.0.101:8082'
+    // return '192.168.0.102:8082'
     //return global.ip;
 }
 
@@ -388,7 +397,7 @@ function qiniuDeleteImgUrl() {
 
 
 function getQiniuTokenUrl(key) {
-    
+
     return http() + `/account/getQiniuImgKey?key=${key}`
 }
 
@@ -412,22 +421,26 @@ function getUserAccountUrl(uid) {
 }
 
 
-function setUserInfoUrl() {
-    return http() + `/account/setInfo`
+function setUserInfoUrl(previousImg: string) {
+    return http() + `/account/setInfo?previousImg=${isEmpty(previousImg) ? "" : previousImg}`
 }
 
 
-function setUserCityCodeUrl(uid : string,citycode : string){
+function setUserCityCodeUrl(uid: string, citycode: number) {
     return http() + `/account/setUserCity?uid=${uid}&cityCode=${citycode}`
 }
 
 
-function getProfilesUrl(){
+function getProfilesUrl() {
     return http() + "/account/getProfiles"
 }
 
+function getCommentsProfilesUrl() {
+    return http() + "/account/getCommentsProfiles"
+}
 
-function getProfileUrl(uid:string){
+
+function getProfileUrl(uid: string) {
     return http() + `/account/getProfile?uid=${uid}`
 }
 
@@ -639,7 +652,7 @@ function totalSharedUrl(inviteCode) {
 
 
 function commitReportUrl() {
-    return http() + '/account/commitReport'
+    return http() + '/account/report'
 }
 
 
@@ -654,47 +667,47 @@ function parkUrl(minutes) {
 }
 
 
-function searchParkByCarNumberUrl(carNumber){
+function searchParkByCarNumberUrl(carNumber) {
     return http() + `/park/searchCarNumber/${carNumber}`
 }
 
 
-function parkGetUrl(uid:string){
+function parkGetUrl(uid: string) {
     return http() + `/park/get/${uid}`
 }
 
 
-function shareParkUrl(){
+function shareParkUrl() {
     return http() + `/park/sharePark`
 }
 
 
-function getNearestPointUrl(lng,lat,deviation:number){
+function getNearestPointUrl(lng, lat, deviation: number) {
     return http() + `/park/matchParkPoint?lng=${lng}&lat=${lat}&deviation=${deviation}`
 }
 
 
-function matchShareParkPointUrl(lng,lat,deviation:number){
+function matchShareParkPointUrl(lng, lat, deviation: number) {
     return http() + `/park/matchShareParkPoint?lng=${lng}&lat=${lat}&deviation=${deviation}`
 }
 
 
-function rankParkUrl(citycode,sortType,page){
+function rankParkUrl(citycode, sortType, page) {
     return http() + `/park/rankPark?cityCode=${citycode}&sortType=${sortType}&page=${page}`
 }
 
 
-function searchNearParkUrl(lng,lat,page:number,uid:string){
-    return http() + `/park/searchNearPark?lng=${lng}&lat=${lat}&page=${page}&uid=${uid}`
+function searchNearParkUrl(lng, lat, page: number, uid: string, role: number) {
+    return http() + `/park/searchNearPark?lng=${lng}&lat=${lat}&page=${page}&uid=${uid}&role=${role}`
 }
 
 
-function thankForParkUrl(){
+function thankForParkUrl() {
     return http() + `/park/thank`
 }
 
 
-function driveUrl(id:string,uid:string) {
+function driveUrl(id: string, uid: string) {
     return http() + `/park/drive/${id}/${uid}`
 }
 
@@ -713,8 +726,9 @@ function writeArticleUrl() {
     return http() + `/article/add`
 }
 
-function updateArticleUrl() {
-    return http() + `/article/update`
+function updateArticleUrl(previousImg: string) {
+
+    return http() + `/article/update?previousImg=${isEmpty(previousImg) ? "" : previousImg}`
 }
 
 function deleteArticleUrl() {
@@ -725,7 +739,7 @@ function readArticleUrl(id: string) {
     return http() + `/article/read/${id}`
 }
 
-function addArticleVisitCountUrl(id:string){
+function addArticleVisitCountUrl(id: string) {
     return http() + `/article/readInc/${id}`
 }
 
@@ -734,18 +748,18 @@ function listArticleUrl(page: number) {
 }
 
 
-function getProfileByCarNumberUrl(carNumber:string){
-    
+function getProfileByCarNumberUrl(carNumber: string) {
+
     return http() + `/account/getProfileByCarNumber?carNumber=${carNumber}`
 }
 
 
-function listNearbyArticleUrl(lng:number,lat:number,page:number){
+function listNearbyArticleUrl(lng: number, lat: number, page: number) {
     return http() + `/article/listNear?lng=${lng}&lat=${lat}&page=${page}`
 }
 
 
-function listMyArticlesUrl(uid:string){
+function listMyArticlesUrl(uid: string) {
     return http() + `/article/listMyBlogs/${uid}`
 }
 
@@ -766,17 +780,17 @@ function likeCommentUrl(uid: string, articleId: string, index: number) {
 }
 
 
-function shopListUrl(page : number){
+function shopListUrl(page: number) {
     return http() + `/shop/list/${page}`
 }
 
 
-function shopGetUrl(id:string){
+function shopGetUrl(id: string) {
     return http() + `/shop/get/${id}`
 }
 
 
-function shopGetByUid(uid : string){
+function shopGetByUid(uid: string) {
     return http() + `/shop/findByUid/${uid}`
 }
 
@@ -786,11 +800,11 @@ function shopEditUrl() {
 }
 
 
-function shopCollectUrl(uid:string,shopUid:string){
+function shopCollectUrl(uid: string, shopUid: string) {
     return http() + `/shop/collect/${uid}/${shopUid}`
 }
 
-function shopUncollectUrl(uid:string,shopUid:string){
+function shopUncollectUrl(uid: string, shopUid: string) {
     return http() + `/shop/uncollect/${uid}/${shopUid}`
 }
 
@@ -798,46 +812,59 @@ function productAddUrl(uid: string) {
     return http() + `/shop/product/add`
 }
 
-function productEditUrl(){
+function productEditUrl() {
     return http() + `/product/edit`
-} 
+}
 
-function productDeleteUrl(uid:string,index:number){
+function productDeleteUrl(uid: string, index: number) {
     return http() + `/shop/product/delete/${uid}/${index}`
 }
 
-function productShowUrl(uid:string,index:number){
+function productShowUrl(uid: string, index: number) {
     return http() + `/shop/product/show/${uid}/${index}`
 }
 
-function productOpenUrl(id:string){
+function productOpenUrl(id: string) {
     return http() + `/product/open/${id}`
 }
 
-function productCloseUrl(id:string){
+function productCloseUrl(id: string) {
     return http() + `/product/close/${id}`
 }
 
-function productCollectUrl(uid:string,shopUid:string,index:number){
+function productCollectUrl(uid: string, shopUid: string, index: number) {
     return http() + `/shop/product/collect/${uid}/${shopUid}/${index}`
 }
 
-function productUncollectUrl(uid:string,shopUid:string,index:number){
+function productUncollectUrl(uid: string, shopUid: string, index: number) {
     return http() + `/shop/product/uncollect/${uid}/${shopUid}/${index}`
 }
 
 
 
-function productListUrl(uid:string){
+function productListUrl(uid: string) {
     return http() + `/product/listByUid/${uid}`
 }
 
 
+function roadChatUrl(){
+    return http() + `/road/chat`
+}
+
+function roadChatListUrl(cityCode,road,page,lng,lat){
+    return http() + `/road/chatList/${cityCode}/${road}/${page}?lng=${lng}&lat=${lat}`
+}
+
+
+function countRoadChatUrl(cityCode,road){ //todo:去掉java多余的page path变量
+    return http() + `/road/count/${cityCode}/${road}/0`
+}
 
 
 export {
     uploadImgUrl, uploadAvatarUrl, uploadRowImgUrl, imgUrl, avatarUrl, bigHeadUrl, qiniuThumbImgUrl, qiniuImgUrl, qiniuDeleteImgUrl, getQiniuTokenUrl, getQiniuAvatarTokenUrl,
-    userAccountLoginUrl, userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl,setUserInfoUrl,setUserCityCodeUrl,getProfilesUrl,getProfileUrl,
+    userAccountLoginUrl, userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl, setUserInfoUrl, setUserCityCodeUrl,
+    getProfilesUrl, getCommentsProfilesUrl, getProfileUrl,
     kdNumRegisterUrl, kdNumEditUrl, sellerConfigUrl, extendServiceUrl, visitKdNumUrl, existsKdNumCodeUrl,
     setTextRowTemplateUrl, setImgRowTemplateUrl, deleteRowTemplateUrl,
     getKdNumsUrl, getPrimaryKdNumUrl, searchByTags, geoSearchUrl, searchForDeal, listForDealUrl, getKdNumByMachineId, searchKdNumUrl, searchKdNumInArrayUrl,
@@ -848,10 +875,11 @@ export {
     inviteDecodeUrl, inviteGetCodeUrl, getInviteCodeUrl, setInviteCodeUrl, setInvitorUrl, addSharedCountUrl, decrSharedCountUrl, decrSharedCountByUrl,
     existInvitorUrl, getSharedFriendsUrl, totalSharedUrl,
     commitReportUrl, geoMapUrl, getHelpUrl,
-    parkUrl, searchParkByCarNumberUrl,driveUrl,parkGetUrl, searchCarNumberUrl, extendParkUrl,shareParkUrl,getNearestPointUrl,searchNearParkUrl,
-    thankForParkUrl,matchShareParkPointUrl,rankParkUrl,
+    parkUrl, searchParkByCarNumberUrl, driveUrl, parkGetUrl, searchCarNumberUrl, extendParkUrl, shareParkUrl, getNearestPointUrl, searchNearParkUrl,
+    thankForParkUrl, matchShareParkPointUrl, rankParkUrl,
 
-    writeArticleUrl,updateArticleUrl,deleteArticleUrl,listArticleUrl,getProfileByCarNumberUrl,listNearbyArticleUrl,listMyArticlesUrl,
-    readArticleUrl,addArticleVisitCountUrl,commentUrl,likeArticleUrl,likeCommentUrl,
-    shopListUrl,shopGetUrl,productListUrl,shopGetByUid,shopEditUrl,productEditUrl,productCloseUrl,productOpenUrl
+    writeArticleUrl, updateArticleUrl, deleteArticleUrl, listArticleUrl, getProfileByCarNumberUrl, listNearbyArticleUrl, listMyArticlesUrl,
+    readArticleUrl, addArticleVisitCountUrl, commentUrl, likeArticleUrl, likeCommentUrl,
+    shopListUrl, shopGetUrl, productListUrl, shopGetByUid, shopEditUrl, productEditUrl, productCloseUrl, productOpenUrl,
+    roadChatUrl,roadChatListUrl,countRoadChatUrl
 }

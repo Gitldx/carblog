@@ -15,7 +15,7 @@ import { AccountRoleType } from '@src/core/userAccount/type';
 import { ProfilePhoto } from './profilePhoto.component'
 import { CameraIconFill, PersonIconFill, PersonImage } from '@src/assets/icons';
 import { author1 } from '@src/core/data/articles';
-import { postService, setUserInfoUrl, RestfulJson, RestfulResult, getService, getUserAccountUrl, getQiniuTokenUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
+import { postService, setUserInfoUrl, RestfulJson, RestfulResult, getService, getUserAccountUrl, getQiniuTokenUrl, qiniuImgUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import ImagePicker from 'react-native-image-picker';
 import { ImageSource } from '@src/assets/images';
@@ -40,7 +40,7 @@ interface State {
 
 type Props = ThemedComponentProps & NavigationScreenProps
 
-export class MyInfo extends React.Component<Props, State> {
+export class MyInfo extends React.Component<Props, State> {//todo:发表文章，聊天前，如果尚未完善信息，提示用户过来完善信息
 
   static navigationOptions: NavigationScreenConfig<any> = ({ navigation, screenProps }) => {
     return {
@@ -50,7 +50,7 @@ export class MyInfo extends React.Component<Props, State> {
 
   public state: State = {
     role: 1,
-    nickname: "用户201908565",
+    nickname: `用户${toDate(new Date(),"yyMMddhhmmss")}`,
     carNumber: "",
     phone: "",
     imgLocalFileSource: null,
@@ -59,10 +59,6 @@ export class MyInfo extends React.Component<Props, State> {
   }
 
 
-
-  private edit = () => {
-    this.props.navigation.navigate("myBlog")
-  }
 
 
   private uploadImg = async () => {
@@ -73,8 +69,11 @@ export class MyInfo extends React.Component<Props, State> {
 
       const now = Date.now()
       const qiniuKey = toDate(now, 'yyyyMMdd') + "/" + UserAccount.getUid() + "_" + now
-      const res = await getService(getQiniuTokenUrl(qiniuKey)) as any
-      const token = res.data
+      const res = await getService(getQiniuTokenUrl(qiniuKey))
+      if(rrnol(res)){
+        return { uploadResult: -1, qiniuKey: null }
+      }
+      const token = rj(res).data
       // console.warn(`token:${token}`)
       const uploadResult = await NativeAPI.uploadImgQiniu(uriStr, token, qiniuKey)
 
@@ -90,6 +89,11 @@ export class MyInfo extends React.Component<Props, State> {
 
   private save = async () => {
 
+    if(isEmpty(this.state.nickname)){
+      simpleAlert(null,"请填写昵称")
+      return;
+    }
+
     this.setState({ spinner: true })
 
     const { uploadResult, qiniuKey } = await this.uploadImg()
@@ -100,14 +104,23 @@ export class MyInfo extends React.Component<Props, State> {
       const image = qiniuKey ? qiniuKey : imgPath
       const reqData = { id: UserAccount.getUid(), carNumber, role, nickname, phone, image }
       // return;
-      const rj: RestfulJson = await postService(setUserInfoUrl(), reqData) as any
-      if (rj.ok) {
+      const toDeleteImg = this.serverUserInfo.image != image ? this.serverUserInfo.image : ""
+      const rr = await postService(setUserInfoUrl(toDeleteImg), reqData)
+      if (rj(rr).ok) {
         this.setState({ spinner: false }, () => {
           UserAccount.instance.setInfo({ ...this.state })
           setTimeout(() => {
-            simpleAlert(null, "保存成功", null, () => {
-              this.props.navigation.goBack(KEY_NAVIGATION_BACK)
-            })
+            if(this.state.role != this.serverUserInfo.role){
+              simpleAlert(null, "更改身份类型后需重启App生效", "知道了", () => {
+                NativeAPI.exitApp()
+              })
+            }
+            else{
+              simpleAlert(null, "保存成功", null, () => {
+                this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+              })
+            }
+            
           }, 500)
 
         })
@@ -115,13 +128,16 @@ export class MyInfo extends React.Component<Props, State> {
 
       }
     }
-    else {
+    else if(uploadResult == 0) {
       this.setState({ spinner: false }, () => {
         setTimeout(() => {
           simpleAlert(null, "系统出了点问题，请稍后再试")
         }, 500)
 
       })
+
+    }
+    else if(uploadResult ==-1){
 
     }
 
@@ -133,7 +149,7 @@ export class MyInfo extends React.Component<Props, State> {
     this.setState({ role: value })
   }
 
-  private previousRemoteImgPath = undefined
+  
   private pickImage = () => {
     const options = {
       //title: 'Select Avatar',
@@ -169,7 +185,7 @@ export class MyInfo extends React.Component<Props, State> {
 
         // if(!isEmpty(this.state.imgPath) && !this.state.imgPath.startsWith("file://")){
         //   this.previousRemoteImgPath = this.state.imgPath
-        // }//todo: 删除原来的图片
+        // }
 
         this.setState({
           // imgLocalFileSource: source,
@@ -203,13 +219,18 @@ export class MyInfo extends React.Component<Props, State> {
     );
   };
 
-
+  // private previousRemoteImgPath = undefined
+  private serverUserInfo : UserAccount = null
   public async componentWillMount() {
 
-    const rj: RestfulJson = await getService(getUserAccountUrl(UserAccount.getUid())) as any
+    const rr = await getService(getUserAccountUrl(UserAccount.getUid()))
+    if(rrnol(rr)){
+      return
+    }
 
-    const ua: UserAccount = rj.data;
+    const ua: UserAccount = rj(rr).data;
 
+    this.serverUserInfo = ua
 
     this.setState({ role: ua.role, nickname: ua.nickname, carNumber: ua.carNumber, phone: ua.phone, imgPath: ua.image as string })
 
@@ -275,7 +296,7 @@ export class MyInfo extends React.Component<Props, State> {
         </View>
 
         <InputSetting hint="昵称" value={nickname} onChangeText={val => this.setState({ nickname: val })} />
-        <InputSetting hint="车牌号" value={carNumber} onChangeText={val => this.setState({ carNumber: val })} />
+        <InputSetting hint="车牌号" value={carNumber} onChangeText={val => this.setState({ carNumber: val.toUpperCase() })} />
         <InputSetting hint="手机号" value={phone} onChangeText={val => this.setState({ phone: val })} />
 
         <View style={{ padding: 15 }}>

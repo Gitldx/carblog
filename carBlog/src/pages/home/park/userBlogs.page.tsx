@@ -10,13 +10,13 @@ import { ButtonBar } from '@src/components/common';
 import { ThemeContext, ThemeContextType } from '@src/core/themes';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { Article, Profile } from '@src/core/model';
-import { RestfulJson, getService, listMyArticlesUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
+import { RestfulJson, getService, listMyArticlesUrl, qiniuImgUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { PageView } from '@src/pages/pageView';
 import { VisitCounts, CommentsButton, LikeButton } from '@src/components';
 import { author1 } from '@src/core/data/articles';
 import { RemoteImage } from '@src/assets/images';
-import { getTimeDiff } from '@src/core/uitls/common';
+import { getTimeDiff, displayIssueTime } from '@src/core/uitls/common';
 import { imageUri, thumbnailUri } from '@src/assets/images/type';
 
 
@@ -101,36 +101,20 @@ export class UserBlogs extends React.Component<Props, State> {
 
 
 
-  private displayTime(minutes) {
-
-    if (minutes < 60) {
-      return minutes + "分钟前"
-    }
-    const hours = (Number(minutes) / 60).toFixed(0)
-    if (Number(hours) < 24) {
-      return hours + '小时前'
-    }
-    const day = (Number(hours) / 24).toFixed(0)
-    if (Number(day) < 30) {
-      return day + "天前"
-    }
-    else {
-      return (Number(day) / 30).toFixed(0) + "月前"
-    }
-  }
-
 
   private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
 
   private listArticles = async (uid: string) => {
-    const rj: RestfulJson = await getService(listMyArticlesUrl(uid)) as any
-    // console.warn(rj)
+    const rr = await getService(listMyArticlesUrl(uid))
+    if(rrnol(rr)){
+      return
+    }
 
-    const temp: Article[] = rj.data.map(m => {
+    const temp: Article[] = rj(rr).data.map(m => {
       const date = new Date(m.date)
 
-      m.date = this.displayTime(getTimeDiff(date).toFixed(0))
+      m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
       const profile: Profile = {
         id: this.ua.id,
         nickname: this.ua.nickname.length > 11 ? this.ua.nickname.substr(0, 10) + "..." : this.ua.nickname

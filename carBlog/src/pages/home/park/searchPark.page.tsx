@@ -18,7 +18,7 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow, ContentBox, LicensePlate } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, searchNearParkUrl } from '@src/core/uitls/httpService';
+import { getService, searchNearParkUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { toDate, isEmpty, gcj2wgs } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
@@ -32,7 +32,9 @@ import ActionSheet from 'react-native-actionsheet'
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { calculateSearchScore } from './parkUtils';
 import { showMessage } from 'react-native-flash-message';
-import {Toast,DURATION,COLOR} from '@src/components'
+import { Toast, DURATION, COLOR } from '@src/components'
+import { onlineAccountState } from '@src/core/userAccount/functions';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 
 
@@ -53,7 +55,8 @@ type State = {
     /**
     * 0:默认状态，1:正在加载，2:已到末尾
     */
-    loading: number
+    loading: number,
+    spinner:boolean
 }
 
 const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
@@ -99,7 +102,7 @@ class SearchPark extends React.Component<Props, State> {
 
     private currentPage: number = 0
 
-    private toast : Toast
+    private toast: Toast
 
 
     public state: State = {
@@ -113,7 +116,8 @@ class SearchPark extends React.Component<Props, State> {
         nearParks: [],
         selectedLatitude: null,
         selectedLongitude: null,
-        loading: 0
+        loading: 0,
+        spinner : false
 
     }
 
@@ -322,29 +326,47 @@ class SearchPark extends React.Component<Props, State> {
 
 
     private netRequest = async (wgsLongitude, wgsLatitude) => {
-        const rj: RestfulJson = await getService(searchNearParkUrl(wgsLongitude, wgsLatitude, this.currentPage, UserAccount.getUid())) as any
-        const uas: UserAccount[] = rj.data.uas
-        const shareParks: any[] = rj.data.park || []
+        const role = UserAccount.instance.role
+        const rr = await getService(searchNearParkUrl(wgsLongitude, wgsLatitude, this.currentPage, UserAccount.getUid(),role))
+        
+        if(rrnol(rr)){
+            this.currentPage--
+            return { shareParks:[], currentLatitude:0, currentLongitude:0, selectedItem:0, loading:0 }
+        }
+        
+        const uas: UserAccount[] = rj(rr).data.uas
+        const shareParks: any[] = rj(rr).data.park || []
         // console.warn(`shareparks:${JSON.stringify(shareParks)}`)
-        const OffStreetPark: any[] = rj.data.offStreet || []
+        const OffStreetPark: any[] = rj(rr).data.offStreet || []
 
         shareParks.forEach((element: ParkItem) => {
             const ua = uas.find(u => u.id == element.uid)
             element.publisher = ua;
         });
 
-        const score = await calculateSearchScore(shareParks)
+        const s = onlineAccountState()
 
-        if (score > 0) {
-            this.toast.show("- " + (score * 0.1),DURATION.LENGTH_SHORT)
-            // showMessage({
-            //     message: "- " + (score * 0.1),
-            //     position: 'center',
-            //     // type : 'danger',
-            //     backgroundColor: "#FF003390",
-            //     floating: true
-            // })
+        if (s != 1) {
+            showMessage({
+                message: "提示",
+                description: "登录车主账号可以查看更多实时车位信息，点击查看游戏规则",
+                position: 'center',
+                type: 'info',
+                icon: "info",
+                floating: true,
+                duration: 5000,
+                onPress:()=>{this.props.navigation.navigate("MyScore")}
+            })
         }
+        else {
+            const score = await calculateSearchScore(shareParks)
+
+            if (score > 0) {
+                this.toast.show("- " + (score * 0.1), DURATION.LENGTH_SHORT)
+            }
+        }
+
+
 
         if (OffStreetPark.length > 0) {
             OffStreetPark.forEach((osp: OffStreetPark) => {
@@ -423,6 +445,9 @@ class SearchPark extends React.Component<Props, State> {
 
 
     private searchPark = async (longitude, latitude) => {
+
+        this.setState({spinner:true})
+
         const { lng, lat } = gcj2wgs(longitude, latitude)
 
         this.currentPage = 0
@@ -461,7 +486,8 @@ class SearchPark extends React.Component<Props, State> {
         this.setState(
             {
                 selectedItem: 0, nearParks: shareParks,
-                currentLatitude, currentLongitude, loading
+                currentLatitude, currentLongitude, loading,
+                spinner:false
             }
         )
         // console.warn(JSON.stringify(shareParks))
@@ -595,7 +621,12 @@ class SearchPark extends React.Component<Props, State> {
 
         return (
             <PageView style={themedStyle.container}>
-                <Toast ref={elm=>this.toast=elm} opacity={0.8} style={{backgroundColor:COLOR.warning}}/>
+                <Spinner
+                    visible={this.state.spinner}
+                    textContent={'找车位...'}
+                    textStyle={{ color: 'white' }}
+                />
+                <Toast ref={elm => this.toast = elm} opacity={0.8} style={{ backgroundColor: COLOR.warning }} />
                 <ActionSheet
                     ref={o => this.ActionSheet = o}
                     title={'使用以下地图导航'}

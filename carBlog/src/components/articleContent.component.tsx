@@ -6,31 +6,24 @@ import { NavigationScreenProps } from 'react-navigation';
 // import { routes } from './routes';
 import { withStyles, ThemeType, ThemedComponentProps, Text, Button } from 'react-native-ui-kitten';
 
-
-import { NavigationScreenConfig } from 'react-navigation';
 import { Article as ArticleModel, Comment, Profile } from '@src/core/model';
 import { textStyle, Input, ScrollableAvoidKeyboard } from '@src/components/common';
 
-import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate } from '@src/core/uitls/common';
-import { postService, writeArticleUrl, commentUrl } from '@src/core/uitls/httpService';
-import { UserAccount } from '@src/core/userAccount/userAccount';
-import { ImageSource } from '@src/assets/images';
 import { imageUri, LocalImage } from '@src/assets/images/type';
 
 
 
-type Props = {article : ArticleModel} & ThemedComponentProps
+type Props = { article: ArticleModel } & ThemedComponentProps
 
 class ArticleContentComponent extends React.Component<Props> {
 
 
 
 
-  
+
   private article: ArticleModel
 
-  public componentWillMount(){
+  public componentWillMount() {
     this.article = this.props.article
   }
 
@@ -51,8 +44,8 @@ class ArticleContentComponent extends React.Component<Props> {
         </Text>
 
         {article.image && <ImageBackground
-          style={themedStyle.image}
-          source={ article.image.startsWith("file://") ? new LocalImage(article.image).imageSource : imageUri(article.image)}
+          style={[{ aspectRatio: article.imgRatio ? article.imgRatio : 1 }, themedStyle.image]}
+          source={article.image.startsWith("file://") ? new LocalImage(article.image).imageSource : imageUri(article.image)}
         />}
         <Text
           style={themedStyle.contentLabel}

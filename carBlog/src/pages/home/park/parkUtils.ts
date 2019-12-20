@@ -1,6 +1,8 @@
 import { SharePark } from "@src/core/model/park";
-import { getSearchedShareParks, saveSearchedShareParks, getThankParks, saveThankParks } from "@src/core/uitls/storage/locationStorage";
+import { getSearchedShareParks, saveSearchedShareParks, getThankParks, saveThankParks, getRoadChats, saveRoadChat } from "@src/core/uitls/storage/locationStorage";
 import { globalFields } from "@src/core/model";
+import { object } from "prop-types";
+import { isEmpty, timeDiffInSeconds } from "@src/core/uitls/common";
 
 type localSearchedPark = {id:string,time:Date}
 type localThankPark = localSearchedPark
@@ -101,4 +103,45 @@ export async function hasThanked(parkId : string){
     
 
     
+}
+
+type RoadChat = {road:string,time:Date}
+
+export async function hasOverRoadChat(road:string){
+    const chats : RoadChat[] = await getRoadChats()
+
+    if(!isEmpty(chats)){
+        const copy : RoadChat[] = Object.assign([],chats)
+        for(let i = 0;i<copy.length;i++){
+            const minutes = timeDiffInSeconds(new Date(),copy[i].time)/(60)
+            if(minutes>=60){
+                chats.splice(i,1)
+            }
+        }
+    }
+
+
+    if(chats.length >=3){
+        const c = chats.find(cc=>cc.road == road)
+        if(c != null){
+            c.time = new Date()
+            saveRoadChat(chats)
+            return false
+        }
+        else{
+            return true
+        }
+    }
+    else{
+        const c = chats.find(cc=>cc.road == road)
+        if(c != null){
+            c.time = new Date()
+            saveRoadChat(chats)
+        }
+        else{
+            chats.push({road,time:new Date()})
+            saveRoadChat(chats)
+        }
+        return false
+    }
 }

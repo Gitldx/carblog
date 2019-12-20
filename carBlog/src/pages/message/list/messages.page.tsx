@@ -30,8 +30,9 @@ import { getLocalMsgs, saveMsgs, unreadMsgKey, readMsgKey, saveChats, removeOneC
 import { onlineAccountState, hasInitAppUserState } from '@src/core/userAccount/functions';
 import { MESSAGETYPE } from '@src/core/model';
 import { simpleAlert } from '@src/core/uitls/alertActions';
-import { getService, getProfileUrl, RestfulJson } from '@src/core/uitls/httpService';
+import { getService, getProfileUrl, RestfulJson, rrnol, rj } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
+import { LoginEventData } from '@src/core/userAccount/type';
 
 
 interface ConversationsListNavigationStateParams {
@@ -91,6 +92,8 @@ export class MessagesPage extends React.Component<NavigationScreenProps, State> 
     if (onlineState == 0) {
       // unreadMessages = isEmpty(localMsgs.unreads) ? [] : localMsgs.unreads//localMsgs.unreads.filter(msg => msg.type == MESSAGETYPE.sys.bulletin)
       // readMessages = isEmpty(localMsgs.reads) ? [] : localMsgs.reads//localMsgs.reads.filter(msg => msg.type == MESSAGETYPE.sys.bulletin)
+      unreadMessages = localMsgs.unreads.filter(m=>m.type == MESSAGETYPE.sys_bulletin)
+      readMessages = localMsgs.reads.filter(m=>m.type == MESSAGETYPE.sys_bulletin)
     }
     else {
       unreadMessages = localMsgs.unreads
@@ -135,7 +138,7 @@ export class MessagesPage extends React.Component<NavigationScreenProps, State> 
       })
     }
 
-    EventRegister.addEventListener(loginEvent, data => {
+    EventRegister.addEventListener(loginEvent, (data:LoginEventData) => {
       if (data.accountHasLogined) {
 
         this.listMessages()
@@ -194,8 +197,11 @@ export class MessagesPage extends React.Component<NavigationScreenProps, State> 
 
   private gotoUserPage = (uid:string) => {
     
-    getService(getProfileUrl(uid)).then((rj:RestfulJson)=>{
-      const ua : UserAccount = rj.data
+    getService(getProfileUrl(uid)).then((rr)=>{
+      if(rrnol(rr)){
+        return
+      }
+      const ua : UserAccount = rj(rr).data
       this.props.navigation.navigate("UserBlog", { ua })
     })
     

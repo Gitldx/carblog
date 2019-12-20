@@ -16,11 +16,12 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { CommentsButton, LikeButton, VisitCounts, ArticleContent } from '@src/components';
 import { RemoteImage } from '@src/assets/images';
 import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate, isEmpty } from '@src/core/uitls/common';
-import { postService, writeArticleUrl, commentUrl, addArticleVisitCountUrl, likeArticleUrl, RestfulJson, likeCommentUrl, getService, getProfilesUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
+import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime } from '@src/core/uitls/common';
+import { postService, commentUrl, addArticleVisitCountUrl, likeArticleUrl, RestfulJson, likeCommentUrl, getProfilesUrl, rj, getCommentsProfilesUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { showMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
+import { networkConnected } from '@src/core/uitls/netStatus';
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -55,10 +56,14 @@ class Article extends React.Component<Props, State> {
 
 
   private onCommentLikePress = (index: number) => {
+    if(!networkConnected()){
+      showNoNetworkAlert()
+      return
+    }
     const uid = UserAccount.getUid()
-    postService(likeCommentUrl(uid, this.article.id, index), null).then((rj: RestfulJson) => {
-      console.warn(index)
-      if (rj.ok) {
+    postService(likeCommentUrl(uid, this.article.id, index), null).then((rr) => {
+      // console.warn(index)
+      if (rj(rr).ok) {
         // if(this.article.comments){
         const comment: Comment = this.article.comments.find(c => c.index == index)
 
@@ -91,6 +96,10 @@ class Article extends React.Component<Props, State> {
   };
 
   private onCommentSubmit = () => {
+    if(!networkConnected()){
+      showNoNetworkAlert()
+      return
+    }
     // const articleCopy: Article = this.state.article;
     // articleCopy.comments.push({
     //   author: profiles[Math.floor(Math.random() * profiles.length)],
@@ -100,7 +109,7 @@ class Article extends React.Component<Props, State> {
     // });
     const c: Comment = { author: UserAccount.getUid(), text: this.state.currentCommentText } as any
     postService(commentUrl(this.article.id), c).then(res => {
-      console.warn(`comment:${JSON.stringify(res)}`)
+      // console.warn(`comment:${JSON.stringify(res)}`)
       c.authorProfile = { image: author1.image, nickname: UserAccount.instance.nickname }
       c.date = new Date()
       c.dateString = toDate(c.date, "yyyy/MM/dd hh:mm:ss")
@@ -152,31 +161,19 @@ class Article extends React.Component<Props, State> {
   //   }
   private article: ArticleModel
 
-  private displayTime(minutes) {
 
-    if (minutes < 60) {
-      return minutes + "分钟前"
-    }
-    const hours = (Number(minutes) / 60).toFixed(0)
-    if (Number(hours) < 24) {
-      return hours + '小时前'
-    }
-    const day = (Number(hours) / 24).toFixed(0)
-    if (Number(day) < 30) {
-      return day + "天前"
-    }
-    else {
-      return (Number(day) / 30).toFixed(0) + "月前"
-    }
-  }
 
   private toast : Toast
 
   private likeArticle = () => {
+    if(!networkConnected()){
+      showNoNetworkAlert()
+      return
+    }
     const uid = UserAccount.getUid()
-    postService(likeArticleUrl(uid, this.article.id), null).then((rj: RestfulJson) => {
+    postService(likeArticleUrl(uid, this.article.id), null).then((rr) => {
       // console.warn(JSON.stringify(rj))
-      if (rj.ok) {
+      if (rj(rr).ok) {
         if (this.article.likes) {
           if (this.article.likes.findIndex(a => a == uid) == -1) {
             this.article.likes.push(uid)
@@ -205,15 +202,15 @@ class Article extends React.Component<Props, State> {
     if (this.article.comments) {
 
       const uids = this.article.comments.map(c => c.author)
-      const rj: RestfulJson = await postService(getProfilesUrl(), uids) as any//todo:优化，服务器只返回需要的字段即可
+      const rr = await postService(getCommentsProfilesUrl(), uids)
 
-      const uas: UserAccount[] = rj.data
-
+      const uas: UserAccount[] = rj(rr).data
+     
       this.article.comments = this.article.comments.map(c => {
         // console.warn(`cdate:${c.date}`)
         const date = new Date(c.date)
 
-        c.dateString = this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0)+"小时前"
+        c.dateString = displayIssueTime(date) //this.displayTime(getTimeDiff(date).toFixed(0))
         const ua = uas.find(u => u.id = c.author)
         const profile: Profile = { nickname: ua.nickname, image: ua.image }
         c.authorProfile = profile

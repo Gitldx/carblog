@@ -20,4 +20,8 @@ RCT_EXPORT_METHOD(uploadImgQiniu: (NSString *)path token:(NSString *) token key:
   [QiniuUtil uploadImageToQNFilePath:path token:token key:key size:100 resolver:resolve rejecter:reject];
 }
 
+RCT_EXPORT_METHOD(exitApp){
+  exit(0);
+}
+
 @end

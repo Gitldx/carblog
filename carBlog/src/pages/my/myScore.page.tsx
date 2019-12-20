@@ -15,10 +15,11 @@ import { AccountRoleType } from '@src/core/userAccount/type';
 import { ProfilePhoto } from './profilePhoto.component'
 import { CameraIconFill, PersonIconFill, PersonImage, MaterialCommunityIcons } from '@src/assets/icons';
 import { author1 } from '@src/core/data/articles';
-import { postService, setUserInfoUrl, RestfulJson, RestfulResult, getService, getUserAccountUrl, getProfileUrl } from '@src/core/uitls/httpService';
+import {getService, getUserAccountUrl, getProfileUrl, rj } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
+import { onlineAccountState } from '@src/core/userAccount/functions';
 
 
 
@@ -35,7 +36,7 @@ export class MyScore extends React.Component<Props, State> {
 
   static navigationOptions: NavigationScreenConfig<any> = ({ navigation, screenProps }) => {
     return {
-      title: '我的成就'
+      title: '积分，游戏规则'
     }
   }
 
@@ -47,21 +48,19 @@ export class MyScore extends React.Component<Props, State> {
 
 
 
-  private edit = () => {
-    this.props.navigation.navigate("myBlog")
-  }
-
-
-
-
 
   public async componentWillMount() {
 
-    const rj: RestfulJson = await getService(getProfileUrl(UserAccount.getUid())) as any
+    const s = onlineAccountState()
+    if(s == 0){
+      return;
+    }
 
-    const ua: UserAccount = rj.data;
+    const rr = await getService(getProfileUrl(UserAccount.getUid()))
+
+    const ua: UserAccount = rj(rr).data;
     // console.warn(JSON.stringify(ua))
-    this.setState({ totolGiftMoney:ua.totalGiftMoney,totalProducedMoney:ua.totalProducedMoney,parkMoney:ua.parkMoney })//todo:小数位服务器取整
+    this.setState({ totolGiftMoney:ua.totalGiftMoney,totalProducedMoney:ua.totalProducedMoney,parkMoney:ua.parkMoney })
 
   }
 

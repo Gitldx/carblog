@@ -12,6 +12,7 @@ export interface Article {
   content: string;
   // images?: ImageSource[];
   image: string;
+  imgRatio:number;
   //author?: Profile;
   date: string;
   // tips: number;

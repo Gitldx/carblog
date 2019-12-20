@@ -50,7 +50,7 @@ const MyHomeNavigator: NavigationContainer = createStackNavigator(
   },
   {
     defaultNavigationOptions: MenuNavigationOptions,
-    transitionConfig: TransitionConfig
+    // transitionConfig: TransitionConfig
     // transitionConfig: () => ({
     //   screenInterpolator: screenProps=> StackViewStyleInterpolator.forHorizontal,
     // })
@@ -93,7 +93,7 @@ const HomeNavigator: NavigationContainer = createStackNavigator(
   },
   {
     // defaultNavigationOptions: MenuNavigationOptions,
-    transitionConfig: TransitionConfig
+    // transitionConfig: TransitionConfig
 
   },
 );
@@ -215,6 +215,7 @@ const AppNavigator: NavigationContainer = createStackNavigator({
     defaultNavigationOptions: {
       header: null
     },
+    transitionConfig: TransitionConfig
   }
 
 );

@@ -185,7 +185,9 @@ RCT_EXPORT_METHOD(getDistance:(NSDictionary *) location1 : (NSDictionary *) loca
                        body:@{
                               @"address" : response.regeocode.formattedAddress ? response.regeocode.formattedAddress : @"",
                               @"city" : response.regeocode.addressComponent.city,
-                              @"citycode" : response.regeocode.addressComponent.citycode
+                              @"citycode" : response.regeocode.addressComponent.citycode,
+                              @"road": response.regeocode.roads[0].name,
+                              @"roadDirection":response.regeocode.roads[0].direction
                               }];
   }
  

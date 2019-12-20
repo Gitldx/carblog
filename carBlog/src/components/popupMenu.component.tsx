@@ -62,7 +62,7 @@ class PopupMenuComponent extends React.Component<LikeButtonProps, State> {
         style={themedStyle.container}
         placement={placement}
         visible={this.state.menuVisible}
-        data={items}
+        items={items}
         onSelect={this.onItemSelect}
         onBackdropPress={this.onBackdropPress}>
         {
@@ -82,7 +82,7 @@ class PopupMenuComponent extends React.Component<LikeButtonProps, State> {
 export const PopupMenu = withStyles(PopupMenuComponent, (theme: ThemeType) => ({
   container: {
     width: 228,
-    backgroundColor: theme['background-basic-color-2'],
+    backgroundColor: theme['background-basic-color-4'],
   },
 
 }));

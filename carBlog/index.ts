@@ -22,7 +22,7 @@ declare var global: globalFields
 
 AppRegistry.registerComponent(appName, () => App);
 
-
+global.networkConnected = true
 
 function* initAppState() {
     yield initUserState();
@@ -72,6 +72,7 @@ function RegNetworkConnChangedListener() {
 
 
 setTimeout(() => {
+    
     getOnlineOffline((isConnected) => {
 
         if (!global.networkConnected) {
@@ -123,7 +124,7 @@ networkListener(() => {
 
 function* localInitAppUserState() {
     yield initUserState();
-    // yield UserState.instance.launch();
+    yield UserState.instance.launch();
   
     global.hasInitAppUserState = true
     EventRegister.emitEvent(initAppUserStateCompleteEvent)

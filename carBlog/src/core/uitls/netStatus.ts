@@ -30,8 +30,10 @@ export async function getOnlineOfflineAsync() :Promise<boolean> {
 
 
 export function networkConnected() {
-    // if(!global.networkConnected){
-    //     global.networkConnected = await NetInfo.isConnected.fetch()
-    // }
+    if(!global.networkConnected){
+        NetInfo.isConnected.fetch().then(flag=>{
+            global.networkConnected = flag
+        })
+    }
     return global.networkConnected;
 }

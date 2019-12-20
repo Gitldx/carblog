@@ -14,7 +14,7 @@ import { ImageSource } from '@src/assets/images';
 import { LocalImage, RemoteImage } from '@src/assets/images/type';
 import { MaterialCommunityIcons } from '@src/assets/icons';
 import { blogList, author1, articles } from '@src/core/data/articles';
-import { RestfulJson, postService, writeArticleUrl, qiniuImgUrl, getService, getQiniuTokenUrl } from '@src/core/uitls/httpService';
+import { RestfulJson, postService, writeArticleUrl, qiniuImgUrl, getService, getQiniuTokenUrl, rrnol, rj, RestfulResult, updateArticleUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Article } from '@src/core/model';
 import { isEmpty, toDate } from '@src/core/uitls/common';
@@ -28,7 +28,7 @@ const NativeAPI = NativeModules.NativeAPI
 type Props = ThemedComponentProps & NavigationScreenProps
 
 type State = {
-  imgLocalFileSource: ImageSource, imgPath: string, imgRatio: number,
+  /* imgLocalFileSource: ImageSource, */ imgPath: string, imgRatio: number,
   title: string, content: string, spinner: boolean
 }
 
@@ -51,7 +51,7 @@ class BlogEdit extends React.Component<Props, State> {
 
 
   public state: State = {
-    imgLocalFileSource: null,
+    // imgLocalFileSource: null,
     imgPath: '',
     imgRatio: 1,
     title: "",
@@ -69,8 +69,8 @@ class BlogEdit extends React.Component<Props, State> {
   });
 
 
-  private imgWidth = 0
-  private imgHeight = 0
+  // private imgWidth = 0
+  // private imgHeight = 0
   private pickImage = () => {
     const options = {
       //title: 'Select Avatar',
@@ -101,14 +101,14 @@ class BlogEdit extends React.Component<Props, State> {
       } else if (response.customButton) {
 
       } else {
-        const source: ImageSource = new LocalImage(response.uri) //{ uri: response.uri };
+        // const source: ImageSource = new LocalImage(response.uri) //{ uri: response.uri };
 
         // console.warn(`filesize:${response.fileSize}`)
         // You can also display the image using data:
         // const source = { uri: 'data:image/jpeg;base64,' + response.data };
         //console.warn(source.uri)
-        this.imgWidth = response.width
-        this.imgHeight = response.height
+        // this.imgWidth = response.width
+        // this.imgHeight = response.height
         this.setState({
           // imgLocalFileSource: source,
           imgPath: response.uri,//(source.imageSource as any).uri,
@@ -193,8 +193,11 @@ class BlogEdit extends React.Component<Props, State> {
 
       const now = Date.now()
       const qiniuKey = toDate(now, 'yyyyMMdd') + "/" + UserAccount.getUid() + "_" + now
-      const res = await getService(getQiniuTokenUrl(qiniuKey)) as any
-      const token = res.data
+      const res = await getService(getQiniuTokenUrl(qiniuKey))
+      if(rrnol(res)){
+        return { uploadResult: -1, qiniuKey: null }
+      }
+      const token = rj(res).data
       // console.warn(`token:${token}`)
       const uploadResult = await NativeAPI.uploadImgQiniu(uriStr, token, qiniuKey)
 
@@ -208,7 +211,7 @@ class BlogEdit extends React.Component<Props, State> {
   }
 
 
-  private save = async () => {//todo:save imageratio
+  private save = async () => {
 
     this.setState({ spinner: true })
 
@@ -216,15 +219,22 @@ class BlogEdit extends React.Component<Props, State> {
 
     if (uploadResult == 1) {
 
-      const { title, content, imgPath } = this.state
+      const { title, content, imgPath,imgRatio } = this.state
       const image = qiniuKey ? qiniuKey : imgPath
-      const reqData = { id: this.article ? this.article.id : null, uid: UserAccount.getUid(), title, content, image }
+      const reqData = { id: this.article ? this.article.id : null, uid: UserAccount.getUid(), title, content, image,imgRatio }
 
-      const rj: RestfulJson = await postService(writeArticleUrl(), reqData) as any
-      // console.warn(JSON.stringify(rj))
+      let rr : RestfulResult
+      if(!this.article){
+        rr = await postService(writeArticleUrl(), reqData)
+      }
+      else{
+        const toDeleteImg = this.article.image != image ? this.article.image : ""
+        rr = await postService(updateArticleUrl(toDeleteImg),{...reqData,date:this.article.date})
+      }
 
-      if (rj.ok) {
-        this.article = Object.assign({}, { id: rj.data, title: this.state.title, content: this.state.content, image: image }) as any
+      if (rj(rr).ok) {
+        this.article = Object.assign({}, { id: rj(rr).data, title: this.state.title, content: this.state.content, image: image,
+          imgRatio:this.state.imgRatio }) as any
         this.state.imgPath = image
         if (this.saveHandler) {
           this.saveHandler(this.article);
@@ -240,13 +250,16 @@ class BlogEdit extends React.Component<Props, State> {
       }
 
     }
-    else {
+    else if(uploadResult == 0) {
       this.setState({ spinner: false }, () => {
         setTimeout(() => {
           simpleAlert(null, "系统出了点问题，请稍后再试")
         }, 500)
         
       })
+
+    }
+    else if(uploadResult == -1){
 
     }
 
@@ -266,9 +279,11 @@ class BlogEdit extends React.Component<Props, State> {
         image = new RemoteImage(qiniuImgUrl(this.state.imgPath))
       }
     }
+
+    const data : Article = { title: this.state.title, content: this.state.content, 
+      image : image ? this.state.imgPath : null,imgRatio:this.state.imgRatio} as any
     
-    this.props.navigation.navigate("ArticlePreview", { article: { title: this.state.title, content: this.state.content, 
-      image : image ? this.state.imgPath : null} })
+    this.props.navigation.navigate("ArticlePreview", { article: data })
   }
 
 
@@ -281,8 +296,8 @@ class BlogEdit extends React.Component<Props, State> {
     this.article = this.props.navigation.getParam("article")
     this.saveHandler = this.props.navigation.getParam("saveHandler")
     if (this.article) {
-      const { title, content, image } = this.article;
-      this.setState({ title, content, imgPath: image as string })
+      const { title, content, image,imgRatio } = this.article;
+      this.setState({ title, content, imgPath: image as string,imgRatio:imgRatio?imgRatio:1 })
     }
 
   }

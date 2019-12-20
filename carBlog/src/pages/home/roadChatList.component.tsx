@@ -219,7 +219,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
     private async getCityAndRoad(callback: (oldCitycode: number, newCitycode: number, road: string, lng: number, lat: number) => void) {
 
-        if (Platform.OS == "android") {//todo:安卓测一下
+        if (Platform.OS == "android") {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION, {
                 title: "提示",
                 message: "app需要获取地理位置权限，以便知道您所在道路",
@@ -311,7 +311,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         this.getCityAndRoad((oldCitycode, newCitycode, road, longitude, latitude) => {
 
             if (isEmpty(road)) {//没有定位权限
-                console.warn("set canUseGeo false")
+              
                 this.canUseGeo = false
                 this.setState({ list: [], loading: 2 })
                 return;
@@ -369,25 +369,12 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     private canUseGeo: boolean = true
     private renderListEmptyComponent = (): React.ReactElement => {
 
-        if (!this.listLoaded) {//todo:安卓刚启动时还是可能空白
+        if (!this.listLoaded) {
             return null
-        }
+        }        
 
-        // if (networkConnected()) {
-        //     return (
-        //         <View style={{ height: 600, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        //             <View style={{flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
-        //             <MaterialCommunityIcons name="emoticon-neutral-outline" color="lightgrey" size={30}/>
-        //             <Text style={{marginLeft:10}}>当前区域暂无内容</Text>
-        //             </View>
-        //         </View>
-        //     )
-        // }
-
-        
-
-        const hint = this.canUseGeo ? "暂时空白，点击刷新再试试" : "未能获取到当前城市，请到设置中心授权app使用定位"
-        console.warn(`renderListEmptyComponent,${hint}`)
+        const hint = this.canUseGeo ? "暂时空白，点击刷新再试试" : "未能获取到当前城市，请点击刷新或者到设置中心授权app使用定位"
+        // console.warn(`renderListEmptyComponent,${hint}`)
         return (
             <TouchableOpacity onPress={this.list}
                 style={{ height: 600, paddingHorizontal: 10, flex: 1, alignItems: 'center' }}>
@@ -405,7 +392,6 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
     public async componentWillMount() {
         EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
-
             this.list()
 
         })

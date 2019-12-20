@@ -22,9 +22,11 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { SignUpFormData } from './type';
 import { SignUpForm } from './signUpForm.component';
 import { NavigationScreenProps } from 'react-navigation';
-import { postService, userAccountRegisterUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { simpleAlert } from '@src/core/uitls/alertActions';
+import { networkConnected } from '@src/core/uitls/netStatus';
+import { showNoNetworkAlert } from '@src/core/uitls/common';
+import { removeCityCode } from '@src/core/uitls/storage/locationStorage';
 
 interface ComponentProps {
   // onSignUpPress: (formData: SignUpFormData) => void;
@@ -65,13 +67,24 @@ class SignUp2Component extends React.Component<SignUp2Props, State> {
     // this.props.navigation.navigate("MyInfo")
   };
 
-  private onSignUpButtonPress = async () => {
-    // this.props.onSignUpPress(this.state.formData);
-    const {accountName,password,role} = this.state.formData
+  private onSignUpButtonPress = () => {
 
-    UserAccount.instance.register(accountName,password,role,()=>{
-      simpleAlert(null,"注册成功")
+    if (!networkConnected()) {
+      showNoNetworkAlert()
+      return
+    }
+
+    const { accountName, password, role } = this.state.formData
+
+    UserAccount.instance.register(accountName, password, role, () => {
+      removeCityCode()
+      simpleAlert(null, "注册成功", null, () => {
+        this.props.navigation.navigate("MyScore")
+      })
     })
+
+
+
 
     // const result = await postService(userAccountRegisterUrl(),{accountName,password,role} )
     // console.warn(JSON.stringify(result))

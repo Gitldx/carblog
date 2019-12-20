@@ -16,8 +16,8 @@ import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import { LicensePlate, VisitCounts, CommentsButton, LikeButton } from '@src/components';
 import { Article, Profile } from '@src/core/model';
 import { UserAccount } from '@src/core/userAccount/userAccount';
-import { isEmpty, getTimeDiff } from '@src/core/uitls/common';
-import { RestfulJson, getService, getProfileByCarNumberUrl } from '@src/core/uitls/httpService';
+import { isEmpty, getTimeDiff, displayIssueTime } from '@src/core/uitls/common';
+import { RestfulJson, getService, getProfileByCarNumberUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { author1 } from '@src/core/data/articles';
 import { RemoteImage } from '@src/assets/images';
 import { thumbnailUri } from '@src/assets/images/type';
@@ -51,23 +51,6 @@ export class SearchCar extends React.Component<Props, State> {
   private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
 
-  private displayTime(minutes) {
-
-    if (minutes < 60) {
-      return minutes + "分钟前"
-    }
-    const hours = (Number(minutes) / 60).toFixed(0)
-    if (Number(hours) < 24) {
-      return hours + '小时前'
-    }
-    const day = (Number(hours) / 24).toFixed(0)
-    if (Number(day) < 30) {
-      return day + "天前"
-    }
-    else {
-      return (Number(day) / 30).toFixed(0) + "月前"
-    }
-  }
 
   private search = async () => {
     if (isEmpty(this.state.searchText)) {
@@ -75,23 +58,26 @@ export class SearchCar extends React.Component<Props, State> {
     }
     const s = this.state.searchText.replace("·", "").toUpperCase()
 
-    const rj: RestfulJson = await getService(getProfileByCarNumberUrl(s)) as any
+    const rr = await getService(getProfileByCarNumberUrl(s))
+    if(rrnol(rr)){
+      return
+    }
 
-    if(rj.data == null){
+    if(rj(rr).data == null){
       
       this.setState({userInfo : null})
       return;
     }
 
 
-    const ua: UserAccount = rj.data.ua
-    const articles: Article[] = rj.data.articles || []
+    const ua: UserAccount = rj(rr).data.ua
+    const articles: Article[] = rj(rr).data.articles || []
 
     
     const temp: Article[] = articles.map(m => {
       const date = new Date(m.date)
 
-      m.date = this.displayTime(getTimeDiff(date).toFixed(0))
+      m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
       const profile: Profile = {
         nickname: ua.nickname.length > 11 ? ua.nickname.substr(0, 10) + "..." : ua.nickname
         , carNumber: ua.carNumber

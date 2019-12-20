@@ -14,11 +14,7 @@ import { textStyle, Input, ScrollableAvoidKeyboard } from '@src/components/commo
 import { CommentsList } from '@src/components/commentList';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { CommentsButton, LikeButton, VisitCounts, ArticleContent } from '@src/components';
-import { RemoteImage } from '@src/assets/images';
-import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate } from '@src/core/uitls/common';
-import { postService, writeArticleUrl, commentUrl } from '@src/core/uitls/httpService';
-import { UserAccount } from '@src/core/userAccount/userAccount';
+
 
 
 

@@ -5,30 +5,16 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
 import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, List, ListItem, } from 'react-native-ui-kitten';
-import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
+
 import { PageView } from '../../pageView';
-import { BlogList } from '../blogList.component';
-import { ScrollPageView } from '../../scrollPageView';
-import { ScrollView } from 'react-native-gesture-handler';
-import { Input, ScrollableAvoidKeyboard } from '@src/components/common';
-import { MaterialCommunityIcons, ArrowIosBackFill } from '@src/assets/icons';
-import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
-import { Config } from '@src/core/uitls/config';
-import { TopNavigationOptions } from '@src/core/navigation/options';
-import { ShopList } from '../shopList.componen';
-import { SearchPlaceholder, FormRow, ContentBox, LicensePlate } from '@src/components';
-import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl } from '@src/core/uitls/httpService';
-import { toDate, isEmpty } from '@src/core/uitls/common';
+
 import Amap from '@src/components/amap'
-import { PermissionsAndroid } from "react-native";
-import { init, Geolocation } from "@src/components/amap/location";
-import { Park } from '@src/core/model';
-import { UserAccount } from '@src/core/userAccount/userAccount';
+import { init } from "@src/components/amap/location";
 import { ParkItem } from './type';
 import ActionSheet from 'react-native-actionsheet'
 import MapLinking from '@src/core/uitls/mapLinking';
 import { simpleAlert } from '@src/core/uitls/alertActions';
+import { LicensePlate } from '@src/components';
 
 
 
@@ -175,19 +161,10 @@ class ParkDetail extends React.Component<Props, State> {
             <Text>附近有很多小吃</Text>
         )
     }
-
-    private onItemPressed = (info: ListRenderItemInfo<any>) => {
-        (this.refs.mapview as any).animateTo({ coordinate: { latitude: 22.538853, longitude: 114.057108 } })
-        this.setState({ selectedItem: info.index, currentLatitude: 22.538853, currentLongitude: 114.057108 })
-    }
-
    
     private info: ParkItem
 
     public componentWillMount() {
-        // if (Platform.OS == "android") {
-        //     await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
-        // }
 
         init();
 

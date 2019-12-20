@@ -6,10 +6,6 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { routes } from './routes';
 import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, } from 'react-native-ui-kitten';
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
-import { PageView } from '../../pageView';
-import { BlogList } from '../blogList.component';
-import { ScrollPageView } from '../../scrollPageView';
-import { ScrollView } from 'react-native-gesture-handler';
 import { Input, ScrollableAvoidKeyboard } from '@src/components/common';
 import { MaterialCommunityIcons, ArrowIosBackFill } from '@src/assets/icons';
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
@@ -18,8 +14,8 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, shareParkUrl, getNearestPointUrl } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds } from '@src/core/uitls/common';
+import { postService, parkUrl, getService, shareParkUrl, getNearestPointUrl, rj } from '@src/core/uitls/httpService';
+import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation, getDistance } from "@src/components/amap/location";
@@ -33,6 +29,8 @@ import { saveLastLocation, getLastLocation, LocationStorage } from '@src/core/ui
 import { showMessage } from 'react-native-flash-message';
 import {Toast,DURATION,COLOR} from '@src/components'
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
+import { onlineAccountState } from '@src/core/userAccount/functions';
+import { networkConnected } from '@src/core/uitls/netStatus';
 
 
 
@@ -146,7 +144,29 @@ class SharePark extends React.Component<Props, State> {
 
 
 
-    private publish = async () => {
+    private publish = async () => {//todo:重复提交的问题，似乎还是会删掉附近的固定停车位
+
+        if(!networkConnected()){
+            showNoNetworkAlert()
+            return
+        }
+
+
+        const s = onlineAccountState()
+        if(s == 0 || s == -1){
+            showMessage({
+                message: "提示",
+                description: "登录账号再分享信息，可以获得积分，点击查看游戏规则",
+                position: 'center',
+                type: 'info',
+                icon: "info",
+                floating: true,
+                duration: 10000,
+                onPress:()=>{this.props.navigation.navigate("MyScore")}
+            })
+            return;
+        }
+
         const lastLocation: LocationStorage = await getLastLocation()
         
         if (lastLocation) {
@@ -206,11 +226,11 @@ class SharePark extends React.Component<Props, State> {
             },
             offStreetPark
         }
-        const rj: RestfulJson = await postService(shareParkUrl(), data) as RestfulJson
+        const rr = await postService(shareParkUrl(), data)
 
         
 
-        const rjData: { sharePark: ShareParkModel, offStreetPark: OffStreetPark } = rj.data
+        const rjData: { sharePark: ShareParkModel, offStreetPark: OffStreetPark } = rj(rr).data
         this.currentPark = rjData.sharePark;
         this.currentOffStreetPark = rjData.offStreetPark;
 
@@ -291,20 +311,21 @@ class SharePark extends React.Component<Props, State> {
 
                 const offStreetPark: ParkItem = offStreets[0]
                 const { forFree, parkName } = offStreetPark
-                this.setState({ forfree: forFree, parkName ,parkType : 1})
+                this.setState({ forfree: forFree, parkName ,parkType : 1,parkNumber:"1",info:""})
                 this.currentOffStreetPark = offStreetPark
             }
             else {
                 this.currentPark = null
+                this.setState({forfree:false,parkType:0,parkName:"",parkNumber:"1",info:""})
             }
         })
     }
 
 
     public async componentWillMount() {
-        // if (Platform.OS == "android") {
-        //     await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
-        // }
+        if (Platform.OS == "android") {
+            await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+        }
 
         await init();
 
@@ -349,44 +370,13 @@ class SharePark extends React.Component<Props, State> {
 
     public async componentDidMount() {
 
-        const rj = await getService(parkGetUrl(UserAccount.getUid())) as RestfulJson
+        // const rj = await getService(parkGetUrl(UserAccount.getUid())) as RestfulJson
 
 
 
-        const p: Park = rj.data
-        this.parkId = p ? p.id : null
-        // setTimeout(() => {
-        //     this.setState({
-        //         mapShow: true
-        //     },
-
-        //         () => {
-        //             // this.refs.map.setMarkers({
-        //             //     centerCoordinate: {
-        //             //         latitude: 22.529321,
-        //             //         longitude: 113.978006,
-        //             //     },
-
-        //             //     zoomLevel: 18,
-        //             // })
-        //         })
-        // }, 500)
-
-        // if (Platform.OS == "ios") {
-        //     setTimeout(() => (this.refs.mapview as any).animateTo({
-        //         coordinate: {
-        //             latitude: 22.633373,
-        //             longitude: 113.83478
-        //         }
-        //     })
-        //         , 1000)
-        // }
-        // setTimeout(() => this.setState({
-        //     limitRegion: {
-        //         latitude: 22.633373,
-        //         longitude: 113.83478, latitudeDelta: 0.004, longitudeDelta: 0.004
-        //     }
-        // }), 1000)
+        // const p: Park = rj.data
+        // this.parkId = p ? p.id : null
+       
 
     }
 

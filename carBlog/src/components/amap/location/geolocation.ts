@@ -29,10 +29,12 @@ export interface Position {
 }
 
 
-export interface ReGeocodeInfo{
-  address:string,
-  city:string,
-  citycode:string
+export interface ReGeocodeInfo {
+  address: string,
+  city: string,
+  citycode: number,
+  road: string,
+  roadDirection: string,
 }
 
 /**
@@ -104,12 +106,12 @@ export default class Geolocation {
   }
 
 
-  static getReGeoCode({latitude,longitude},
+  static getReGeoCode({ latitude, longitude },
     success: (reGeocode: ReGeocodeInfo) => void,
     error?: (error: PositionError) => void,
     options?: PositionOptions
-  ){
-    const listener = addReGeoCodeListener(reGeocode =>{
+  ) {
+    const listener = addReGeoCodeListener(reGeocode => {
       if (reGeocode.errorCode) {
         error && error(new PositionError(reGeocode.errorCode, reGeocode.errorInfo, reGeocode));
       } else {
@@ -117,7 +119,7 @@ export default class Geolocation {
       }
       listener.remove();
     });
-    getAddress({latitude,longitude})
+    getAddress({ latitude, longitude })
   }
 
   /**
@@ -171,10 +173,13 @@ function toPosition(location: Location) {
 }
 
 
-function toReGeocode(reGeocode : ReGeocode) : ReGeocodeInfo{
-  return{
-    address : reGeocode.address,
-    city : reGeocode.city,
-    citycode : reGeocode.citycode
+function toReGeocode(reGeocode: ReGeocode): ReGeocodeInfo {
+  
+  return {
+    address: reGeocode.address,
+    city: reGeocode.city,
+    citycode: reGeocode.citycode,
+    road : reGeocode.road,
+    roadDirection : reGeocode.roadDirection
   }
 }

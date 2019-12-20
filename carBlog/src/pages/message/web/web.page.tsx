@@ -5,20 +5,7 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
 import { Button, Toggle, Text, withStyles, ThemeType, ThemedComponentProps, Layout, List, Radio, ButtonProps } from 'react-native-ui-kitten';
-import { Config } from '@src/core/uitls/config';
-import { ButtonBar, ScrollableAvoidKeyboard, Input } from '@src/components/common';
-import { ThemeContext, ThemeContextType } from '@src/core/themes';
-import Icon from 'react-native-vector-icons/Ionicons'
 
-import { InputSetting } from '@src/components';
-import { AccountRoleType } from '@src/core/userAccount/type';
-
-import { CameraIconFill, PersonIconFill, PersonImage } from '@src/assets/icons';
-import { author1 } from '@src/core/data/articles';
-import { postService, setUserInfoUrl, RestfulJson, RestfulResult } from '@src/core/uitls/httpService';
-import { UserAccount } from '@src/core/userAccount/userAccount';
-import { isEmpty, toDate } from '@src/core/uitls/common';
-import FlashMessage,{showMessage,hideMessage} from 'react-native-flash-message'
 
 
 

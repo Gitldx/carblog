@@ -20,6 +20,9 @@ import { NavigationScreenConfig } from 'react-navigation';
 import { NavigationScreenProps } from 'react-navigation';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
+import { networkConnected } from '@src/core/uitls/netStatus';
+import { showNoNetworkAlert } from '@src/core/uitls/common';
+import { removeCityCode } from '@src/core/uitls/storage/locationStorage';
 
 interface ComponentProps {
   onSignInPress: (formData: SignInFormData) => void;
@@ -46,9 +49,17 @@ class SignInComponent extends React.Component<SignIn2Props> {
     formData: undefined,
   };
 
-  private onSignInButtonPress = () => {//todo:用户名不存在的情况
+  private onSignInButtonPress = () => {
+    if(!networkConnected()){
+      showNoNetworkAlert()
+      return;
+    }
     const {username,password} = this.state.formData
-    UserAccount.loginWithAccount(username,password,()=>{
+    UserAccount.loginWithAccount(username,password,(data:any)=>{
+      if(data == false){
+        return
+      }
+      removeCityCode()
       this.props.navigation.navigate("MyHome")
     })
     //this.props.onSignInPress(this.state.formData);

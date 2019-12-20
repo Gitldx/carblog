@@ -13,7 +13,13 @@ import { PageView } from '../pageView';
 import EventRegister, { loginEvent } from '@src/core/uitls/eventRegister';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { UserAccount } from '@src/core/userAccount/userAccount';
-
+import { showMessage } from 'react-native-flash-message';
+import { showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
+import { LoginEventData } from '@src/core/userAccount/type';
+import { networkConnected } from '@src/core/uitls/netStatus';
+import debounce from "@src/core/uitls/debounce"
+import { simpleAlert } from '@src/core/uitls/alertActions';
+import { JSAPIVERSION_ANDROID } from '@src/core/uitls/constants';
 
 
 type DayNight = "day" | "night"
@@ -78,7 +84,7 @@ export class MyHome extends React.Component<Props, State> {
   }
 
 
-  private signOut = ()=>{
+  private signOut = () => {
     UserAccount.instance.logout()
   }
 
@@ -88,9 +94,46 @@ export class MyHome extends React.Component<Props, State> {
   }
 
 
+  private gotoMyBlogs = () => {
+    const s = onlineAccountState()
+    if (s == 0) {
+      showNoAccountOnAlert();
+      return;
+    }
+    this.props.navigation.navigate({ routeName: "MyBlogs" })
+  }
+
+  private gotoMyInfo = () => {
+    const s = onlineAccountState()
+    if (s == 0) {
+      showNoAccountOnAlert();
+      return;
+    }
+    this.props.navigation.navigate({ routeName: "MyInfo" })
+  }
+
+
+  private gotoMyReport = () => {
+    if(!networkConnected()){
+      showNoNetworkAlert()
+      return
+    }
+    this.props.navigation.navigate({ routeName: "MyReport" })
+  }
+
+
+  private count = 0
+  private debounce = debounce(()=>{
+    console.warn(++this.count)
+  },2000,false)
+  private testDebounce=()=>{
+    // this.debounce()
+    simpleAlert(null,JSAPIVERSION_ANDROID)
+  }
+
 
   public componentWillMount = () => {
-    EventRegister.addEventListener(loginEvent, (data) => {
+    EventRegister.addEventListener(loginEvent, (data:LoginEventData) => {
       const { stateStr, accountHasLogined } = data
       // console.warn(`loginEvent:${accountHasLogined}`)
       if (accountHasLogined == true) {
@@ -116,17 +159,17 @@ export class MyHome extends React.Component<Props, State> {
     return (
       <PageView style={themedStyle.container}>
 
-        <ButtonBar style={{ marginTop: 5 }} leftText="我的后车箱" onPress={this.gotoShop} />
-        <ButtonBar style={{ marginTop: 5 }} leftText="我的博客" 
-        /* rightKit={() => <View style={{ backgroundColor: 'red', width: 8, height: 8, borderRadius: 4 }} />} */
-          onPress={() => this.props.navigation.navigate({ routeName: "MyBlogs" })}
+        {/* <ButtonBar style={{ marginTop: 5 }} leftText="我的后车箱" onPress={this.gotoShop} /> */}
+        <ButtonBar style={{ marginTop: 5 }} leftText="我的博客"
+          /* rightKit={() => <View style={{ backgroundColor: 'red', width: 8, height: 8, borderRadius: 4 }} />} */
+          onPress={this.gotoMyBlogs}
         />
 
         {/* <ButtonBar leftText="我的收藏" style={{ marginTop: 5 }}
           onPress={() => this.props.navigation.navigate({ routeName: "MyCollection" })}
         /> */}
         <ButtonBar leftText="用户信息"
-          onPress={() => this.props.navigation.navigate({ routeName: "MyInfo" })}
+          onPress={this.gotoMyInfo}
         />
         <ButtonBar leftText="积分，游戏规则"
           onPress={() => this.props.navigation.navigate({ routeName: "MyScore" })}
@@ -143,7 +186,7 @@ export class MyHome extends React.Component<Props, State> {
         </ThemeContext.Consumer>
 
         <ButtonBar leftText="意见，投诉，商务沟通"
-          onPress={() => this.props.navigation.navigate({ routeName: "MyScore" })}
+          onPress={this.gotoMyReport}
         />
 
         <View style={{ marginHorizontal: 10, marginVertical: 18, paddingHorizontal: 8, paddingVertical: 4 }}>
@@ -159,11 +202,13 @@ export class MyHome extends React.Component<Props, State> {
               </View>
             </React.Fragment>
             :
-            <Button onPress={()=>UserAccount.instance.logout()}>退出账号</Button>
+            <Button onPress={() => UserAccount.instance.logout()}>退出账号</Button>
           }
         </View>
 
 
+          <Text>test0</Text>
+          <Button onPress={this.testDebounce}>测试</Button>
       </PageView>
 
     );

@@ -25,7 +25,7 @@ export async function readParameter() {
 export async function getSevertimeDiff(){
     if(!global.serverParam){
         const local = await getLocalServerParameter()
-        console.warn(`getSevertimeDiff local:${JSON.stringify(local)}`)
+        // console.warn(`getSevertimeDiff local:${JSON.stringify(local)}`)
         if(!local){
             return 0
         }

@@ -3,6 +3,7 @@ import EventRegister, { loginEvent } from '../uitls/eventRegister';
 import { globalFields } from '../model/global';
 import { UserAccount } from './userAccount';
 import { isEmpty } from '../uitls/common';
+import { LoginEventData } from './type';
 
 declare var global : globalFields
 
@@ -114,7 +115,8 @@ export class UserState {
             accountHasLogined = true;
         }
         console.warn(`userstate.transfer:${JSON.stringify({ accountHasLogined,stateStr })}`)
-        EventRegister.emitEvent(loginEvent, { accountHasLogined,stateStr })
+        const data : LoginEventData = { accountHasLogined,stateStr }
+        EventRegister.emitEvent(loginEvent, data)
     }
 
 

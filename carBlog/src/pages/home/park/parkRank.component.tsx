@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, PermissionsAndroid, Platform, TouchableWithoutFeedback, TouchableHighlight } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -13,8 +13,8 @@ import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service'
 import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
-import { Article, Profile } from '@src/core/model';
-import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, rankParkUrl, setUserCityCodeUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
+import { Article, Profile, globalFields } from '@src/core/model';
+import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, rankParkUrl, setUserCityCodeUrl, qiniuImgUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { toDate, getTimeDiff, isEmpty } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
@@ -22,33 +22,22 @@ import { Geolocation, init } from '@src/components/amap/location';
 import { getLastLocationCityCode, saveLastCityCode, removeCityCode } from '@src/core/uitls/storage/locationStorage';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { thumbnailUri } from '@src/assets/images/type';
+import { networkConnected } from '@src/core/uitls/netStatus';
 
 
-interface BlogListItemData {
-    id: string,
-    authorName: string,
-    authorAvatar: ImageSource,
-    blogTime: string,
-    carNumber: string,
-    blogTitle: string,
-    commentCount: number,
-    likesCount: number,
-    visitCount: number,
-    image: ImageSource,
-    
-}
+declare var global: globalFields
 
 type ListItemElementInfo = ListRenderItemInfo<UserAccount>;
 
-type Props = { load?: boolean ,tabLabel:string} & ThemedComponentProps & NavigationScreenProps
+type Props = { load?: boolean, tabLabel: string } & ThemedComponentProps & NavigationScreenProps
 
 interface State {
     list: UserAccount[],
-    rankSort: 0 | 1 , //0:生产，1赠送
+    rankSort: 0 | 1, //0:生产，1赠送
     /**
     * 0:默认状态，1:正在加载，2:已到末尾
     */
-   loading: number
+    loading: 0 | 1 | 2,
 }
 
 export class ParkRankComponent extends React.Component<Props, State> {
@@ -58,7 +47,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
     public state: State = {
         list: [],
         rankSort: 0,
-        loading : 0
+        loading: 0,
     }
 
     // private data: BlogListItemData[] = blogList.map<BlogListItemData>(elm => { return { id:elm.id,authorName: elm.author.nickname, authorAvatar: elm.author.photo, blogTime: elm.date, carNumber: elm.author.carNumber, blogTitle: elm.title, commentCount: elm.comments.length, likesCount: elm.likes, visitCount: elm.visitCounts, image: elm.image } })
@@ -74,7 +63,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
                 {/* <View>
                     <Text>{item.carNumber}</Text>
                 </View> */}
-                <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />
+                {item.carNumber && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
                 {/* <Text appearance="hint" category="c1" style={{ marginLeft: 20 }}>{item.date}</Text> */}
             </View>
         )
@@ -108,12 +97,12 @@ export class ParkRankComponent extends React.Component<Props, State> {
                         </LikeButton> */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                             <MaterialCommunityIcons name="medal" size={18} color="green" />
-                            <Text>{item.totalProducedMoney}</Text>
+                            <Text>{item.totalProducedMoney.toString()}</Text>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                             <MaterialCommunityIcons name="medal" size={18} color="red" />
-                            <Text>{item.totalGiftMoney}</Text>
+                            <Text>{item.totalGiftMoney.toString()}</Text>
                         </View>
                     </View>
                 </ContentBox>
@@ -144,12 +133,12 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                             <MaterialCommunityIcons name="medal" size={18} color="green" />
-                            <Text>{item.totalProducedMoney}</Text>
+                            <Text>{item.totalProducedMoney.toString()}</Text>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                             <MaterialCommunityIcons name="medal" size={18} color="red" />
-                            <Text>{item.totalGiftMoney}</Text>
+                            <Text>{item.totalGiftMoney.toString()}</Text>
                         </View>
                     </View>
                 </View>
@@ -200,55 +189,97 @@ export class ParkRankComponent extends React.Component<Props, State> {
     }
 
 
-    private async getcitycode(callback: (oldcode: string, newcode: string) => void) {
+    private async getcitycode(callback: (oldcode: number, newcode: number) => void) {
+
+        if (Platform.OS == "android") {
+            const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION, {
+                title: "提示",
+                message: "app需要获取地理位置权限，以便知道您所在方位",
+                buttonPositive: "知道了"
+            })
+
+            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                callback(null, null)
+                return
+            }
+        }
+
 
         await init();
 
-        const citycode: string = await getLastLocationCityCode()
-        
+        let geoAllowed: boolean = false
+        setTimeout(() => {
+            if (!geoAllowed) {
+                callback(null, null)
+            }
+        }, 5000);
 
-        Geolocation.getCurrentPosition(({ coords }) => {
-            const { longitude, latitude } = coords
-          
-            Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
-                // console.warn(JSON.stringify(reGeocode))
-                callback(citycode, reGeocode.citycode)
+        const citycode: number = await getLastLocationCityCode()
+        if (!global.citycode) {
+            Geolocation.getCurrentPosition(({ coords }) => {
+                const { longitude, latitude } = coords
+
+                Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
+
+                    geoAllowed = true
+                    global.citycode = reGeocode.citycode
+                    callback(citycode, reGeocode.citycode)
+                })
             })
-        })
+        }
+        else {
+            geoAllowed = true
+            callback(citycode, global.citycode)
+        }
+
+
     }
 
-    private currentPage : number = 0
+    private currentPage: number = 0
 
-    private rank = (sort = 0) => { //todo:没有定位权限时，数据为空的提示,切换用户的时候把本地的citycode 清空，重新设置
+    private rank = (sort = 0) => {
+        this.listLoaded = true
         // removeCityCode()
         this.currentPage = 0
         this.getcitycode(async (oldcode, newcode) => {
 
+            if (isEmpty(newcode)) {//没有定位权限
+                this.canUseGeo = false
+                this.setState({ list: [], loading: 2 })
+                return;
+            }
+            else {
+                this.canUseGeo = true
+            }
 
-            const rankrj: RestfulJson = await getService(rankParkUrl(newcode, sort, 0)) as any
+            const rankrr = await getService(rankParkUrl(newcode, sort, 0))
+            if (rrnol(rankrr)) {
+                this.setState({ list: [], loading: 2 })
+                return
+            }
             // console.warn(`old:${oldcode},new:${newcode}`)
-           
-            const loading = rankrj.data.length > 0 ? 0 : 2
+
+            const loading = rj(rankrr).data.length > 0 ? 0 : 2
 
             // const temp = (rankrj.data as UserAccount[]).map((u:UserAccount)=>{
-                
+
             //     const ua = Object.assign({},u)
             //     ua.image = !!!isEmpty(u.image) ? new RemoteImage(qiniuImgUrl(u.image)) : null
             //     return ua
             // })
 
-           
 
-            this.setState({ list: rankrj.data,loading })
+
+            this.setState({ list: rj(rankrr).data, loading })
 
             if (isEmpty(oldcode) || oldcode != newcode) {
-                console.warn(`old:${oldcode},new:${newcode}`)
+                // console.warn(`old:${oldcode},new:${newcode}`)
                 const _us = onlineAccountState()
-                if(_us == 1 || _us == 2){
-                    saveLastCityCode(newcode)  
+                if (_us == 1 || _us == 2) {
+                    saveLastCityCode(newcode)
                     await postService(setUserCityCodeUrl(UserAccount.getUid(), newcode), null)
                 }
-                
+
             }
 
 
@@ -256,30 +287,38 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
     }
 
-    private getMore = async ()=>{
-        this.setState({loading:1})
+    private getMore = async () => {
+        this.setState({ loading: 1 })
         this.currentPage++;
 
-        const citycode: string = await getLastLocationCityCode()
-        const rankrj: RestfulJson = await getService(rankParkUrl(citycode, this.state.rankSort, this.currentPage)) as any
-        
+        const citycode: number = await getLastLocationCityCode()
+        const rankrr = await getService(rankParkUrl(citycode, this.state.rankSort, this.currentPage))
+
+        if (rrnol(rankrr)) {
+            this.currentPage--;
+            return;
+        }
         // const _temp = (rankrj.data as UserAccount[]).map((u:UserAccount)=>{
-                
+
         //     const ua = Object.assign({},u)
         //     ua.image = !!!isEmpty(u.image) ? new RemoteImage(qiniuImgUrl(u.image)) : null
         //     return ua
         // })
-        
-        const temp = this.state.list.concat(rankrj.data)
 
-        const loading = rankrj.data.length > 0 ? 0 : 2
-        this.setState({list:temp,loading})
+        const temp = this.state.list.concat(rj(rankrr).data)
+
+        const loading = rj(rankrr).data.length > 0 ? 0 : 2
+        this.setState({ list: temp, loading })
     }
 
 
     private renderFooter = (): React.ReactElement => {
 
         const { loading } = this.state
+
+        if (!networkConnected() || !this.listLoaded) {
+            return null
+        }
 
         if (loading == 2) {
             return (
@@ -296,62 +335,59 @@ export class ParkRankComponent extends React.Component<Props, State> {
         )
     }
 
+    private listLoaded: boolean = false
+    private canUseGeo: boolean = true
+    private renderListEmptyComponent = (): React.ReactElement => {
+
+        if (!this.listLoaded) {
+            return null
+        }
+
+        // if (networkConnected()) {
+        //     return (
+        //         <View style={{ height: 600, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        //             <View style={{flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
+        //             <MaterialCommunityIcons name="emoticon-neutral-outline" color="lightgrey" size={30}/>
+        //             <Text style={{marginLeft:10}}>当前区域暂无内容</Text>
+        //             </View>
+        //         </View>
+        //     )
+        // }
+
+        const hint = this.canUseGeo ? "暂时空白，点击刷新再试试" : "未能获取到当前城市，请到设置中心授权app使用定位"
+
+        return (
+            <TouchableOpacity onPress={() => this.rank(this.state.rankSort)}
+                style={{ height: 600, paddingHorizontal: 10, flex: 1, alignItems: 'center' }}>
+                {/* <Button 
+                    icon={(styles) => MaterialCommunityIcons({ name: "emoticon-neutral-outline", color: styles.tintColor }) as any}
+                    appearance="ghost" size="giant">{hint}</Button> */}
+                <View style={{ flexDirection: 'row', paddingHorizontal: 10, marginTop: 250, justifyContent: 'center', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="emoticon-neutral-outline" color="lightgrey" size={30} />
+                    <Text style={{ marginLeft: 10 }}>{hint}</Text>
+                </View>
+            </TouchableOpacity>
+        )
+    }
+
 
     public async componentWillMount() {
-
-
-
-
+        // console.warn(`parkRank mount`)
         EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
 
             this.rank()
 
-
-            // const rj: RestfulJson = await getService(listArticleUrl(0)) as any
-            // const articles: Article[] = rj.data.articles
-            // const profiles: Profile[] = rj.data.profiles
-
-            // const ids = new Set()
-            // articles.forEach(d => {
-
-            //     ids.add(d.uid)
-            //     // d.image = this.testimage
-            //     // d.comments = []
-            // })
-
-
-
-            // // const rj2 : RestfulJson = await postService(getProfilesUrl(),Array.from(ids)) as any //todo:服务端统一返回profile
-            // // const profiles = rj2.data as UserAccount
-            // // console.warn(JSON.stringify(profiles))
-
-            // const temp: Article[] = articles.map(m => {
-            //     const date = new Date(m.date)  //todo:服务器返回yyyy-MM-dd hh:mm:ss格式
-
-            //     m.date = getTimeDiff(date).toFixed(0) + "小时前"
-            //     const profile: Profile = {
-            //         nickname: author1.nickname.length > 6 ? author1.nickname.substr(0, 5) + "..." : author1.nickname
-            //         , avatar: author1.avatar, carNumber: author1.carNumber
-            //     }
-            //     m.authorProfile = profile
-            //     m.image = this.testimage
-
-            //     return m;
-
-            //     // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-            //     //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-            //     //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
-            // })
-            // // console.warn(JSON.stringify(new Date("2019/10/27 16:30:23"))) 
-
-            // this.articles = temp
-
-            // this.setState({ list: temp })
-
         })
 
+    }
 
 
+    private hasLoaded: boolean = false
+    componentWillReceiveProps(nextProps) {
+        if (!this.props.load && nextProps.load == true && !this.hasLoaded) {
+            this.hasLoaded = true;
+            this.rank()
+        }
 
     }
 
@@ -374,6 +410,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
                     )}
                     ListHeaderComponent={this.renderHeader}
                     ListFooterComponent={this.renderFooter}
+                    ListEmptyComponent={this.renderListEmptyComponent}
                 />
 
             </React.Fragment>

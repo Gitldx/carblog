@@ -1,7 +1,7 @@
 import { getDeviceId } from '../uitls/common'
 import { getStorageAsync, isEmpty } from '../uitls/common'
 
-import { postService, userAccountRegisterUrl, userAccountLoginUrl, kdNumRegisterUrl, getService, getPrimaryKdNumUrl, RestfulJson } from '../uitls/httpService'
+import { postService, userAccountRegisterUrl, userAccountLoginUrl, RestfulJson, rj } from '../uitls/httpService'
 // import { KdNum } from './KdNum'
 // import { UserState } from './UserState'
 // import { AccountState } from './AccountState'
@@ -40,7 +40,7 @@ export class UserAccount {
     nickname = ""
     phone: string = ""
     carNumber: string = ""
-    image : string = null
+    image: string = null
 
     totalProducedMoney: number;
     totalGiftMoney: number;
@@ -71,9 +71,12 @@ export class UserAccount {
         this.nickname = nickname
         this.phone = phone
         this.carNumber = carNumber
+        
         this.role = role
+        
         console.warn(`setInfo:${JSON.stringify(this)}`)
         saveUserAccountLocally(this)
+
     }
 
 
@@ -97,20 +100,20 @@ export class UserAccount {
     }
 
 
-    static async loginWithAccount(accountName: string, password: string, successcallback: (data: any) => void) {
+    static async loginWithAccount(accountName: string, password: string, callback: (data: any) => void) {
 
         // const existKdnum = await KdNum.existLocalKdNum()
         const machineId = getDeviceId()
 
         try {
-            const rj: RestfulJson = await postService(userAccountLoginUrl(), { accountName, password }) as any;
+            const rr = await postService(userAccountLoginUrl(), { accountName, password });
             // console.warn(`rj:${JSON.stringify(rj)}`)
 
 
-            if (rj.ok) {
+            if (rj(rr).ok) {
 
-                if (rj.code == 0) {
-                    const data = rj.data
+                if (rj(rr).code == 0) {
+                    const data = rj(rr).data
 
                     const role: AccountRoleType = data.role
                     const ua = new UserAccount(data.id, null, accountName, password, true, role)
@@ -129,12 +132,13 @@ export class UserAccount {
                     // updateGlobalUserAccount(ua, true)
                     // await saveUserAccountLocally(ua)
 
-                    successcallback({ id: data.id/* data.id */ })
+                    callback({ id: data.id/* data.id */ })
 
-                    return true;
+                    
                 }
                 else {
-                    simpleAlert(null, rj.message)
+                    simpleAlert(null, rj(rr).message)
+                    callback(false)
                 }
 
             }
@@ -152,7 +156,7 @@ export class UserAccount {
 
 
     async logout() {
-        await UserState.instance.transfer(new EmptyState())
+        await UserState.instance.transfer(new EmptyState(new UserAccount()))//todo: 测试一下
         // this.accountHasLogined = false
         // await saveUserAccountLocally(this)
     }
@@ -168,18 +172,18 @@ export class UserAccount {
 
 
         try {
-            const rj: RestfulJson = await postService(userAccountLoginUrl(), { accountName, password }) as any;
+            const rr = await postService(userAccountLoginUrl(), { accountName, password });
 
 
-            if (rj.ok) {
+            if (rj(rr).ok) {
 
-                if (rj.code == 0) {
-                    const data = rj.data//rj.returnData
+                if (rj(rr).code == 0) {
+                    const data = rj(rr).data//rj.returnData
 
                     return data;
                 }
                 else {
-                    simpleAlert(null, rj.message)
+                    simpleAlert(null, rj(rr).message)
                 }
 
             }
@@ -213,12 +217,12 @@ export class UserAccount {
         const machineId = getDeviceId()
 
         try {
-            const rj: RestfulJson = await postService(userAccountRegisterUrl(), { accountName, password, role }) as any
-            console.warn(`rj:${JSON.stringify(rj)}`)
+            const rr = await postService(userAccountRegisterUrl(), { accountName, password, role })
+            console.warn(`rj:${JSON.stringify(rr)}`)
 
-            if (rj.ok) {
-                if (rj.code == 0) {
-                    const id = rj.data;
+            if (rj(rr).ok) {
+                if (rj(rr).code == 0) {
+                    const id = rj(rr).data;
                     const ua = new UserAccount(id, null, accountName, password, true, role)
                     let newState = undefined
                     if (role == 2) {
@@ -234,8 +238,8 @@ export class UserAccount {
 
                     successcallback(ua);
                 }
-                else if(rj.code == 1){
-                    simpleAlert(null,rj.message)
+                else if (rj(rr).code == 1) {
+                    simpleAlert(null, rj(rr).message)
                 }
 
             }

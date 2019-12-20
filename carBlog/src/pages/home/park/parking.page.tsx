@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform, Dimensions, TouchableOpacity, ListRenderItemInfo } from 'react-native'
+import { View, StyleSheet, Platform, Dimensions, TouchableOpacity, ListRenderItemInfo, Linking } from 'react-native'
 import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -18,8 +18,8 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow, ContentBox, LicensePlate } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, getNearestPointUrl, searchNearParkUrl, thankForParkUrl, matchShareParkPointUrl, searchParkByCarNumberUrl } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs } from '@src/core/uitls/common';
+import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, getNearestPointUrl, searchNearParkUrl, thankForParkUrl, matchShareParkPointUrl, searchParkByCarNumberUrl, rrnol, rj } from '@src/core/uitls/httpService';
+import { toDate, isEmpty, gcj2wgs, showNoNetworkAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation } from "@src/components/amap/location";
@@ -32,6 +32,10 @@ import Dialog from 'react-native-dialog'
 import { showMessage } from 'react-native-flash-message';
 import { hasThanked } from './parkUtils';
 import { Toast, DURATION, COLOR } from '@src/components'
+import { onlineAccountState } from '@src/core/userAccount/functions';
+import { getLastParkData, saveLastParkData } from '@src/core/uitls/storage/park';
+import { simpleAlert } from '@src/core/uitls/alertActions';
+import { networkConnected } from '@src/core/uitls/netStatus';
 
 
 
@@ -130,10 +134,10 @@ class Parking extends React.Component<Props, State> {
 
     private currentPosition: { longitude: number, latitude: number }
 
-    private onSearchPressed = () => {
+    // private onSearchPressed = () => {
 
-        this.props.navigation.navigate("SearchCar")
-    }
+    //     this.props.navigation.navigate("SearchCar")
+    // }
 
     private goBack = () => {
         this.props.navigation.goBack(KEY_NAVIGATION_BACK)
@@ -158,11 +162,27 @@ class Parking extends React.Component<Props, State> {
         }
         else {
 
-            const rj: RestfulJson = await getService(searchParkByCarNumberUrl(this.state.searchText)) as any
-            const park: Park = rj.data
+            const rr = await getService(searchParkByCarNumberUrl(this.state.searchText.toUpperCase()))
+            if(rrnol(rr)){
+                return
+            }
+
+            const park: Park = rj(rr).data
             this.setState({ searchResult: park })
 
         }
+    }
+
+
+    private phoneCall = ()=>{
+        const tel = `tel:${this.state.searchResult.carPhone}`
+        Linking.canOpenURL(tel).then((supported) => {
+            if (!supported) {
+              console.warn('Can not handle tel:' + tel)
+            } else {
+              return Linking.openURL(tel)
+            }
+          }).catch(error => console.warn('tel error', error))
     }
 
 
@@ -170,47 +190,108 @@ class Parking extends React.Component<Props, State> {
         // const d = new Date()
         // d.setTime(d.getTime() + Number(this.state.delayTime) * 60 * 1000)
         // this.setState({ leaveTime: toDate(d) })
+        if(isEmpty(this.state.delayTime)){
+            simpleAlert(null,"请填写延长时间")
+            return
+        }
 
-        const rj = await postService(extendParkUrl(this.parkId, this.state.delayTime), null) as RestfulJson
+        const rr = await postService(extendParkUrl(this.parkId, this.state.delayTime), null)
+        if(rrnol(rr)){
+            return;
+        }
 
-        const p: Park = rj.data
+        const p: Park = rj(rr).data
 
         this.setState({ leaveTime: toDate(new Date(p.leaveTime)) })
-
+        this.callback(p)
     }
 
     park = async () => {
         const c = this.currentPosition
         const { lng, lat } = gcj2wgs(c.longitude, c.latitude)
+        const carNumber = this.state.carNumber.toUpperCase()
         const data: Park = {
-            uid: UserAccount.getUid(), carNumber: this.state.carNumber, carPhone: this.state.phone,
+            uid: UserAccount.getUid(), carNumber, carPhone: this.state.phone,
             location: { coordinates: [lng, lat] }, gcjLocation: [c.longitude, c.latitude]
         }
-        const res = await postService(parkUrl(this.state.stayTime), data) as RestfulJson
+        const res = await postService(parkUrl(this.state.stayTime), data)
+        if(rrnol(res)){
+            return
+        }
 
         // console.warn(`res:${JSON.stringify(res)}`)
         // EventRegister.emit(parkingEvent, 1)
-        const p: Park = res.data
+        const p: Park = rj(res).data
         this.parkId = p.id
         const d = new Date(p.leaveTime)
         // d.setTime(d.getTime() + Number(this.state.stayTime) * 60 * 1000)
         this.setState({ status: 1, btnText: '开车', leaveTime: toDate(d), delayTime: null })
+        saveLastParkData({carNumber,phone:this.state.phone})
+        this.callback(p)
     }
 
     drive = async () => {
+        if(!networkConnected()){
+            showNoNetworkAlert()
+            return
+        }
         await deleteService(driveUrl(this.parkId, UserAccount.getUid()), null)
         // EventRegister.emit(parkingEvent, 0)
         this.setState({ status: 0, btnText: '停车', leaveTime: '', stayTime: null, delayTime: null })
+        this.callback(null)
     }
 
 
     private action = () => {
+
+        const s = onlineAccountState()
+        let hint = ""
+        if(s==0||s== -1){
+            hint = "请先登录"
+            showMessage({
+                message:"提示",
+                description:hint,
+                type:'info',
+                icon:'info',
+                // position:'center',
+                floating:true
+            })
+
+            return;
+        }
+        else if(s == 2){
+            hint = "车主才需要停车"
+            showMessage({
+                message:"提示",
+                description:hint,
+                type:'info',
+                icon:'info',
+                // position:'center',
+                floating:true
+            })
+            return;
+        }
+
+
+        
+
+
         if (this.state.status == 0) {
+            if(isEmpty(this.state.carNumber) || isEmpty(this.state.phone)){
+                simpleAlert(null,"请填写车牌号和挪车电话")
+                return;
+            }
+            if(isEmpty(this.state.stayTime)){
+                simpleAlert(null,"请填写停车时长")
+                return;
+            }
             this.park()
         }
         else if (this.state.status == 1) {
             this.drive()
         }
+
+        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
     }
 
 
@@ -241,13 +322,16 @@ class Parking extends React.Component<Props, State> {
     private searchPark = async (longitude, latitude) => {
         const { lng, lat } = gcj2wgs(longitude, latitude)
 
-        const rj: RestfulJson = await getService(matchShareParkPointUrl(lng, lat, 100)) as any //todo:补充uas
+        const rr = await getService(matchShareParkPointUrl(lng, lat, 100))
+        if(rrnol(rr)){
+            return
+        }
 
-        console.warn(`matchShareParkPoint:${JSON.stringify(rj)}`)
+        // console.warn(`matchShareParkPoint:${JSON.stringify(rj)}`)
 
 
-        const uas: UserAccount[] = rj.data.uas
-        const shareParks: any[] = rj.data.sharePark || []
+        const uas: UserAccount[] = rj(rr).data.uas
+        const shareParks: any[] = rj(rr).data.sharePark || []
         // const OffStreetPark : any[] = rj.data.offStreet
         // console.warn(JSON.stringify(shareParks))
         if (shareParks) {
@@ -268,11 +352,24 @@ class Parking extends React.Component<Props, State> {
         }
     }
 
+    private parkData : Park
+    private callback : (parkData:Park)=>void
 
     public async componentWillMount() {
-        // if (Platform.OS == "android") {
-        //     await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
-        // }
+
+        this.parkData = this.props.navigation.getParam("park")
+        this.callback = this.props.navigation.getParam("callback")
+
+        const s = onlineAccountState()
+        if(s == 1){
+
+        }
+
+        
+
+        if (Platform.OS == "android") {
+            await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+        }
 
         await init();
 
@@ -283,20 +380,40 @@ class Parking extends React.Component<Props, State> {
             this.searchPark(longitude, latitude)
         });
 
-        this.props.navigation.setParams({ "onSearchPressed": this.onSearchPressed })
+        // this.props.navigation.setParams({ "onSearchPressed": this.onSearchPressed })
     }
 
     public async componentDidMount() {
 
-        const rj = await getService(parkGetUrl(UserAccount.getUid())) as RestfulJson
+        // const rj = await getService(parkGetUrl(UserAccount.getUid())) as RestfulJson
+        const p: Park = this.parkData
+        this.parkId = this.parkData ? this.parkData.id : null
 
+        const s = onlineAccountState()
+        // console.warn(`p:${JSON.stringify(p)}`)
+        let carNumber = "",phone=""
+        if(p == null && s == 1){
+           
+            const localPark = await getLastParkData()
+            if(localPark!=null){
+                carNumber = localPark.carNumber
+                phone = localPark.phone
+            }
+            else{
+                const ua = UserAccount.instance
+                carNumber = ua.carNumber
+                phone = ua.phone
+            }
+        }
+        else if(p != null){
+            carNumber = p.carNumber
+            phone = p.carPhone
+        }
+        
 
-
-        const p: Park = rj.data
-        this.parkId = p ? p.id : null
         setTimeout(() => {
             this.setState({
-                status: this.parkId ? 1 : 0, btnText: this.parkId ? "开车" : "停车", carNumber: p ? p.carNumber : "", phone: p ? p.carPhone : "",
+                status: this.parkId ? 1 : 0, btnText: this.parkId ? "开车" : "停车", carNumber, phone,
                 leaveTime: toDate(new Date(p ? p.leaveTime : null))
             },
 
@@ -433,8 +550,11 @@ class Parking extends React.Component<Props, State> {
     private thank = async () => {
 
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
-        const rj: RestfulJson = await postService(thankForParkUrl(), param) as any
-        console.warn(JSON.stringify(rj))
+        const rr = await postService(thankForParkUrl(), param)
+        if(rrnol(rr)){
+            return
+        }
+        // console.warn(JSON.stringify(rr))
         this.setState({ dialogVisible: false, thankText: '' },()=>{
             this.toast.show("赠人玫瑰，手留余香",DURATION.LENGTH_LONG)
         })
@@ -562,7 +682,7 @@ class Parking extends React.Component<Props, State> {
                                 <LicensePlate category="p1" carNumber={searchResult.carNumber} />
                             </View>
                             <Text style={{ marginBottom: 5 }}>{`预计开车时间：${searchResult.leaveTime}`}</Text>
-                            <Button size="small">电话通知车主挪车</Button>
+                            <Button size="small" onPress={this.phoneCall}>电话通知车主挪车</Button>
                         </View>)
                 }
 

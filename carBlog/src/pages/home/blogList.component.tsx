@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -14,8 +14,8 @@ import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile } from '@src/core/model';
-import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl, listNearbyArticleUrl, qiniuImgUrl } from '@src/core/uitls/httpService';
-import { toDate, getTimeDiff, gcj2wgs } from '@src/core/uitls/common';
+import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol } from '@src/core/uitls/httpService';
+import { toDate, getTimeDiff, gcj2wgs, displayIssueTime } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
@@ -83,7 +83,7 @@ export class BlogListComponent extends React.Component<Props, State> {
                 {/* <View>
                     <Text>{item.carNumber}</Text>
                 </View> */}
-                <LicensePlate carNumber={item.authorProfile.carNumber} category="c1" style={{ marginLeft: 5 }} />
+                {item.authorProfile.carNumber && <LicensePlate carNumber={item.authorProfile.carNumber} category="c1" style={{ marginLeft: 5 }} />}
 
             </View>
         )
@@ -125,7 +125,7 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
     private renderFooter = (): React.ReactElement => {
-
+       
         const { loading } = this.state
 
         if (loading == 2) {
@@ -230,25 +230,6 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
 
-
-    private displayTime(minutes) {
-
-        if (minutes < 60) {
-            return minutes + "分钟前"
-        }
-        const hours = (Number(minutes) / 60).toFixed(0)
-        if (Number(hours) < 24) {
-            return hours + '小时前'
-        }
-        const day = (Number(hours) / 24).toFixed(0)
-        if (Number(day) < 30) {
-            return day + "天前"
-        }
-        else {
-            return (Number(day) / 30).toFixed(0) + "月前"
-        }
-    }
-
     private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
     private pressMore = () => {
@@ -261,18 +242,25 @@ export class BlogListComponent extends React.Component<Props, State> {
         }
     }
 
+    isNotOnline(rj:RestfulJson){
+        return (rj as RestfulResult) == NOTONLINE
+    }
+
     private getMore_near = async () => {
         this.currentNearPage++;
-        const rj: RestfulJson = await getService(listNearbyArticleUrl(this.currentLongitude_wgs, this.currentLatitude_wgs, this.currentNearPage)) as any
+        const rr = await getService(listNearbyArticleUrl(this.currentLongitude_wgs, this.currentLatitude_wgs, this.currentNearPage))
         // console.warn(`rj:${JSON.stringify(rj)}`)
+        if(rrnol(rr)){
+            return;
+        }
 
-        const articles: Article[] = rj.data.articles
-        const profiles: Profile[] = rj.data.profiles
+        const articles: Article[] = rj(rr).data.articles
+        const profiles: Profile[] = rj(rr).data.profiles
 
         const temp: Article[] = articles.map(m => {
             const date = new Date(m.date)
 
-            m.date = this.displayTime(getTimeDiff(date).toFixed(0))
+            m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
             // const profile: Profile = {
             //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
             //     , image: author1.image, carNumber: author1.carNumber
@@ -294,13 +282,18 @@ export class BlogListComponent extends React.Component<Props, State> {
         this.articles = this.articles.concat(temp)
 
 
-        const loading = rj.data.articles.length > 0 ? 0 : 2
+        const loading = rj(rr).data.articles.length > 0 ? 0 : 2
         this.setState({ list: this.articles, sortType: 0, loading })
 
 
     }
 
     private listNear = async () => {
+
+        if (Platform.OS == "android") {
+            await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+        }
+
 
         await init();
 
@@ -311,16 +304,19 @@ export class BlogListComponent extends React.Component<Props, State> {
             this.currentLatitude_wgs = lat
             this.currentLongitude_wgs = lng
 
-            const rj: RestfulJson = await getService(listNearbyArticleUrl(lng, lat, 0)) as any
+            const rr = await getService(listNearbyArticleUrl(lng, lat, 0))
+            if(rrnol(rr)){
+                return;
+            }
 
-            console.warn(`lng:${lng},data:${JSON.stringify(rj)}`)
-            const articles: Article[] = rj.data.articles
-            const profiles: Profile[] = rj.data.profiles
+            // console.warn(`lng:${lng},data:${JSON.stringify(rr)}`)
+            const articles: Article[] = rj(rr).data.articles
+            const profiles: Profile[] = rj(rr).data.profiles
             // console.warn(`profiles:${JSON.stringify(profiles)}`)
             const temp: Article[] = articles.map(m => {
                 const date = new Date(m.date)
 
-                m.date = this.displayTime(getTimeDiff(date).toFixed(0))
+                m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
                 // const profile: Profile = {
                 //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
                 //     , image: author1.image, carNumber: author1.carNumber
@@ -352,14 +348,19 @@ export class BlogListComponent extends React.Component<Props, State> {
     private getMore_hot = async () => {
         this.currentHotPage++;
 
-        const rj: RestfulJson = await getService(listArticleUrl(this.currentHotPage)) as any
-        const articles: Article[] = rj.data.articles
-        const profiles: Profile[] = rj.data.profiles
+        const rr = await getService(listArticleUrl(this.currentHotPage))
+
+        if(rrnol(rr)){
+            return;
+        }
+
+        const articles: Article[] = rj(rr).data.articles
+        const profiles: Profile[] = rj(rr).data.profiles
 
         const temp: Article[] = articles.map(m => {
             const date = new Date(m.date)
 
-            m.date = this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
+            m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
             // const profile: Profile = {
             //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
             //     , image: author1.image, carNumber: author1.carNumber
@@ -393,9 +394,12 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
     private listHottest = async () => {
-        const rj: RestfulJson = await getService(listArticleUrl(0)) as any
-        const articles: Article[] = rj.data.articles
-        const profiles: Profile[] = rj.data.profiles
+        const rr = await getService(listArticleUrl(0))
+        if(rrnol(rr)){
+            return;
+        }
+        const articles: Article[] = rj(rr).data.articles
+        const profiles: Profile[] = rj(rr).data.profiles
 
         // const ids = new Set()
         // articles.forEach(d => {
@@ -407,14 +411,14 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
 
-        // const rj2 : RestfulJson = await postService(getProfilesUrl(),Array.from(ids)) as any //todo:服务端统一返回profile
+        // const rj2 : RestfulJson = await postService(getProfilesUrl(),Array.from(ids)) as any
         // const profiles = rj2.data as UserAccount
         // console.warn(JSON.stringify(profiles))
 
         const temp: Article[] = articles.map(m => {
             const date = new Date(m.date)
 
-            m.date = this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
+            m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
             // const profile: Profile = {
             //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
             //     , image: author1.image, carNumber: author1.carNumber
@@ -473,7 +477,7 @@ export class BlogListComponent extends React.Component<Props, State> {
 
     private hasLoaded: boolean = false
     componentWillReceiveProps(nextProps) {
-        if (!this.props.load && nextProps.load == true && !this.hasLoaded) {//todo:和initAppOnlineCompleteEvent协调
+        if (!this.props.load && nextProps.load == true && !this.hasLoaded) {
             this.hasLoaded = true;
             this.listHottest()
         }

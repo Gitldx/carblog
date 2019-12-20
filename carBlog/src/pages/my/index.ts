@@ -8,3 +8,4 @@ export {MyInfoPage} from "./myInfo.page"
 export {MyScorePage} from './myScore.page'
 export {Pay} from './pay.page'
 export {ArticlePreviewPage} from './articlePreview.page'
+export {MyReportPage} from './myReport.page'

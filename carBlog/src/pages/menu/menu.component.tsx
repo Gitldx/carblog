@@ -34,11 +34,11 @@ interface State {
   unreadsNumber: number,
 }
 
-class MenuComponent extends React.Component<Props,State> {
+class MenuComponent extends React.Component<Props, State> {
 
 
-  public state : State = {
-    unreadsNumber : 0
+  public state: State = {
+    unreadsNumber: 0
   }
 
 
@@ -164,9 +164,16 @@ class MenuComponent extends React.Component<Props,State> {
 
     EventRegister.addEventListener(loginEvent, () => {
       if (UserAccount.instance.accountHasLogined) {
-        
+
         getLocalMsgs().then(msgs => {
           const unreads = msgs.unreads
+          // console.warn(`unreads:${JSON.stringify(unreads)}`)
+          this.setState({ unreadsNumber: unreads.length })
+        })
+      }
+      else {
+        getLocalMsgs().then(msgs => {
+          const unreads = msgs.unreads.filter(m => m.type == MESSAGETYPE.sys_bulletin)
           // console.warn(`unreads:${JSON.stringify(unreads)}`)
           this.setState({ unreadsNumber: unreads.length })
         })
@@ -182,7 +189,7 @@ class MenuComponent extends React.Component<Props,State> {
   }
 
 
-  public componentDidMount(){
+  public componentDidMount() {
     this.registerMessageEvent()
 
     if (hasInitAppUserState()) {
@@ -190,7 +197,7 @@ class MenuComponent extends React.Component<Props,State> {
       if (state == 1 || state == 2) {
         getLocalMsgs().then(msgs => {
           const unreads = msgs.unreads
-          
+
           this.setState({ unreadsNumber: unreads.length })
         })
       }
@@ -201,15 +208,15 @@ class MenuComponent extends React.Component<Props,State> {
   public render(): React.ReactNode {
     const { selectedIndex, themedStyle } = this.props;
 
-    return (
+    return (//todo:为什么程序一开始会显示消息badge
       <SafeAreaView style={themedStyle.safeAreaContainer}>
         <ThemeProvider theme={{ ...this.props.theme, ...themes['App Theme'] }}>
           <BottomNavigation
             appearance='noIndicator'
             selectedIndex={selectedIndex}
             onSelect={this.onTabSelect}
-            style={{backgroundColor:"transparent"}}
-            >
+            style={{ backgroundColor: "transparent" }}
+          >
             <TabButton style={{ alignItems: 'center' }} lable="首页">
               <MaterialCommunityIcons name="home" size={30} />
             </TabButton>

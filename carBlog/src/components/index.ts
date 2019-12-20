@@ -1,5 +1,4 @@
 
-
 export {AvatarContentBox} from './avatarContentBox.component'
 export {ContentBox} from './contentBox.component'
 export {LicensePlate} from './licensePlate.component'

@@ -6,6 +6,7 @@ const lastLocationKey = 'lastLocationKey'
 const lastLocatinCityKey = "lastLocatinCityKey"
 const searchedShareParksKey = "searchedShareParksKey" 
 const thankParksKey = "thankParksKey"
+const roadChatKey =  "roadChatKey"
 
 export type LocationStorage = {lng:number,lat:number,time:string}
 
@@ -21,7 +22,7 @@ export async function getLastLocation() {
 }
 
 
-export function saveLastCityCode(code:string){
+export function saveLastCityCode(code:number){
     saveAsyncStorage(lastLocatinCityKey, JSON.stringify(code), () => { }, () => { })
 }
 
@@ -70,5 +71,23 @@ export async function getThankParks(){
 
     return temp.map(t=>{
         return {id:t.id,time:new Date(t.time)}
+    })
+}
+
+
+
+type RoadChat = {road:string,time:Date}
+
+export function saveRoadChat(items : RoadChat[]){
+    saveAsyncStorage(roadChatKey,JSON.stringify(items),()=>{},()=>{})
+}
+
+
+export async function getRoadChats(){
+    const _result  = await AsyncStorage.getItem(roadChatKey)
+    const temp : RoadChat[] =  _result ? JSON.parse(_result) : []
+
+    return temp.map(t=>{
+        return {road:t.road,time:new Date(t.time)}
     })
 }

@@ -7,6 +7,7 @@ import *  as constants from './constants'
 import { EmptyState } from "./emptyState";
 import { PedestrianState } from "./pedestrianState";
 import { DriverState } from "./driverState";
+import { LoginEventData } from "./type";
 
 declare var global: globalFields
 
@@ -100,7 +101,8 @@ export function updateGlobalUserAccount(d: UserAccount, accountHasLogined: boole
 
 
     if (onLaunch) {//非启动时登录已经在 userstate 里emit登录事件了
-        EventRegister.emitEvent(loginEvent, { accountHasLogined: accountHasLogined, onLaunch })
+        const data : LoginEventData =  { accountHasLogined: accountHasLogined, onLaunch }
+        EventRegister.emitEvent(loginEvent,data)
     }
 }
 

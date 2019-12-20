@@ -49,6 +49,7 @@ const MenuTopNavigationParams: TopNavigationParams = {
       />
     );
   },
+  gesturesEnabled : true//todo:测试一下安卓的情况
 };
 
 const TopNavigationParams: TopNavigationParams = {
@@ -73,6 +74,7 @@ const TopNavigationParams: TopNavigationParams = {
         leftControl={leftControl} centerControl={centerControl} rightControls={rightControls} />
     );
   },
+  gesturesEnabled : true
 };
 
 // const EcommerceMenuTopNavigationParams: TopNavigationParams = {

@@ -101,6 +101,17 @@ export function showNoNetworkAlert() {
 }
 
 
+export function showNoAccountOnAlert(){
+    showMessage({
+        message:"提示",
+        description : "请先注册或者登录账号",
+        type : "warning",
+        icon : "warning",
+        position : 'center'
+      })
+}
+
+
 
 export async function getStorageAsync(key: string) {
     try {
@@ -222,6 +233,28 @@ export function timeDiffInSeconds(time1:Date,time2:Date){
     const diff = Math.abs(time1.getTime()-time2.getTime())
     // console.warn(`diff:${diff/1000}`)
     return diff/1000
+}
+
+
+export function displayIssueTime(time:Date) {
+
+    const minutes = getTimeDiff(time).toFixed(0)
+
+    if (Number(minutes) < 60) {
+        return minutes + "分钟前"
+    }
+    const hours = (Number(minutes) / 60).toFixed(0)
+    if (Number(hours) < 24) {
+        return hours + '小时前'
+    }
+    const day = (Number(hours) / 24).toFixed(0)
+    if (Number(day) < 30) {
+        return day + "天前"
+    }
+    else {
+        // const m = (Number(day) / 30).toFixed(0)
+        return (Number(day) / 30).toFixed(0) + "月前"
+    }
 }
 
 
