@@ -24,7 +24,7 @@ import { UserAccount } from '@src/core/userAccount/userAccount';
 import { OffStreetPark, SharePark as ShareParkModel } from '@src/core/model/park';
 import { ParkItem } from './type';
 import { simpleAlert } from '@src/core/uitls/alertActions';
-import { NEARDEVIATION } from '@src/core/uitls/constants';
+import { NEARDEVIATION, shareparkhint1 } from '@src/core/uitls/constants';
 import { saveLastLocation, getLastLocation, LocationStorage } from '@src/core/uitls/storage/locationStorage';
 import { showMessage } from 'react-native-flash-message';
 import {Toast,DURATION,COLOR} from '@src/components'
@@ -490,7 +490,7 @@ class SharePark extends React.Component<Props, State> {
                 </View>
                 {
                     this.state.selectedAddress ?
-                        <Text appearance="hint">{this.state.selectedAddress}</Text>
+                        <Text style={{marginLeft:16}} appearance="hint">{this.state.selectedAddress}</Text>
                         : null
                 }
                 <View>
@@ -524,7 +524,7 @@ class SharePark extends React.Component<Props, State> {
                             checked={this.state.parkType == 1}
                             onChange={() => this.setState({ parkType: 1 })}
                         />
-                        <Tooltip textStyle={{ fontSize: 14 }} text="路外停车场一般指社会公共停车场，商场专用停车场，建筑物室内停车场等,通常有专人管理" placement="left" style={{ width: 220 }}
+                        <Tooltip textStyle={{ fontSize: 14 }} text={shareparkhint1} placement="left" style={{ width: 220 }}
                             visible={this.state.tooltipVisible} onBackdropPress={() => this.setState({ tooltipVisible: false })}>
                             <TouchableOpacity onPress={() => this.setState({ tooltipVisible: true })}>
                                 <MaterialCommunityIcons name="help-circle" size={20} color={getThemeValue("color-warning-default", themes['App Theme'])} />
@@ -550,7 +550,10 @@ class SharePark extends React.Component<Props, State> {
                     <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
                         <View style={{ marginTop: 10 }}>
                             <Button onPress={this.publish}>发布</Button>
-                            <Text style={{ textAlign: 'center', marginTop: 10 }} category="p1" appearance="hint" >分享快乐</Text>
+                            <View style={{flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
+                            <MaterialCommunityIcons name="flower" color="#CD3700"/>
+                            <Text style={{ textAlign: 'center', marginTop: 10 }} category="p1" appearance="hint" >赠人玫瑰，手留余香</Text>
+                            </View>
                         </View>
 
                     </View>

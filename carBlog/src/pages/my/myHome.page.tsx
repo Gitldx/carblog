@@ -207,8 +207,8 @@ export class MyHome extends React.Component<Props, State> {
         </View>
 
 
-          <Text>test0</Text>
-          <Button onPress={this.testDebounce}>测试</Button>
+          {/* <Text>test0</Text>
+          <Button onPress={this.testDebounce}>测试</Button> */}
       </PageView>
 
     );

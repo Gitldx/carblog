@@ -47,7 +47,7 @@ type State = {
     initLatitude: number,
     initLongitude: number,
     selectedRoad: string,
-    chatCounts : number
+    chatCounts: number
     // limitRegion: any
 }
 
@@ -87,8 +87,8 @@ class SelectRoad extends React.Component<Props, State> {
     }
 
 
-    private selectedPoint: { lat: number, lng: number,citycode:number }
-    private selectCallback : (citycode,road,longitude,latitude)=>void
+    private selectedPoint: { lat: number, lng: number, citycode: number }
+    private selectCallback: (citycode, road, longitude, latitude) => void
 
 
     private keyboardOffset: number = Platform.select({
@@ -104,15 +104,15 @@ class SelectRoad extends React.Component<Props, State> {
         initLatitude: null,
         initLongitude: null,
         selectedRoad: '',
-        chatCounts:0
+        chatCounts: 0
 
         // limitRegion: null
     }
 
 
-    private go = ()=>{
-        const {lng,lat,citycode} = this.selectedPoint
-        this.selectCallback(citycode,this.state.selectedRoad,lng,lat)
+    private go = () => {
+        const { lng, lat, citycode } = this.selectedPoint
+        this.selectCallback(citycode, this.state.selectedRoad, lng, lat)
         this.props.navigation.goBack(KEY_NAVIGATION_BACK)
     }
 
@@ -122,11 +122,11 @@ class SelectRoad extends React.Component<Props, State> {
     private onMapPressed = async (e) => {
         let { longitude, latitude, } = e.nativeEvent
 
-        
+
 
         Geolocation.getReGeoCode({ latitude, longitude }, (result) => {
-            this.selectedPoint = { lat: latitude, lng: longitude,citycode:result.citycode };
-            this.setState({ selectedRoad: result.road },()=>{
+            this.selectedPoint = { lat: latitude, lng: longitude, citycode: result.citycode };
+            this.setState({ selectedRoad: result.road }, () => {
                 this.getCounts()
             })
         });
@@ -135,14 +135,14 @@ class SelectRoad extends React.Component<Props, State> {
 
 
 
-    private getCounts= async ()=>{
-        const rr = await getService(countRoadChatUrl(this.selectedPoint.citycode,this.state.selectedRoad))
-        if(rrnol(rr)){
+    private getCounts = async () => {
+        const rr = await getService(countRoadChatUrl(this.selectedPoint.citycode, this.state.selectedRoad))
+        if (rrnol(rr)) {
             return
         }
         // console.warn(JSON.stringify(rr))
         const count = rj(rr).data
-        this.setState({chatCounts:count})
+        this.setState({ chatCounts: count })
     }
 
 
@@ -160,13 +160,13 @@ class SelectRoad extends React.Component<Props, State> {
             const { latitude, longitude } = coords
             // this.setState({ mapShow: true, initLongitude: longitude, initLatitude: latitude })
 
-            
+
 
             Geolocation.getReGeoCode({
                 latitude: latitude,
                 longitude: longitude,
             }, (result) => {
-                this.selectedPoint = { lat: latitude, lng: longitude ,citycode:result.citycode}
+                this.selectedPoint = { lat: latitude, lng: longitude, citycode: result.citycode }
                 this.setState({ selectedRoad: result.road })
             });
 
@@ -186,7 +186,7 @@ class SelectRoad extends React.Component<Props, State> {
 
     }
 
-    
+
 
     public componentDidMount() {
 
@@ -258,29 +258,31 @@ class SelectRoad extends React.Component<Props, State> {
 
             <ScrollableAvoidKeyboard style={themedStyle.container} extraScrollHeight={this.keyboardOffset}>
                 {/* {this.renderSearchBar()} */}
-              
+
 
                 <View style={{ paddingHorizontal: 16 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
                         <Text appearance="hint" category="p2">选择道路</Text>
-                      
+
                     </View>
                 </View>
                 <View style={{ marginBottom: 20, height: 300 }}>
                     {this.state.mapShow ? this.renderMapview() : null}
                     {/* <View style={{backgroundColor:'yellow',width:300,height:28,position:'absolute',zIndex:9999,bottom:0,left:0}}></View> */}
                 </View>
-                {
-                    this.state.selectedRoad ?
-                        <Text appearance="hint">{this.state.selectedRoad}</Text>
-                        : null
-                }
+                <View style={{ paddingHorizontal: 16}}>
+                    {
+                        this.state.selectedRoad ?
+                            <Text appearance="hint">{this.state.selectedRoad}</Text>
+                            : null
+                    }
 
 
-                <Text appearance="hint" style={{marginTop:10}}>
-                    {`发言总数：${this.state.chatCounts}`}
-                </Text>
+                    <Text appearance="hint" style={{ marginTop: 10 }}>
+                        {`发言总数：${this.state.chatCounts}`}
+                    </Text>
 
+                </View>
                 <View>
 
                     <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>

@@ -161,7 +161,7 @@ class ParkDetail extends React.Component<Props, State> {
             <Text>附近有很多小吃</Text>
         )
     }
-   
+
     private info: ParkItem
 
     public componentWillMount() {
@@ -274,15 +274,17 @@ class ParkDetail extends React.Component<Props, State> {
                             </Text>
                         </View>
                     </View>
-                    <Text>
-                        {this.info.streetName}
-                    </Text>
-                    <Text>
-                        {this.info.parkName}
-                    </Text>
-                    <Text>
-                        {this.info.note}
-                    </Text>
+                    <View style={{paddingLeft:10}}>
+                        <Text>
+                            {this.info.streetName}
+                        </Text>
+                        <Text>
+                            {this.info.parkName}
+                        </Text>
+                        <Text>
+                            {this.info.note}
+                        </Text>
+                    </View>
 
 
 

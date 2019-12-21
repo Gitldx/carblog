@@ -35,6 +35,7 @@ import { showMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import Spinner from 'react-native-loading-spinner-overlay';
+import { loginhint1 } from '@src/core/uitls/constants';
 
 
 
@@ -349,12 +350,12 @@ class SearchPark extends React.Component<Props, State> {
         if (s != 1) {
             showMessage({
                 message: "提示",
-                description: "登录车主账号可以查看更多实时车位信息，点击查看游戏规则",
+                description: loginhint1,
                 position: 'center',
                 type: 'info',
                 icon: "info",
                 floating: true,
-                duration: 5000,
+                duration: 1500,
                 onPress:()=>{this.props.navigation.navigate("MyScore")}
             })
         }
@@ -638,7 +639,7 @@ class SearchPark extends React.Component<Props, State> {
 
 
 
-                <Text>点击你的目的地，搜索附近一公里停车位</Text>
+                <Text style={{marginLeft:10}}>点击你的目的地，搜索附近一公里停车位</Text>
 
                 <View style={{ marginBottom: 20, height: 250 }}>
                     {this.state.mapShow ? this.renderMapview() : null}

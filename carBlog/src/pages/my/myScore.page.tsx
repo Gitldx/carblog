@@ -15,11 +15,12 @@ import { AccountRoleType } from '@src/core/userAccount/type';
 import { ProfilePhoto } from './profilePhoto.component'
 import { CameraIconFill, PersonIconFill, PersonImage, MaterialCommunityIcons } from '@src/assets/icons';
 import { author1 } from '@src/core/data/articles';
-import {getService, getUserAccountUrl, getProfileUrl, rj } from '@src/core/uitls/httpService';
+import { getService, getUserAccountUrl, getProfileUrl, rj } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
 import { onlineAccountState } from '@src/core/userAccount/functions';
+import { gamerule1, gamerule2, gamerule3_1, gamerule3_2 } from '@src/core/uitls/constants';
 
 
 
@@ -41,9 +42,9 @@ export class MyScore extends React.Component<Props, State> {
   }
 
   public state: State = {
-    totalProducedMoney:0,
-    totolGiftMoney:0,
-    parkMoney:0,
+    totalProducedMoney: 0,
+    totolGiftMoney: 0,
+    parkMoney: 0,
   }
 
 
@@ -52,7 +53,7 @@ export class MyScore extends React.Component<Props, State> {
   public async componentWillMount() {
 
     const s = onlineAccountState()
-    if(s == 0){
+    if (s == 0) {
       return;
     }
 
@@ -60,14 +61,14 @@ export class MyScore extends React.Component<Props, State> {
 
     const ua: UserAccount = rj(rr).data;
     // console.warn(JSON.stringify(ua))
-    this.setState({ totolGiftMoney:ua.totalGiftMoney,totalProducedMoney:ua.totalProducedMoney,parkMoney:ua.parkMoney })
+    this.setState({ totolGiftMoney: ua.totalGiftMoney, totalProducedMoney: ua.totalProducedMoney, parkMoney: ua.parkMoney })
 
   }
 
   public render(): React.ReactNode {
 
     const { themedStyle } = this.props
-    const { parkMoney,totolGiftMoney,totalProducedMoney } = this.state
+    const { parkMoney, totolGiftMoney, totalProducedMoney } = this.state
     return (
       <PageView style={{ flex: 1 }}>
         {/* <View style={{ flexDirection: 'row',justifyContent:'space-around',padding:30 }}>
@@ -125,19 +126,22 @@ export class MyScore extends React.Component<Props, State> {
             车位币的用途
         </RKText>
           <RKText appearance="hint" category="p2">
-            查看附近的车位信息，将会消耗 (车位信息条数 x 0.1) 个车位币
-        </RKText>
+            {gamerule1}
+          </RKText>
           <RKText appearance="hint" category="s1" style={{ marginTop: 5 }}>
             如何自己生产车位币
         </RKText>
           <RKText appearance="hint" category="p2">
-            {"1、每在地图上分享一次车位信息，不管有没有车主获得帮助，你都可以获得0.1个车位币。\n2、打赏给信息分享者，每给分享人打赏1元钱，自己可获得10个车位币"}
+            {gamerule2}
           </RKText>
           <RKText appearance="hint" category="s1" style={{ marginTop: 5 }}>
             如何帮其他车主生产车位币
         </RKText>
           <RKText appearance="hint" category="p2">
-            停车时使用其他车主分享的空车位信息，随即赠送给分享人1个车位币，<RKText style={{ color: getThemeValue("color-warning-default", themes["App Theme"]) }} category="p2">赠送车位币并不会消耗你自己的车位币，但会增加对方的车位币</RKText>
+            {gamerule3_1}
+            <RKText style={{ color: getThemeValue("color-warning-default", themes["App Theme"]) }} category="p2">
+              {gamerule3_2}
+            </RKText>
           </RKText>
         </View>
 

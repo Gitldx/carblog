@@ -25,7 +25,7 @@ import { PermissionsAndroid } from "react-native";
 import { init, Geolocation } from "@src/components/amap/location";
 import { Park } from '@src/core/model';
 import { UserAccount } from '@src/core/userAccount/userAccount';
-import { NEARDEVIATION } from '@src/core/uitls/constants';
+import { NEARDEVIATION, parkhint1, parkhint2 } from '@src/core/uitls/constants';
 import { ParkItem } from './type';
 import { SharePark } from '@src/core/model/park';
 import Dialog from 'react-native-dialog'
@@ -735,7 +735,7 @@ class Parking extends React.Component<Props, State> {
                     <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
                         <View style={{ marginTop: 10 }}>
                             <Button onPress={this.action}>{this.state.btnText}</Button>
-                            <Text category="p1" appearance="hint" >只有设置成停车状态，其他人才能通过车牌号联系你</Text>
+                            <Text category="p1" appearance="hint" >{parkhint1}</Text>
                         </View>
 
                     </View>
@@ -744,7 +744,7 @@ class Parking extends React.Component<Props, State> {
                         {
                             (this.state.nearParks && this.state.nearParks.length > 0) ?
                                 <Text category="s2" appearance="hint" style={{ marginVertical: 5 }}>
-                                    意思一下，鼓励刚才给你提供车位信息的热心人吧
+                                    {parkhint2}
                                 </Text>
                                 : null
                         }

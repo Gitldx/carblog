@@ -51,6 +51,11 @@ interface State {
 export class MessagesPage extends React.Component<NavigationScreenProps, State> {
 
   static navigationOptions: NavigationScreenConfig<any> = ({ navigation, screenProps }) => {
+    
+    return {
+      title : "消息"
+    }
+
     const conversationHeaderConfig: ConversationsListNavigationStateParams = {
       onBack: navigation.getParam('onBack'),
       onSearchPress: navigation.getParam('onSearchPress'),

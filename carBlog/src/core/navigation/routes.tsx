@@ -26,7 +26,7 @@ import { SearchCarPage } from '@src/pages/home/searchCar.page';
 import { PayPage } from '@src/pages/my/pay.page';
 
 import Jigsaw from '@src/pages/test/jigsaw'
-import {ModalScreen} from '@src/pages/home'
+import { ModalScreen } from '@src/pages/home'
 
 
 
@@ -117,10 +117,28 @@ HomeNavigator.navigationOptions = ({ navigation }) => {
 
 
 
+const MessageNavigator: NavigationContainer = createStackNavigator({
+  ['Messages']: {
+    screen: MessagesPage,//Jigsaw,//MessagesPage,
+    navigationOptions: TopNavigationOptions
+    // navigationOptions: ({ navigation }) => ({
+    //   title: "消息",
+    // }),
+  },
+})
+
+
 
 const MenuNavigator: NavigationContainer = createBottomTabNavigator({
   ['Home']: HomeNavigator,
-  ['Messages']: MessagesPage,//Jigsaw,//MessagesPage,
+  ['Messages']: MessageNavigator,
+  // {
+  //   screen: MessagesPage,//Jigsaw,//MessagesPage,
+  //   TopNavigationOptions
+  //   // navigationOptions: ({ navigation }) => ({
+  //   //   title: "消息",
+  //   // }),
+  // },
   ['MyHome']: MyHomeNavigator,
 
 },
