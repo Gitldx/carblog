@@ -49,7 +49,7 @@ const MenuTopNavigationParams: TopNavigationParams = {
       />
     );
   },
-  gesturesEnabled : true//todo:测试一下安卓的情况
+  gesturesEnabled : true
 };
 
 const TopNavigationParams: TopNavigationParams = {

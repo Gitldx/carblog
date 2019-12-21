@@ -15,7 +15,7 @@ import {
 } from '@src/assets/icons';
 import { themes } from '@src/core/themes';
 import { TabButton } from './tabButton.component';
-import EventRegister, { messageEvent, chatEvent, homeMessageEvent, loginEvent, homeMessageReadEvent } from '@src/core/uitls/eventRegister';
+import EventRegister, { messageEvent, chatEvent, homeMessageEvent, loginEvent, homeMessageReadEvent, initAppUserStateCompleteEvent } from '@src/core/uitls/eventRegister';
 import { HomeMessage, MESSAGETYPE, ChatMessage } from '@src/core/model';
 import { MessageLooper } from '@src/core/uitls/messageLooper';
 import { isEmpty } from '@src/core/uitls/common';
@@ -186,13 +186,8 @@ class MenuComponent extends React.Component<Props, State> {
       this.setState({ unreadsNumber: MessageLooper.unReadMessage.length })
     })
 
-  }
 
-
-  public componentDidMount() {
-    this.registerMessageEvent()
-
-    if (hasInitAppUserState()) {
+    EventRegister.addEventListener(initAppUserStateCompleteEvent,()=>{
       const state = onlineAccountState()
       if (state == 1 || state == 2) {
         getLocalMsgs().then(msgs => {
@@ -201,7 +196,38 @@ class MenuComponent extends React.Component<Props, State> {
           this.setState({ unreadsNumber: unreads.length })
         })
       }
-    }
+      else{
+        getLocalMsgs().then(msgs => {
+          const unreads = msgs.unreads.filter(m=>m.type == MESSAGETYPE.sys_bulletin)
+
+          this.setState({ unreadsNumber: unreads.length })
+        })
+      }
+    })
+
+  }
+
+
+  public componentDidMount() {
+    this.registerMessageEvent()
+
+    // if (hasInitAppUserState()) {
+    //   const state = onlineAccountState()
+    //   if (state == 1 || state == 2) {
+    //     getLocalMsgs().then(msgs => {
+    //       const unreads = msgs.unreads
+
+    //       this.setState({ unreadsNumber: unreads.length })
+    //     })
+    //   }
+    //   else{
+    //     getLocalMsgs().then(msgs => {
+    //       const unreads = msgs.unreads.filter(m=>m.type == MESSAGETYPE.sys_bulletin)
+
+    //       this.setState({ unreadsNumber: unreads.length })
+    //     })
+    //   }
+    // }
   }
 
 

@@ -2,7 +2,7 @@ import { Platform, Alert } from 'react-native'
 import { isEmpty, toDate, showNoNetworkAlert } from "./common";
 import { getOnlineOffline, networkConnected } from "./netStatus";
 import { getJIP, getNIP } from "./readParameter";
-import { JSAPIVERSION_ANDROID } from './constants'; //todo: 统一js访问版本
+import { SPRINGWEBSERVICEVERSION ,NODEWEBSERVICEVERSION} from './constants';
 
 import { globalFields } from '../model';
 import { simpleAlert } from './alertActions';
@@ -55,7 +55,7 @@ const delay = (timeOut: number = 10 * 1000): Promise<RestfulResult> => {//todo:p
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function postService(url: string, body: {}, version: string = JSAPIVERSION_ANDROID): Promise<RestfulResult> {//todo:服务器关闭的情况
+export function postService(url: string, body: {}, version: string = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {//todo:服务器关闭的情况
 
 
 
@@ -116,7 +116,7 @@ export function postService(url: string, body: {}, version: string = JSAPIVERSIO
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function putService(url, body, version = JSAPIVERSION_ANDROID): Promise<RestfulResult> {
+export function putService(url, body, version = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
@@ -149,7 +149,7 @@ export function putService(url, body, version = JSAPIVERSION_ANDROID): Promise<R
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function deleteService(url, body, version = JSAPIVERSION_ANDROID): Promise<RestfulResult> {
+export function deleteService(url, body, version = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
@@ -195,7 +195,7 @@ export function deleteService(url, body, version = JSAPIVERSION_ANDROID): Promis
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function getNodeService(url, version = JSAPIVERSION_ANDROID): Promise<NodeSerivceJson> {
+export function getNodeService(url, version = NODEWEBSERVICEVERSION): Promise<NodeSerivceJson> {
 
     return Promise.race([getPromise(url, version), delay()]).then(obj => {
         return obj as any;
@@ -208,7 +208,7 @@ export function getNodeService(url, version = JSAPIVERSION_ANDROID): Promise<Nod
 }
 
 
-export function loopService(url, version = JSAPIVERSION_ANDROID): Promise<NodeSerivceJson> {
+export function loopService(url, version = NODEWEBSERVICEVERSION): Promise<NodeSerivceJson> {
 
     return getPromise(url, version).then(obj => {
         return obj as any;
@@ -227,7 +227,7 @@ export function loopService(url, version = JSAPIVERSION_ANDROID): Promise<NodeSe
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function getService(url, version = JSAPIVERSION_ANDROID, headers = {}): Promise<RestfulResult> {
+export function getService(url, version = SPRINGWEBSERVICEVERSION, headers = {}): Promise<RestfulResult> {
 
     return Promise.race([getPromise(url, version, headers), delay()]).then(obj => {
         return obj as any;
