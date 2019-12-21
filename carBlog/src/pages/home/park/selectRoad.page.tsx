@@ -18,7 +18,7 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { postService, parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol } from '@src/core/uitls/httpService';
+import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol } from '@src/core/uitls/httpService';
 import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";

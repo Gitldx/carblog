@@ -17,13 +17,14 @@ import { blogList, author1, articles } from '@src/core/data/articles';
 import { RestfulJson, postService, writeArticleUrl, qiniuImgUrl, getService, getQiniuTokenUrl, rrnol, rj, RestfulResult, updateArticleUrl, roadChatUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Article, RoadChat, globalFields } from '@src/core/model';
-import { isEmpty, toDate, showNoNetworkAlert, gcj2wgs } from '@src/core/uitls/common';
+import { isEmpty, toDate, showNoNetworkAlert, gcj2wgs, showNoAccountOnAlert } from '@src/core/uitls/common';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { init, Geolocation } from '@src/components/amap/location';
 import Amap from '@src/components/amap'
 import { hasOverRoadChat } from './parkUtils';
+import { onlineAccountState } from '@src/core/userAccount/functions';
 
 
 declare var global : globalFields
@@ -79,6 +80,14 @@ class IssueChat extends React.Component<Props, State> {
 
 
   private issue = async () => { //todo: 服务器设置time
+
+    const s = onlineAccountState()
+    if (s == 0 || s == -1) {
+      showNoAccountOnAlert();
+      return;
+    }
+
+
     const ua = UserAccount.instance
 
     const test = await hasOverRoadChat(this.state.selectedRoad)

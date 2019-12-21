@@ -19,7 +19,7 @@ import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow, ContentBox, LicensePlate } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, getNearestPointUrl, searchNearParkUrl, thankForParkUrl, matchShareParkPointUrl, searchParkByCarNumberUrl, rrnol, rj } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs, showNoNetworkAlert } from '@src/core/uitls/common';
+import { toDate, isEmpty, gcj2wgs, showNoNetworkAlert, showNoAccountOnAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation } from "@src/components/amap/location";
@@ -548,6 +548,12 @@ class Parking extends React.Component<Props, State> {
 
 
     private thank = async () => {
+
+        const s = onlineAccountState()
+        if (s == 0 || s == -1) {
+          showNoAccountOnAlert();
+          return;
+        }
 
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
         const rr = await postService(thankForParkUrl(), param)

@@ -731,8 +731,8 @@ function updateArticleUrl(previousImg: string) {
     return http() + `/article/update?previousImg=${isEmpty(previousImg) ? "" : previousImg}`
 }
 
-function deleteArticleUrl() {
-    return http() + `/article/delete/`
+function deleteArticleUrl(id:string) {
+    return http() + `/article/delete/${id}`
 }
 
 function readArticleUrl(id: string) {

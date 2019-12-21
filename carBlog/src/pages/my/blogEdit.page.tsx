@@ -14,11 +14,11 @@ import { ImageSource } from '@src/assets/images';
 import { LocalImage, RemoteImage } from '@src/assets/images/type';
 import { MaterialCommunityIcons } from '@src/assets/icons';
 import { blogList, author1, articles } from '@src/core/data/articles';
-import { RestfulJson, postService, writeArticleUrl, qiniuImgUrl, getService, getQiniuTokenUrl, rrnol, rj, RestfulResult, updateArticleUrl } from '@src/core/uitls/httpService';
+import { RestfulJson, postService, writeArticleUrl, qiniuImgUrl, getService, getQiniuTokenUrl, rrnol, rj, RestfulResult, updateArticleUrl, deleteService, deleteArticleUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Article } from '@src/core/model';
-import { isEmpty, toDate } from '@src/core/uitls/common';
-import { simpleAlert } from '@src/core/uitls/alertActions';
+import { isEmpty, toDate, showNoNetworkAlert } from '@src/core/uitls/common';
+import { simpleAlert, towActionAlert } from '@src/core/uitls/alertActions';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import Spinner from 'react-native-loading-spinner-overlay';
 
@@ -62,7 +62,7 @@ class BlogEdit extends React.Component<Props, State> {
 
   private article: Article
   private saveHandler: (article: Article) => void
-
+  private deleteHandler : ()=>void
   private keyboardOffset: number = Platform.select({
     ios: 40,
     android: 30,
@@ -194,7 +194,7 @@ class BlogEdit extends React.Component<Props, State> {
       const now = Date.now()
       const qiniuKey = toDate(now, 'yyyyMMdd') + "/" + UserAccount.getUid() + "_" + now
       const res = await getService(getQiniuTokenUrl(qiniuKey))
-      if(rrnol(res)){
+      if (rrnol(res)) {
         return { uploadResult: -1, qiniuKey: null }
       }
       const token = rj(res).data
@@ -219,22 +219,24 @@ class BlogEdit extends React.Component<Props, State> {
 
     if (uploadResult == 1) {
 
-      const { title, content, imgPath,imgRatio } = this.state
+      const { title, content, imgPath, imgRatio } = this.state
       const image = qiniuKey ? qiniuKey : imgPath
-      const reqData = { id: this.article ? this.article.id : null, uid: UserAccount.getUid(), title, content, image,imgRatio }
+      const reqData = { id: this.article ? this.article.id : null, uid: UserAccount.getUid(), title, content, image, imgRatio }
 
-      let rr : RestfulResult
-      if(!this.article){
+      let rr: RestfulResult
+      if (!this.article) {
         rr = await postService(writeArticleUrl(), reqData)
       }
-      else{
+      else {
         const toDeleteImg = this.article.image != image ? this.article.image : ""
-        rr = await postService(updateArticleUrl(toDeleteImg),{...reqData,date:this.article.date})
+        rr = await postService(updateArticleUrl(toDeleteImg), { ...reqData, date: this.article.date })
       }
 
       if (rj(rr).ok) {
-        this.article = Object.assign({}, { id: rj(rr).data, title: this.state.title, content: this.state.content, image: image,
-          imgRatio:this.state.imgRatio }) as any
+        this.article = Object.assign({}, {
+          id: rj(rr).data, title: this.state.title, content: this.state.content, image: image,
+          imgRatio: this.state.imgRatio
+        }) as any
         this.state.imgPath = image
         if (this.saveHandler) {
           this.saveHandler(this.article);
@@ -250,21 +252,41 @@ class BlogEdit extends React.Component<Props, State> {
       }
 
     }
-    else if(uploadResult == 0) {
+    else if (uploadResult == 0) {
       this.setState({ spinner: false }, () => {
         setTimeout(() => {
           simpleAlert(null, "系统出了点问题，请稍后再试")
         }, 500)
-        
+
       })
 
     }
-    else if(uploadResult == -1){
+    else if (uploadResult == -1) {
 
     }
 
 
 
+
+  }
+
+
+  private delete = () => { //todo:删除图片
+    towActionAlert("提示", "确认删除", "取消", null, "删除", async () => {
+
+      const rr = await deleteService(deleteArticleUrl(this.article.id), null)
+      if (rrnol(rr)) {
+        showNoNetworkAlert()
+        return;
+      }
+
+      this.deleteHandler()
+
+      simpleAlert(null, "删除成功", "关闭", () => {
+        this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+      })
+
+    })
 
   }
 
@@ -280,24 +302,27 @@ class BlogEdit extends React.Component<Props, State> {
       }
     }
 
-    const data : Article = { title: this.state.title, content: this.state.content, 
-      image : image ? this.state.imgPath : null,imgRatio:this.state.imgRatio} as any
-    
+    const data: Article = {
+      title: this.state.title, content: this.state.content,
+      image: image ? this.state.imgPath : null, imgRatio: this.state.imgRatio
+    } as any
+
     this.props.navigation.navigate("ArticlePreview", { article: data })
   }
 
 
 
-  public componentDidMount() {
+  public componentWillMount() {
     this.props.navigation.setParams({
       preview: this.preview
     })
 
     this.article = this.props.navigation.getParam("article")
     this.saveHandler = this.props.navigation.getParam("saveHandler")
+    this.deleteHandler = this.props.navigation.getParam("deleteHandler")
     if (this.article) {
-      const { title, content, image,imgRatio } = this.article;
-      this.setState({ title, content, imgPath: image as string,imgRatio:imgRatio?imgRatio:1 })
+      const { title, content, image, imgRatio } = this.article;
+      this.setState({ title, content, imgPath: image as string, imgRatio: imgRatio ? imgRatio : 1 })
     }
 
   }
@@ -320,7 +345,13 @@ class BlogEdit extends React.Component<Props, State> {
         <Input label="正文" placeholder="..." multiline={true} value={content} onChangeText={val => this.setState({ content: val })} />
 
 
-        <Button status="success" style={{ marginTop: 100,marginBottom:50 }} onPress={this.save}>保存</Button>
+        <Button status="success" style={{ marginTop: 100 }} onPress={this.save}>保存</Button>
+
+        {
+          this.article && this.article.id &&
+          <Button status="danger" style={{ marginTop: 20, marginBottom: 50 }} onPress={this.delete}>删除</Button>
+
+        }
 
 
       </ScrollableAvoidKeyboard>

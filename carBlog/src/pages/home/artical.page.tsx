@@ -16,12 +16,13 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { CommentsButton, LikeButton, VisitCounts, ArticleContent } from '@src/components';
 import { RemoteImage } from '@src/assets/images';
 import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime } from '@src/core/uitls/common';
+import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime, showNoAccountOnAlert } from '@src/core/uitls/common';
 import { postService, commentUrl, addArticleVisitCountUrl, likeArticleUrl, RestfulJson, likeCommentUrl, getProfilesUrl, rj, getCommentsProfilesUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { showMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { networkConnected } from '@src/core/uitls/netStatus';
+import { onlineAccountState } from '@src/core/userAccount/functions';
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -60,6 +61,13 @@ class Article extends React.Component<Props, State> {
       showNoNetworkAlert()
       return
     }
+
+    const s = onlineAccountState()
+    if (s == 0 || s == -1) {
+      showNoAccountOnAlert();
+      return;
+    }
+
     const uid = UserAccount.getUid()
     postService(likeCommentUrl(uid, this.article.id, index), null).then((rr) => {
       // console.warn(index)
@@ -100,6 +108,13 @@ class Article extends React.Component<Props, State> {
       showNoNetworkAlert()
       return
     }
+
+    const s = onlineAccountState()
+    if (s == 0 || s == -1) {
+      showNoAccountOnAlert();
+      return;
+    }
+
     // const articleCopy: Article = this.state.article;
     // articleCopy.comments.push({
     //   author: profiles[Math.floor(Math.random() * profiles.length)],
@@ -170,6 +185,13 @@ class Article extends React.Component<Props, State> {
       showNoNetworkAlert()
       return
     }
+
+    const s = onlineAccountState()
+    if (s == 0 || s == -1) {
+      showNoAccountOnAlert();
+      return;
+    }
+
     const uid = UserAccount.getUid()
     postService(likeArticleUrl(uid, this.article.id), null).then((rr) => {
       // console.warn(JSON.stringify(rj))

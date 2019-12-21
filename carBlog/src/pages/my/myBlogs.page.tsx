@@ -46,7 +46,8 @@ export class MyBlogs extends React.Component<Props, State> {
 
   private edit = (article? : Article)=>{
     const saveHandler = this.listArticles
-    this.props.navigation.navigate("myBlog",{article,saveHandler})
+    const deleteHandler = this.listArticles
+    this.props.navigation.navigate("myBlog",{article,saveHandler,deleteHandler})
   }
 
   private listArticles = async ()=>{

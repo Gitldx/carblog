@@ -234,7 +234,7 @@ class MenuComponent extends React.Component<Props, State> {
   public render(): React.ReactNode {
     const { selectedIndex, themedStyle } = this.props;
 
-    return (//todo:为什么程序一开始会显示消息badge
+    return (
       <SafeAreaView style={themedStyle.safeAreaContainer}>
         <ThemeProvider theme={{ ...this.props.theme, ...themes['App Theme'] }}>
           <BottomNavigation
