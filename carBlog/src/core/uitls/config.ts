@@ -3,7 +3,12 @@ import { themes, ThemeKey } from "../themes";
 export class Config {
 
     static get currentTheme() : ThemeKey {
-        return Config._themeKey
+        if(Config._themeKey != null){
+            return Config._themeKey
+        }
+        else{
+            return "Default"
+        }
     }
 
     static _themeKey: ThemeKey

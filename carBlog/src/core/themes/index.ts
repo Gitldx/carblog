@@ -9,6 +9,7 @@ import {
     ['Eva Light']: ThemeType;
     ['Eva Dark']: ThemeType;
     ['App Theme']: ThemeType;
+    ['Default'] : ThemeType
   }
   
   export type ThemeKey = keyof ThemeRegistry;
@@ -17,6 +18,7 @@ import {
     'Eva Light': light,
     'Eva Dark': dark,
     'App Theme': appTheme,
+    'Default' : light
   };
   
   export {
