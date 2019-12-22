@@ -21,3 +21,4 @@ export const gamerule3_2 = "赠送车位币并不会消耗你自己的车位币�
 export const parkhint1 = "只有设置成停车状态，其他人才能通过车牌号联系你"
 export const parkhint2 = "意思一下，鼓励刚才给你提供车位信息的热心人吧"
 export const shareparkhint1 = "路外停车场一般指社会公共停车场，商场专用停车场，建筑物室内停车场等,通常有专人管理"
+export const issueWarningText = "一个小时内只能同时在三条道路上发言"

@@ -20,16 +20,17 @@ import { UserAccount } from '@src/core/userAccount/userAccount';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
 import { onlineAccountState } from '@src/core/userAccount/functions';
-import { isEmpty, showNoNetworkAlert } from '@src/core/uitls/common';
+import { isEmpty, showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-
+import debounce from '@src/core/uitls/debounce'
+import { hideMessage } from 'react-native-flash-message';
 
 
 interface State {
   reportText: string,
-  type:0|1|2
+  type: 0 | 1 | 2
 }
 
 
@@ -45,16 +46,21 @@ export class MyReport extends React.Component<Props, State> {
 
   public state: State = {
     reportText: "",
-    type:0
+    type: 0
   }
 
 
-  private onRadioChecked = (value:AccountRoleType) => {
-    this.setState({ type: value})
+  private onRadioChecked = (value: AccountRoleType) => {
+    this.setState({ type: value })
   }
 
 
-  private commitReport = () => {
+  private commitReport = debounce(() => {
+    showOngoingAlert()
+    this.commitReportAction()
+  }, 5000, true)
+
+  private commitReportAction = () => {
 
     if (isEmpty(this.state.reportText)) {
       simpleAlert(null, "请填写一些内容")
@@ -68,7 +74,7 @@ export class MyReport extends React.Component<Props, State> {
     }
 
     const uid = UserAccount.getUid();
-    postService(commitReportUrl(), { uid: uid || "", content: this.state.reportText, type: this.state.type });
+    postService(commitReportUrl(), { uid: uid || "", content: this.state.reportText, type: this.state.type }).then(b=>hideMessage());
 
 
     this.props.navigation.goBack(KEY_NAVIGATION_BACK)
@@ -80,7 +86,7 @@ export class MyReport extends React.Component<Props, State> {
   public render(): React.ReactNode {
 
     const { themedStyle } = this.props
-    const { reportText,type } = this.state
+    const { reportText, type } = this.state
     return (
       <PageView style={{ flex: 1 }}>
 
@@ -136,7 +142,7 @@ export const MyReportPage = withStyles(MyReport, (theme: ThemeType) => ({
   },
   textInput: {
     marginHorizontal: 10, marginVertical: 10,
-     height: 160, borderRadius: 4,
+    height: 160, borderRadius: 4,
     padding: 5,
     backgroundColor: theme['background-basic-color-1'],
     color: theme['text-basic-color']

@@ -125,10 +125,10 @@ export class MyHome extends React.Component<Props, State> {
   private count = 0
   private debounce = debounce(()=>{
     console.warn(++this.count)
-  },2000,false)
+  },2000,true)
   private testDebounce=()=>{
-    // this.debounce()
-    simpleAlert(null,JSAPIVERSION_ANDROID)
+    this.debounce()
+    // simpleAlert(null,JSAPIVERSION_ANDROID)
   }
 
 

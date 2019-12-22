@@ -25,8 +25,11 @@ import { NavigationScreenProps } from 'react-navigation';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { networkConnected } from '@src/core/uitls/netStatus';
-import { showNoNetworkAlert } from '@src/core/uitls/common';
+import { showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import { removeCityCode } from '@src/core/uitls/storage/locationStorage';
+import debounce from '@src/core/uitls/debounce'
+import { hideMessage } from 'react-native-flash-message';
+
 
 interface ComponentProps {
   // onSignUpPress: (formData: SignUpFormData) => void;
@@ -67,7 +70,14 @@ class SignUp2Component extends React.Component<SignUp2Props, State> {
     // this.props.navigation.navigate("MyInfo")
   };
 
-  private onSignUpButtonPress = () => {
+
+  private onSignUpButtonPress = debounce(()=>{
+    showOngoingAlert()
+    this.onSignUpButtonPressAction()
+  },3000,true)
+
+
+  private onSignUpButtonPressAction = () => {
 
     if (!networkConnected()) {
       showNoNetworkAlert()
@@ -78,7 +88,8 @@ class SignUp2Component extends React.Component<SignUp2Props, State> {
 
     UserAccount.instance.register(accountName, password, role, () => {
       removeCityCode()
-      simpleAlert(null, "注册成功", null, () => {
+      hideMessage()
+      simpleAlert(null, "注册成功", null, () => {//todo:注册成功后每个用户赠送10个车位币
         this.props.navigation.navigate("MyScore")
       })
     })

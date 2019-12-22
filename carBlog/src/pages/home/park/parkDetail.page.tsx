@@ -215,6 +215,10 @@ class ParkDetail extends React.Component<Props, State> {
 
                 {...props}
                 locationEnabled
+                locationStyle={{
+                    fillColor: "rgba(0,0,0,0)",
+                    strokeColor: "rgba(0,0,0,0)"
+                }}
                 // onLocation={({ nativeEvent }) =>
                 //     console.log(`${nativeEvent.latitude}, ${nativeEvent.longitude}`)}
                 onPress={this.onMapPressed}
@@ -257,7 +261,7 @@ class ParkDetail extends React.Component<Props, State> {
 
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row' }}>
-                        {this.info.publisher && <Text>{this.info.publisher.nickname}</Text>}
+                        {this.info.publisher && <Text style={{ marginLeft: 10 }}>{this.info.publisher.nickname}</Text>}
                         {
                             this.info.publisher ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={this.info.publisher.carNumber} />
                                 : null
@@ -274,7 +278,7 @@ class ParkDetail extends React.Component<Props, State> {
                             </Text>
                         </View>
                     </View>
-                    <View style={{paddingLeft:10}}>
+                    <View style={{ paddingLeft: 10 }}>
                         <Text>
                             {this.info.streetName}
                         </Text>

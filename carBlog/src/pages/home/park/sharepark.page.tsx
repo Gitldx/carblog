@@ -15,7 +15,7 @@ import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import { postService, parkUrl, getService, shareParkUrl, getNearestPointUrl, rj } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
+import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation, getDistance } from "@src/components/amap/location";
@@ -31,6 +31,7 @@ import {Toast,DURATION,COLOR} from '@src/components'
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { networkConnected } from '@src/core/uitls/netStatus';
+import debounce from "@src/core/uitls/debounce"
 
 
 
@@ -141,10 +142,13 @@ class SharePark extends React.Component<Props, State> {
         )
     }
 
+    private publish = debounce(()=>{
+        this.toast.show("提交中...",DURATION.LENGTH_LONG)
+        this.publishAction()
+    },5000,true)
 
-
-
-    private publish = async () => {//todo:重复提交的问题，似乎还是会删掉附近的固定停车位
+//todo:所有表单检查一下值的合法性，特别时数字
+    private publishAction = async () => {
 
         if(!networkConnected()){
             showNoNetworkAlert()
@@ -211,7 +215,7 @@ class SharePark extends React.Component<Props, State> {
             }
             offStreetPark = { id: _id, parkName: this.state.parkName, location, gcjLocation, streetName, forFree }
         }
-        else if (this.state.parkType == 0 && this.currentOffStreetPark) {//需要删除掉路外停车场数据
+        else if (this.state.parkType == 0 && this.currentOffStreetPark != null) {//需要删除掉路外停车场数据
             offStreetPark = this.currentOffStreetPark
             offStreetPark.parkName = null
         }
@@ -302,6 +306,9 @@ class SharePark extends React.Component<Props, State> {
                             this.currentOffStreetPark = offStreet
                         }
                     }
+                    else{
+                        this.currentOffStreetPark = null
+                    }
                     this.setState({ forfree: forFree, parkType, parkName, parkNumber: parkNumber.toString(), info: note })
                     this.currentPark = myShare
                 }
@@ -316,6 +323,7 @@ class SharePark extends React.Component<Props, State> {
             }
             else {
                 this.currentPark = null
+                this.currentOffStreetPark = null
                 this.setState({forfree:false,parkType:0,parkName:"",parkNumber:"1",info:""})
             }
         })

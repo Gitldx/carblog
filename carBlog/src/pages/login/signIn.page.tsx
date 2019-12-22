@@ -21,8 +21,10 @@ import { NavigationScreenProps } from 'react-navigation';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import { networkConnected } from '@src/core/uitls/netStatus';
-import { showNoNetworkAlert } from '@src/core/uitls/common';
+import { showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import { removeCityCode } from '@src/core/uitls/storage/locationStorage';
+import debounce from '@src/core/uitls/debounce'
+import { hideMessage } from 'react-native-flash-message';
 
 interface ComponentProps {
   onSignInPress: (formData: SignInFormData) => void;
@@ -49,7 +51,13 @@ class SignInComponent extends React.Component<SignIn2Props> {
     formData: undefined,
   };
 
-  private onSignInButtonPress = () => {
+  private onSignInButtonPress = debounce(()=>{
+    showOngoingAlert("正在登录...")
+    this.onSignInButtonPressAction()
+  },3000,true)
+
+
+  private onSignInButtonPressAction = () => {
     if(!networkConnected()){
       showNoNetworkAlert()
       return;
@@ -60,6 +68,7 @@ class SignInComponent extends React.Component<SignIn2Props> {
         return
       }
       removeCityCode()
+      hideMessage()
       this.props.navigation.navigate("MyHome")
     })
     //this.props.onSignInPress(this.state.formData);

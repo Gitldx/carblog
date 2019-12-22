@@ -112,6 +112,18 @@ export function showNoAccountOnAlert(){
 }
 
 
+export function showOngoingAlert(msg?:string){
+    showMessage({
+        message : "提示",
+        description : msg ? msg : "提交中...",
+        type :"info",
+        icon : "info",
+        position : 'center',
+        duration : 3000
+    })
+}
+
+
 
 export async function getStorageAsync(key: string) {
     try {

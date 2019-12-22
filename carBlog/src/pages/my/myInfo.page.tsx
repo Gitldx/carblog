@@ -24,7 +24,7 @@ import { toDate, isEmpty } from '@src/core/uitls/common';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import Spinner from 'react-native-loading-spinner-overlay';
-
+import debounce from '@src/core/uitls/debounce'
 
 const NativeAPI = NativeModules.NativeAPI
 
@@ -87,7 +87,12 @@ export class MyInfo extends React.Component<Props, State> {//todo:发表文章�
   }
 
 
-  private save = async () => {
+  private save = debounce(()=>{
+    this.saveAction()
+  },5000,true)
+
+
+  private saveAction = async () => {
 
     if(isEmpty(this.state.nickname)){
       simpleAlert(null,"请填写昵称")

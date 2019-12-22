@@ -1,1 +1,1 @@
-export default function(func : ()=>any,wait:number,immediate:boolean)
+export default function(func : ()=>any,wait:number,immediate?:boolean)

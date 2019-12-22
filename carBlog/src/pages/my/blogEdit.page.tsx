@@ -21,6 +21,8 @@ import { isEmpty, toDate, showNoNetworkAlert } from '@src/core/uitls/common';
 import { simpleAlert, towActionAlert } from '@src/core/uitls/alertActions';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import Spinner from 'react-native-loading-spinner-overlay';
+import debounce from '@src/core/uitls/debounce'
+
 
 const NativeAPI = NativeModules.NativeAPI
 
@@ -211,7 +213,12 @@ class BlogEdit extends React.Component<Props, State> {
   }
 
 
-  private save = async () => {
+  private save = debounce(()=>{
+    this.saveAction()
+  },5000,true)
+
+
+  private saveAction = async () => {
 
     this.setState({ spinner: true })
 

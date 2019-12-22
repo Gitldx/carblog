@@ -19,7 +19,7 @@ import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow, ContentBox, LicensePlate } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import { postService, parkUrl, getService, parkGetUrl, RestfulJson, driveUrl, deleteService, extendParkUrl, getNearestPointUrl, searchNearParkUrl, thankForParkUrl, matchShareParkPointUrl, searchParkByCarNumberUrl, rrnol, rj } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs, showNoNetworkAlert, showNoAccountOnAlert } from '@src/core/uitls/common';
+import { toDate, isEmpty, gcj2wgs, showNoNetworkAlert, showNoAccountOnAlert, showOngoingAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation } from "@src/components/amap/location";
@@ -29,14 +29,14 @@ import { NEARDEVIATION, parkhint1, parkhint2 } from '@src/core/uitls/constants';
 import { ParkItem } from './type';
 import { SharePark } from '@src/core/model/park';
 import Dialog from 'react-native-dialog'
-import { showMessage } from 'react-native-flash-message';
+import { showMessage, hideMessage } from 'react-native-flash-message';
 import { hasThanked } from './parkUtils';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { getLastParkData, saveLastParkData } from '@src/core/uitls/storage/park';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { networkConnected } from '@src/core/uitls/netStatus';
-
+import debounce from '@src/core/uitls/debounce'
 
 
 type ThankDTO = {
@@ -97,7 +97,8 @@ class Parking extends React.Component<Props, State> {
     static navigationOptions: NavigationScreenConfig<any> = ({ navigation, screenProps }) => {
         return {
 
-            title: '停车'
+            title: '停车',
+            gesturesEnabled : true
         }
     }
 
@@ -185,8 +186,12 @@ class Parking extends React.Component<Props, State> {
           }).catch(error => console.warn('tel error', error))
     }
 
+    private delayParkTime = debounce(()=>{
+        this.delayParkTimeAction()
+    },5000,true)
 
-    private delayParkTime = async () => {
+
+    private delayParkTimeAction = async () => {
         // const d = new Date()
         // d.setTime(d.getTime() + Number(this.state.delayTime) * 60 * 1000)
         // this.setState({ leaveTime: toDate(d) })
@@ -200,13 +205,22 @@ class Parking extends React.Component<Props, State> {
             return;
         }
 
+        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
+
+
         const p: Park = rj(rr).data
 
         this.setState({ leaveTime: toDate(new Date(p.leaveTime)) })
         this.callback(p)
     }
 
-    park = async () => {
+
+    private park = debounce(()=>{
+        showOngoingAlert()
+        this.parkAction()
+    },5000,true)
+
+    parkAction = async () => {
         const c = this.currentPosition
         const { lng, lat } = gcj2wgs(c.longitude, c.latitude)
         const carNumber = this.state.carNumber.toUpperCase()
@@ -218,6 +232,8 @@ class Parking extends React.Component<Props, State> {
         if(rrnol(res)){
             return
         }
+        hideMessage()
+        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
 
         // console.warn(`res:${JSON.stringify(res)}`)
         // EventRegister.emit(parkingEvent, 1)
@@ -230,12 +246,18 @@ class Parking extends React.Component<Props, State> {
         this.callback(p)
     }
 
-    drive = async () => {
+    private drive = debounce(()=>{
+        this.driveAction()
+    },5000,true)
+
+    driveAction = async () => {
         if(!networkConnected()){
             showNoNetworkAlert()
             return
         }
         await deleteService(driveUrl(this.parkId, UserAccount.getUid()), null)
+        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
+
         // EventRegister.emit(parkingEvent, 0)
         this.setState({ status: 0, btnText: '停车', leaveTime: '', stayTime: null, delayTime: null })
         this.callback(null)
@@ -291,7 +313,6 @@ class Parking extends React.Component<Props, State> {
             this.drive()
         }
 
-        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
     }
 
 
@@ -547,7 +568,13 @@ class Parking extends React.Component<Props, State> {
     }
 
 
-    private thank = async () => {
+    private thank = debounce(()=>{
+        showOngoingAlert()
+        this.thankAction()
+    },5000,true)
+
+
+    private thankAction = async () => {
 
         const s = onlineAccountState()
         if (s == 0 || s == -1) {
@@ -556,10 +583,11 @@ class Parking extends React.Component<Props, State> {
         }
 
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
-        const rr = await postService(thankForParkUrl(), param)
+        const rr = await postService(thankForParkUrl(), param)//todo:查一下为什么消息的昵称为空
         if(rrnol(rr)){
             return
         }
+        hideMessage()
         // console.warn(JSON.stringify(rr))
         this.setState({ dialogVisible: false, thankText: '' },()=>{
             this.toast.show("赠人玫瑰，手留余香",DURATION.LENGTH_LONG)

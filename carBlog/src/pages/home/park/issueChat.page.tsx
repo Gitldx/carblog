@@ -25,6 +25,8 @@ import { init, Geolocation } from '@src/components/amap/location';
 import Amap from '@src/components/amap'
 import { hasOverRoadChat } from './parkUtils';
 import { onlineAccountState } from '@src/core/userAccount/functions';
+import {issueWarningText} from '@src/core/uitls/constants'
+import debounce from '@src/core/uitls/debounce'
 
 
 declare var global : globalFields
@@ -76,10 +78,13 @@ class IssueChat extends React.Component<Props, State> {
   });
 
 
-  private warningText = "一个小时内只能同时在三条道路上发言"
+  private warningText = issueWarningText
 
+  private issue = debounce(()=>{
+    this.issueAction()
+  },5000,true)
 
-  private issue = async () => { //todo: 服务器设置time
+  private issueAction = async () => { //todo: 服务器设置time
 
     const s = onlineAccountState()
     if (s == 0 || s == -1) {
@@ -113,7 +118,7 @@ class IssueChat extends React.Component<Props, State> {
     }
 
     const rr = await postService(roadChatUrl(), chat)
-    console.warn(JSON.stringify(rr))
+    // console.warn(JSON.stringify(rr))
     if (rrnol(rr)) {
       return;
     }
