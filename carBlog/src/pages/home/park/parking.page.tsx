@@ -200,6 +200,11 @@ class Parking extends React.Component<Props, State> {
             return
         }
 
+        if(isNaN(this.state.delayTime as any)){
+            simpleAlert(null,"请填写正确时间")
+            return
+        }
+
         const rr = await postService(extendParkUrl(this.parkId, this.state.delayTime), null)
         if(rrnol(rr)){
             return;
@@ -307,6 +312,17 @@ class Parking extends React.Component<Props, State> {
                 simpleAlert(null,"请填写停车时长")
                 return;
             }
+
+            if(isNaN(this.state.phone as any)){
+                simpleAlert(null,"请填写正确电话号码")
+                return
+            }
+
+            if(isNaN(this.state.stayTime as any)){
+                simpleAlert(null,"请填写正确时间")
+                return
+            }
+
             this.park()
         }
         else if (this.state.status == 1) {

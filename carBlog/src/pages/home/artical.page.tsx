@@ -23,6 +23,7 @@ import { showMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { onlineAccountState } from '@src/core/userAccount/functions';
+import { simpleAlert } from '@src/core/uitls/alertActions';
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -104,6 +105,12 @@ class Article extends React.Component<Props, State> {
   };
 
   private onCommentSubmit = () => {
+
+    if(isEmpty(this.state.currentCommentText)){
+      simpleAlert(null,"评论内容不能为空")
+      return
+    }
+
     if(!networkConnected()){
       showNoNetworkAlert()
       return

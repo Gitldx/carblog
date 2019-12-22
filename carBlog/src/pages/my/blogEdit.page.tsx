@@ -220,6 +220,11 @@ class BlogEdit extends React.Component<Props, State> {
 
   private saveAction = async () => {
 
+    if(isEmpty(this.state.title || this.state.content)){
+      simpleAlert(null,"请填写标题和文章内容")
+      return
+    }
+
     this.setState({ spinner: true })
 
     const { uploadResult, qiniuKey } = await this.uploadImg()

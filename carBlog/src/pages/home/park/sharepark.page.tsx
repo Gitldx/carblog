@@ -147,7 +147,7 @@ class SharePark extends React.Component<Props, State> {
         this.publishAction()
     },5000,true)
 
-//todo:所有表单检查一下值的合法性，特别时数字
+
     private publishAction = async () => {
 
         if(!networkConnected()){
@@ -169,6 +169,12 @@ class SharePark extends React.Component<Props, State> {
                 onPress:()=>{this.props.navigation.navigate("MyScore")}
             })
             return;
+        }
+
+
+        if(isEmpty(this.state.parkNumber) || isNaN(this.state.parkNumber as any)){
+            simpleAlert(null,"请填写正确的空车位数量")
+            return
         }
 
         const lastLocation: LocationStorage = await getLastLocation()
@@ -504,7 +510,7 @@ class SharePark extends React.Component<Props, State> {
                 <View>
                     <FormRow title="车位数量">
                         <View style={styles.form}>
-                            <Input style={{ width: '100%' }} value={this.state.parkNumber} onChangeText={(val) => this.setState({ parkNumber: val })} />
+                            <Input keyboardType="number-pad" style={{ width: '100%' }} value={this.state.parkNumber} onChangeText={(val) => this.setState({ parkNumber: val })} />
                         </View>
                     </FormRow>
                     <FormRow title="停车费">

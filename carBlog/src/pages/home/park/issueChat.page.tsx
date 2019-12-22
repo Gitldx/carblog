@@ -86,6 +86,11 @@ class IssueChat extends React.Component<Props, State> {
 
   private issueAction = async () => { //todo: 服务器设置time
 
+    if(isEmpty(this.state.content)){
+      simpleAlert(null,"内容不能为空")
+      return
+    }
+
     const s = onlineAccountState()
     if (s == 0 || s == -1) {
       showNoAccountOnAlert();
