@@ -27,8 +27,10 @@ import { CommentsButton } from '../commentsButton.component';
 import { LikeButton } from '../likeButton.component';
 import { thumbnailUri } from '@src/assets/images/type';
 
+
 interface ComponentProps {
   comment: CommentModel;
+  navigation : any;
   // onMorePress: (index: number) => void;
   onLikePress: (index: number) => void;
   onReplyMorePress: (index: number) => void;
@@ -51,6 +53,8 @@ class CommentListItemComponent extends React.Component<CommentListItemProps, Sta
   // private onMorePress = () => {
   //   this.props.onMorePress(this.props.index);
   // };
+
+ 
 
   private onLikePress = () => {
     this.props.onLikePress(this.props.index);
@@ -98,8 +102,11 @@ class CommentListItemComponent extends React.Component<CommentListItemProps, Sta
 
     return (
       <ListItem style={[themedStyle.container, style]}>
+        
         <View style={themedStyle.authorContainer}>
           <ActivityAuthoring
+            navigation ={this.props.navigation}
+            profile = {comment.authorProfile}
             style={themedStyle.activityAuthoring}
             photo={comment.authorProfile.image ? thumbnailUri(comment.authorProfile.image) : null}
             name={comment.authorProfile.nickname}
@@ -127,7 +134,7 @@ class CommentListItemComponent extends React.Component<CommentListItemProps, Sta
           {/* <CommentsButton onPress={this.onCommentPress}>
             {comment.comments ? comment.comments.length.toString() : "0"}
           </CommentsButton> */}
-          <LikeButton onPress={this.onLikePress}>
+          <LikeButton style={{marginLeft:10}} canAction={true} onPress={this.onLikePress}>
             {comment.likes ? comment.likes.length.toString() : "0"}
           </LikeButton>
         </View>

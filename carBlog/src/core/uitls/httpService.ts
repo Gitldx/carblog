@@ -373,7 +373,7 @@ function qiniuThumbImgUrl(path) {
         return ""
     }
 
-    const arr = path.split("/")
+    // const arr = path.split("/")
     // console.warn(`qiniuThumbImgUrl${getImgIp() + arr[0] + "/t_" + arr[1]}`)
 
     // return getImgIp() + `${arr[0]}/t_${arr[1]}`

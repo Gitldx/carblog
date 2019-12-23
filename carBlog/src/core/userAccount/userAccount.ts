@@ -61,18 +61,21 @@ export class UserAccount {
     }
 
 
-    initInfo({ nickname, phone, carNumber }) {
+    initInfo({ nickname, phone, carNumber,image }) {
         this.nickname = nickname
         this.phone = phone
-        this.carNumber = carNumber
+        this.carNumber = carNumber,
+        this.image = image
     }
 
-    setInfo({ nickname, phone, carNumber, role }) {
+    setInfo({ nickname, phone, carNumber, role,image }) {
         this.nickname = nickname
         this.phone = phone
         this.carNumber = carNumber
         
         this.role = role
+
+        this.image = image
         
         console.warn(`setInfo:${JSON.stringify(this)}`)
         saveUserAccountLocally(this)
@@ -113,11 +116,11 @@ export class UserAccount {
             if (rj(rr).ok) {
 
                 if (rj(rr).code == 0) {
-                    const data = rj(rr).data
+                    const data : UserAccount= rj(rr).data
 
                     const role: AccountRoleType = data.role
                     const ua = new UserAccount(data.id, null, accountName, password, true, role)
-                    ua.initInfo({ nickname: data.nickname, phone: data.phone, carNumber: data.carNumber })
+                    ua.initInfo({ nickname: data.nickname, phone: data.phone, carNumber: data.carNumber,image:data.image })
 
                     let newState = undefined
                     if (role == 1) {
@@ -156,9 +159,10 @@ export class UserAccount {
 
 
     async logout() {
-        await UserState.instance.transfer(new EmptyState(new UserAccount()))//todo: 测试一下
+        await UserState.instance.transfer(new EmptyState(new UserAccount()))
         // this.accountHasLogined = false
         // await saveUserAccountLocally(this)
+
     }
 
 

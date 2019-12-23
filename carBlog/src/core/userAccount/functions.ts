@@ -46,12 +46,12 @@ export async function initUserState() {
             break;
         case constants.PEDESTRIAN:
             ua = new UserAccount(localUa.id, localUa.deviceId, localUa.accountName, localUa.password, localUa.accountHasLogined, localUa.role)
-            ua.initInfo({nickname : localUa.nickname,phone:localUa.phone,carNumber : localUa.carNumber})
+            ua.initInfo({nickname : localUa.nickname,phone:localUa.phone,carNumber : localUa.carNumber,image : localUa.image})
             initState = new PedestrianState(ua)
             break;
         case constants.DRIVER:
             ua = new UserAccount(localUa.id, localUa.deviceId, localUa.accountName, localUa.password, localUa.accountHasLogined, localUa.role)
-            ua.initInfo({nickname : localUa.nickname,phone:localUa.phone,carNumber : localUa.carNumber})
+            ua.initInfo({nickname : localUa.nickname,phone:localUa.phone,carNumber : localUa.carNumber,image:localUa.image})
            
             initState = new DriverState(ua)
             break;

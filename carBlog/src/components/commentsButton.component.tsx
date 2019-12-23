@@ -16,31 +16,50 @@ import { MessageCircleIconOutline } from '@src/assets/icons';
 
 interface ComponentProps {
   textStyle?: StyleProp<TextStyle>;
-  rKTextProps? : TextProps,
+  rKTextProps?: TextProps,
   children?: string,
-  iconSize? : number
+  iconSize?: number,
+  canAction?: boolean
 }
 
 export type CommentsButtonProps = ThemedComponentProps & TouchableOpacityProps & ComponentProps;
 
 class CommentsButtonComponent extends React.Component<CommentsButtonProps> {
 
+  static defaultProps: ComponentProps = {
+    canAction: false
+  }
+
   public render(): React.ReactNode {
-    const { style, themedStyle, textStyle,rKTextProps = {appearance : "default",category:'p2'}, iconSize = 24,children, ...restProps } = this.props;
+    const { style, themedStyle, textStyle, rKTextProps = { appearance: "default", category: 'p2' }, iconSize = 24, children, canAction, ...restProps } = this.props;
 
     return (
-      <TouchableOpacity
-        style={[themedStyle.container, style]}
-        {...restProps}>
-        {MessageCircleIconOutline([themedStyle.icon,{width:iconSize,height:iconSize}])}
-        <Text
-          style={[themedStyle.valueLabel, textStyle]}
-          appearance = {rKTextProps.appearance}
-          category = {rKTextProps.category}
+      canAction ?
+        <TouchableOpacity
+          style={[themedStyle.container, style]}
+          {...restProps}>
+          {MessageCircleIconOutline([themedStyle.icon, { width: iconSize, height: iconSize }])}
+          <Text
+            style={[themedStyle.valueLabel, textStyle]}
+            appearance={rKTextProps.appearance}
+            category={rKTextProps.category}
           >
-          {children}
-        </Text>
-      </TouchableOpacity>
+            {children}
+          </Text>
+        </TouchableOpacity>
+        :
+        <View style={[themedStyle.container, style]}
+          {...restProps}>
+          {MessageCircleIconOutline([themedStyle.icon, { width: iconSize, height: iconSize }])}
+          <Text
+            style={[themedStyle.valueLabel, textStyle]}
+            appearance={rKTextProps.appearance}
+            category={rKTextProps.category}
+          >
+            {children}
+          </Text>
+
+        </View>
     );
   }
 }

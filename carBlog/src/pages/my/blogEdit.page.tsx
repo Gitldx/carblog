@@ -283,7 +283,7 @@ class BlogEdit extends React.Component<Props, State> {
   }
 
 
-  private delete = () => { //todo:删除图片
+  private delete = () => { //todo:服务器删除图片
     towActionAlert("提示", "确认删除", "取消", null, "删除", async () => {
 
       const rr = await deleteService(deleteArticleUrl(this.article.id), null)

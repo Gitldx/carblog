@@ -113,7 +113,7 @@ export class MyInfo extends React.Component<Props, State> {//todo:发表文章�
       const rr = await postService(setUserInfoUrl(toDeleteImg), reqData)
       if (rj(rr).ok) {
         this.setState({ spinner: false }, () => {
-          UserAccount.instance.setInfo({ ...this.state })
+          UserAccount.instance.setInfo({ ...this.state,image })
           setTimeout(() => {
             if(this.state.role != this.serverUserInfo.role){
               simpleAlert(null, "更改身份类型后需重启App生效", "知道了", () => {

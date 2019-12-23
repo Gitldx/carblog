@@ -79,6 +79,7 @@ export class SearchCar extends React.Component<Props, State> {
 
       m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
       const profile: Profile = {
+        id:ua.id,
         nickname: ua.nickname.length > 11 ? ua.nickname.substr(0, 10) + "..." : ua.nickname
         , carNumber: ua.carNumber
       }
@@ -106,9 +107,10 @@ export class SearchCar extends React.Component<Props, State> {
 
 
   private onPressed = (article: Article) => {
+    const profile : Profile = this.state.userInfo
     this.props.navigation.navigate({
         routeName: 'Article',
-        params: { title: article.authorProfile.nickname, article}
+        params: { profile,title: article.authorProfile.nickname, article}
     })
 }
 

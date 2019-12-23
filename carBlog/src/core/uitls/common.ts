@@ -1,14 +1,11 @@
 
 import {
-    AsyncStorage
+    AsyncStorage, Platform, ToastAndroid
 } from 'react-native';
 
 
 import { showMessage } from 'react-native-flash-message'
 // export { toDate } from './prototype'
-
-
-
 import { NativeModules } from 'react-native'
 import { simpleAlert } from './alertActions';
 import {wgs84togcj02,gcj02towgs84} from 'coordtransform'
@@ -122,6 +119,24 @@ export function showOngoingAlert(msg?:string){
         duration : 3000
     })
 }
+
+
+
+export function showLittleMsgToast(msg:string){
+    if(Platform.OS == 'android'){
+        ToastAndroid.showWithGravity(msg,ToastAndroid.SHORT,ToastAndroid.CENTER)
+    }
+    else{
+        showMessage({
+            message : msg,
+            type : 'info',
+            position : 'center',
+            duration : 1500,
+            floating : true
+        })
+    }
+}
+
 
 
 

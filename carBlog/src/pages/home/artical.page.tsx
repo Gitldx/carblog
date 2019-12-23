@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, ImageBackground, Platform } from 'react-native'
+import { View, ImageBackground, Platform, TouchableOpacity } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { withStyles, ThemeType, ThemedComponentProps, Text, Button } from 'react-native-ui-kitten';
+import { withStyles, ThemeType, ThemedComponentProps, Text, Button, Avatar } from 'react-native-ui-kitten';
 
 
 import { NavigationScreenConfig } from 'react-navigation';
@@ -16,7 +16,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { CommentsButton, LikeButton, VisitCounts, ArticleContent } from '@src/components';
 import { RemoteImage } from '@src/assets/images';
 import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime, showNoAccountOnAlert } from '@src/core/uitls/common';
+import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime, showNoAccountOnAlert, showLittleMsgToast } from '@src/core/uitls/common';
 import { postService, commentUrl, addArticleVisitCountUrl, likeArticleUrl, RestfulJson, likeCommentUrl, getProfilesUrl, rj, getCommentsProfilesUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { showMessage } from 'react-native-flash-message';
@@ -24,6 +24,8 @@ import { Toast, DURATION, COLOR } from '@src/components'
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { simpleAlert } from '@src/core/uitls/alertActions';
+import { thumbnailUri } from '@src/assets/images/type';
+import { MaterialCommunityIcons } from '@src/assets/icons';
 
 
 type Props = ThemedComponentProps & NavigationScreenProps
@@ -57,8 +59,8 @@ class Article extends React.Component<Props, State> {
   });
 
 
-  private onCommentLikePress = (index: number) => {
-    if(!networkConnected()){
+  private onCommentLikePress = (index: number) => {//todo:长页面的情况下toast 安卓该用原生，ios该用flashmessage
+    if (!networkConnected()) {
       showNoNetworkAlert()
       return
     }
@@ -82,7 +84,8 @@ class Article extends React.Component<Props, State> {
 
         // }
 
-        this.toast.show('+1', DURATION.LENGTH_SHORT);
+        // this.toast.show('+1', DURATION.LENGTH_SHORT);
+        showLittleMsgToast('+1')
 
         // showMessage({
         //   position: 'center',
@@ -105,13 +108,13 @@ class Article extends React.Component<Props, State> {
   };
 
   private onCommentSubmit = () => {
-
-    if(isEmpty(this.state.currentCommentText)){
-      simpleAlert(null,"评论内容不能为空")
+   
+    if (isEmpty(this.state.currentCommentText)) {
+      simpleAlert(null, "评论内容不能为空")
       return
     }
 
-    if(!networkConnected()){
+    if (!networkConnected()) {
       showNoNetworkAlert()
       return
     }
@@ -132,7 +135,7 @@ class Article extends React.Component<Props, State> {
     const c: Comment = { author: UserAccount.getUid(), text: this.state.currentCommentText } as any
     postService(commentUrl(this.article.id), c).then(res => {
       // console.warn(`comment:${JSON.stringify(res)}`)
-      c.authorProfile = { image: author1.image, nickname: UserAccount.instance.nickname }
+      c.authorProfile = { id:UserAccount.getUid(),image: UserAccount.instance.image, nickname: UserAccount.instance.nickname }
       c.date = new Date()
       c.dateString = toDate(c.date, "yyyy/MM/dd hh:mm:ss")
       this.state.comments.push(c)
@@ -185,10 +188,10 @@ class Article extends React.Component<Props, State> {
 
 
 
-  private toast : Toast
+  private toast: Toast
 
   private likeArticle = () => {
-    if(!networkConnected()){
+    if (!networkConnected()) {
       showNoNetworkAlert()
       return
     }
@@ -214,7 +217,8 @@ class Article extends React.Component<Props, State> {
         }
 
         this.setState({ articleLikes: this.article.likes })
-        this.toast.show('+1', DURATION.LENGTH_SHORT);
+        showLittleMsgToast('+1')
+        // this.toast.show('+1', DURATION.LENGTH_SHORT);
         // showMessage({
         //   position: 'center',
         //   message: "+1",
@@ -234,14 +238,14 @@ class Article extends React.Component<Props, State> {
       const rr = await postService(getCommentsProfilesUrl(), uids)
 
       const uas: UserAccount[] = rj(rr).data
-     
+
       this.article.comments = this.article.comments.map(c => {
         // console.warn(`cdate:${c.date}`)
         const date = new Date(c.date)
 
         c.dateString = displayIssueTime(date) //this.displayTime(getTimeDiff(date).toFixed(0))
         const ua = uas.find(u => u.id = c.author)
-        const profile: Profile = { nickname: ua.nickname, image: ua.image }
+        const profile: Profile = { id:ua.id,nickname: ua.nickname, image: ua.image }
         c.authorProfile = profile
         return c;
       })
@@ -253,8 +257,19 @@ class Article extends React.Component<Props, State> {
     setTimeout(() => { this.setState({ loadComments: true, comments: this.article.comments }) }, 0)
   }
 
+
+  private gotoblogs = ()=>{
+    const p = this.profile
+    const ua : UserAccount = {id:p.id,nickname:p.nickname,image:p.image,carNumber:p.carNumber} as any
+    this.props.navigation.navigate("UserBlog",{ua})
+  }
+
+
+  private profile: Profile
+
   public componentWillMount() {
     this.article = this.props.navigation.getParam("article")
+    this.profile = this.props.navigation.getParam("profile")
     this.setState({ articleLikes: this.article.likes || [] })
 
   }
@@ -287,9 +302,14 @@ class Article extends React.Component<Props, State> {
           category='s1'>
           {article.content}
         </Text> */}
-        <Toast ref={elm=>this.toast=elm} style={{ backgroundColor: COLOR.success }} opacity={0.8}/>
+        <Toast ref={elm => this.toast = elm} style={{ backgroundColor: COLOR.success }} opacity={0.8} />
         <ArticleContent article={article} />
         <View style={themedStyle.articleAuthorContainer}>
+          <TouchableOpacity onPress={this.gotoblogs}>
+            {this.profile.image ? <Avatar source={thumbnailUri(this.profile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
+              <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
+            }
+          </TouchableOpacity>
 
           <Text
             style={themedStyle.articleDateLabel}
@@ -304,7 +324,7 @@ class Article extends React.Component<Props, State> {
             <CommentsButton>
               {article.comments ? article.comments.length.toString() : "0"}
             </CommentsButton>
-            <LikeButton onPress={this.likeArticle}>
+            <LikeButton canAction={true} onPress={this.likeArticle}>
               {this.state.articleLikes.length.toString()}
             </LikeButton>
           </View>
@@ -333,6 +353,7 @@ class Article extends React.Component<Props, State> {
         </View>
         {this.state.loadComments ?
           <CommentsList
+            navigation = {this.props.navigation}
             data={this.state.comments}
             onLikePress={this.onCommentLikePress}
             // onMorePress={this.onMorePress}

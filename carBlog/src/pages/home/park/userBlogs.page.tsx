@@ -44,10 +44,15 @@ export class UserBlogs extends React.Component<Props, State> {
 
 
   private onPressed = (article: Article) => {
-    this.props.navigation.navigate({
-      routeName: 'Article',
-      params: { title: article.authorProfile.nickname, article }
-    })
+    const profile: Profile = this.ua
+    // this.props.navigation.navigate({
+    //   routeName: 'Article',
+    //   params: { profile,title: article.authorProfile.nickname, article }
+    // })
+    this.props.navigation.push(
+      'Article',
+      { profile, title: article.authorProfile.nickname, article }
+    )
   }
 
 
@@ -84,7 +89,7 @@ export class UserBlogs extends React.Component<Props, State> {
         </View>
 
         {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-          <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80 ,borderRadius:5}} />
+          <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
         </View>}
 
       </ListItem>
@@ -107,7 +112,7 @@ export class UserBlogs extends React.Component<Props, State> {
 
   private listArticles = async (uid: string) => {
     const rr = await getService(listMyArticlesUrl(uid))
-    if(rrnol(rr)){
+    if (rrnol(rr)) {
       return
     }
 

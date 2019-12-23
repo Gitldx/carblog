@@ -66,10 +66,14 @@ export class BlogListComponent extends React.Component<Props, State> {
     private currentLongitude_wgs: number = null
 
     private onPressed = (article: Article) => {
-        this.props.navigation.navigate({
-            routeName: 'Article',
-            params: { title: article.authorProfile.nickname, article/* : this.articles.find(i => i.id == article.id) */ }
-        })
+        // this.props.navigation.navigate({
+        //     routeName: 'Article',
+        //     params: { profile:article.authorProfile,title: article.authorProfile.nickname, article/* : this.articles.find(i => i.id == article.id) */ }
+        // })
+        this.props.navigation.push(
+            'Article',
+            { profile:article.authorProfile,title: article.authorProfile.nickname, article/* : this.articles.find(i => i.id == article.id) */ }
+        )
     }
 
     private renderItemHeader(item: Article): React.ReactElement {

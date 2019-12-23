@@ -4,6 +4,7 @@ import {
   TextStyle,
   TouchableOpacity,
   TouchableOpacityProps,
+  View
 } from 'react-native';
 import {
   ThemedComponentProps,
@@ -15,30 +16,49 @@ import { HeartIconFill } from '@src/assets/icons';
 
 interface ComponentProps {
   textStyle?: StyleProp<TextStyle>;
-  rKTextProps? : TextProps,
+  rKTextProps?: TextProps,
   children?: string;
-  iconSize? : number
+  iconSize?: number,
+  canAction?: boolean
 }
 
 export type LikeButtonProps = ThemedComponentProps & TouchableOpacityProps & ComponentProps;
 
 class LikeButtonComponent extends React.Component<LikeButtonProps> {
 
+  static defaultProps: ComponentProps = {
+    canAction: false
+  }
+
+
   public render(): React.ReactNode {
-    const { style, themedStyle, textStyle,rKTextProps = {appearance : "default",category:'p2'}, iconSize = 24,children, ...restProps } = this.props;
+    const { style, themedStyle, textStyle, rKTextProps = { appearance: "default", category: 'p2' }, iconSize = 24, children, canAction, ...restProps } = this.props;
 
     return (
-      <TouchableOpacity
-        style={[themedStyle.container, style]}
-        {...restProps}>
-        {HeartIconFill([themedStyle.icon,{width:iconSize,height:iconSize}])}
-        <Text
-          style={[themedStyle.valueLabel, textStyle]}
-          appearance = {rKTextProps.appearance}
-          category={rKTextProps.category}>
-          {children}
-        </Text>
-      </TouchableOpacity>
+      canAction ?
+        <TouchableOpacity
+          style={[themedStyle.container, style]}
+          {...restProps}>
+          {HeartIconFill([themedStyle.icon, { width: iconSize, height: iconSize }])}
+          <Text
+            style={[themedStyle.valueLabel, textStyle]}
+            appearance={rKTextProps.appearance}
+            category={rKTextProps.category}>
+            {children}
+          </Text>
+        </TouchableOpacity>
+        :
+        <View style={[themedStyle.container, style]}
+          {...restProps}>
+          {HeartIconFill([themedStyle.icon, { width: iconSize, height: iconSize }])}
+          <Text
+            style={[themedStyle.valueLabel, textStyle]}
+            appearance={rKTextProps.appearance}
+            category={rKTextProps.category}>
+            {children}
+          </Text>
+
+        </View>
     );
   }
 }

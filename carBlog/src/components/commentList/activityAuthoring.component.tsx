@@ -14,8 +14,13 @@ import { Avatar } from 'react-native-ui-kitten/ui';
 import { textStyle } from '@src/components/common/style';
 import { MaterialCommunityIcons } from '@src/assets/icons';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Profile } from '@src/core/model';
+import { UserAccount } from '@src/core/userAccount/userAccount';
+import { NavigationScreenProp } from 'react-navigation';
 
 interface ComponentProps {
+  profile : Profile,
+  navigation : NavigationScreenProp<any,any>,
   photo: ImageSourcePropType;
   name: string;
   date: string;
@@ -25,14 +30,21 @@ export type ActivitiAuthoringProps = ThemedComponentProps & ViewProps & Componen
 
 class ActivityAuthoringComponent extends React.Component<ActivitiAuthoringProps> {
 
+  private gotoblogs = ()=>{
+    const p = this.props.profile
+    const ua : UserAccount = {id:p.id,nickname:p.nickname,image:p.image,carNumber:p.carNumber} as any
+    this.props.navigation.push("UserBlog",{ua})
+  }
+
+
   public render(): React.ReactNode {
-    const { style, themedStyle, photo, name, date, ...restProps } = this.props;
+    const { style, themedStyle,photo, name, date, ...restProps } = this.props;
 
     return (
       <View
         {...restProps}
         style={[themedStyle.container, style]}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={this.gotoblogs}>
           {photo ? <Avatar
             style={themedStyle.authorPhoto}
             source={photo} /> : <MaterialCommunityIcons name="account" />

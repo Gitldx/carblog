@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   ListRenderItemInfo,
-  ViewStyle,
+  View,
 } from 'react-native';
 import {
   ThemedComponentProps,
@@ -18,8 +18,10 @@ import {
   CommentListItemProps,
 } from './commentListItem.component';
 
+
 // @ts-ignore (override `renderItem` prop)
 interface ComponentProps extends ListProps {
+  navigation: any;
   data: Comment[];
   onLikePress: (index: number) => void;
   // onMorePress: (index: number) => void;
@@ -38,6 +40,8 @@ class CommentList1Component extends React.Component<CommentsList1Props> {
     // this.props.onMorePress(index);
   };
 
+
+
   private onItemLikePress = (index: number) => {
     this.props.onLikePress(index);
   };
@@ -52,14 +56,15 @@ class CommentList1Component extends React.Component<CommentsList1Props> {
     return data.length - 1 === index;
   };
 
-  private renderListItemElement = (comment: Comment,index : number): ListItemElement => {
+  private renderListItemElement = (comment: Comment, index: number): ListItemElement => {
     const { themedStyle } = this.props;
 
     return (
       <CommentList1Item
-        style={[themedStyle.item,this.isLastItem(index) ? null : themedStyle.itemBorder]}
+        navigation={this.props.navigation}
+        style={[themedStyle.item, this.isLastItem(index) ? null : themedStyle.itemBorder]}
         comment={comment}
-        onLikePress={()=>this.onItemLikePress(comment.index)}
+        onLikePress={() => this.onItemLikePress(comment.index)}
         // onMorePress={this.onItemMorePress}
         onReplyMorePress={this.onItemReplyMorePress}
       />
@@ -70,7 +75,7 @@ class CommentList1Component extends React.Component<CommentsList1Props> {
     const { themedStyle } = this.props;
     const { item, index } = info;
 
-    const listItemElement: ListItemElement = this.renderListItemElement(item,index);
+    const listItemElement: ListItemElement = this.renderListItemElement(item, index);
 
     // const additionalStyle: ViewStyle = this.isLastItem(index) ? null : themedStyle.itemBorder;
 
@@ -84,7 +89,7 @@ class CommentList1Component extends React.Component<CommentsList1Props> {
     const { contentContainerStyle, themedStyle, ...restProps } = this.props;
 
     return (
-      <List style = {themedStyle.list}
+      <List style={themedStyle.list}
         {...restProps}
         renderItem={this.renderItem}
       />
@@ -93,7 +98,7 @@ class CommentList1Component extends React.Component<CommentsList1Props> {
 }
 
 export const CommentsList = withStyles(CommentList1Component, (theme: ThemeType) => ({
-  list : {
+  list: {
     backgroundColor: theme['background-basic-color-1'],
   },
   item: {
