@@ -84,7 +84,7 @@ export class UserBlogs extends React.Component<Props, State> {
         </View>
 
         {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-          <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80 }} />
+          <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80 ,borderRadius:5}} />
         </View>}
 
       </ListItem>

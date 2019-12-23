@@ -18,6 +18,7 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from './shopList.componen';
 import { SearchPlaceholder, PopupMenu } from '@src/components';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome'
+import EntypoIcon from 'react-native-vector-icons/Entypo'
 import { AskParkList } from './park/askParkList.component';
 import { ParkRank } from './park/parkRank.component';
 import { MessageLooper } from '@src/core/uitls/messageLooper';
@@ -87,15 +88,15 @@ class Home extends React.Component<Props, State> {
     const items: OverflowMenuItemType[] = [
       {
         text: '挪车电话',
-        icon: (styles) => MaterialCommunityIcons({ name: "phone", size: 20, color: styles.tintColor }) as any
+        icon: (styles) => MaterialCommunityIcons({ name: "phone", size: 20, color: "#e84e40"/* styles.tintColor */ }) as any
       },
       {
         text: '找停车位',
-        icon: (styles) => MaterialCommunityIcons({ name: "magnify", size: 20, color: styles.tintColor }) as any
+        icon: (styles) => MaterialCommunityIcons({ name: "parking", size: 20, color: "#304ffe"/* styles.tintColor */ }) as any
       },
       {
         text: "分享停车位",
-        icon: (styles) => MaterialCommunityIcons({ name: "share", size: 20, color: styles.tintColor }) as any
+        icon: (styles) => MaterialCommunityIcons({ name: "share", size: 20, color: "#ab47bc"/* styles.tintColor */ }) as any
       }
     ];
 
@@ -324,10 +325,10 @@ class Home extends React.Component<Props, State> {
         /> */}
         {parkStatus == 1 &&
           <TouchableOpacity onPress={this.park}
-            style={{ flexDirection: 'row', paddingVertical: 5, backgroundColor: '#fb7e00', justifyContent: 'center' }}>
-            <FontAwesomeIcon size={18} name="car" color="white" />
-            <Text style={{ color: 'white', fontSize: 18, marginHorizontal: 5 }}>停车中</Text>
+            style={{ flexDirection: 'row', paddingVertical: 5, backgroundColor: '#ff5722', justifyContent: 'center' }}>
             <FontAwesomeIcon size={18} name="truck" color="white" />
+            <Text style={{ color: 'white', fontSize: 18, marginHorizontal: 5 }}>停车中</Text>
+            <EntypoIcon size={18} name="traffic-cone" color="white" />
           </TouchableOpacity>
         }
         {/* <TouchableOpacity onPress={this.sharePark}

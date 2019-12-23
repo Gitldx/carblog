@@ -117,12 +117,12 @@ export class ParkRankComponent extends React.Component<Props, State> {
         // console.warn(`mondey:${JSON.stringify(item)}`)
         const { themedStyle } = this.props
         return (
-            <ListItem style={{ height: 100 }} onPress={() => {
+            <ListItem style={{ height: 100,...themedStyle.listItemContainer  }} onPress={() => {
                 this.gotoUserPage(item)
 
             }}>
 
-                <View style={{ flex: 1, ...themedStyle.listItemContainer }}>
+                <View style={{ flex: 1, }}>
                     {this.renderItemHeader(item)}
 
                     <View style={{
@@ -437,5 +437,6 @@ export const ParkRank = withStyles(ParkRankComponent, (theme: ThemeType) => ({
     listItemContainer: {
         paddingTop: 5,
         backgroundColor: theme['background-basic-color-1'],
+        borderBottomColor: theme['background-basic-color-4'], borderBottomWidth: 1
     },
 }))

@@ -125,7 +125,7 @@ class MessageComponent extends React.Component<MessageProps> {
 
       case MESSAGETYPE.sys_bulletin:
         return (
-          <View style={[styles.icon, { backgroundColor: '#FFDF83', justifyContent: 'center', alignItems: 'center' }]}>
+          <View style={[styles.icon, { backgroundColor: '#f9a825', justifyContent: 'center', alignItems: 'center' }]}>
             <MaterialCommunityIcons name="bell" size={35} color={'white'} />
           </View>
         )
@@ -133,7 +133,7 @@ class MessageComponent extends React.Component<MessageProps> {
       case MESSAGETYPE.user_sysEmail:
         return (
           // <Image style={styles.icon} source={{ uri: 'http://img32.photophoto.cn/20140709/0046044459284152_s.jpg' }} />
-          <View style={[styles.icon, { backgroundColor: '#6C7FBE', justifyContent: 'center', alignItems: 'center' }]}>
+          <View style={[styles.icon, { backgroundColor: '#4d73ff', justifyContent: 'center', alignItems: 'center' }]}>
             <MaterialCommunityIcons name="email" size={35} color={'white'} />
           </View>
         )
@@ -147,8 +147,8 @@ class MessageComponent extends React.Component<MessageProps> {
       case MESSAGETYPE.user_park:
           return (
             // <Image style={styles.icon} source={{ uri: 'http://img32.photophoto.cn/20140709/0046044459284152_s.jpg' }} />
-            <View style={[styles.icon, { backgroundColor: '#6C7FBE', justifyContent: 'center', alignItems: 'center' }]}>
-              <MaterialCommunityIcons name="email" size={35} color={'white'} />
+            <View style={[styles.icon, { backgroundColor: '#4d73ff', justifyContent: 'center', alignItems: 'center' }]}>
+              <MaterialCommunityIcons name="parking" size={35} color={'white'} />
             </View>
           )
     }

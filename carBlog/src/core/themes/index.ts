@@ -1,7 +1,9 @@
-import {
-    dark,
-    light,
-  } from '@eva-design/eva';
+// import {
+//     dark,
+//     light,
+//   } from '@eva-design/eva';
+  import {default as light} from './light.json'
+  import {default as dark} from './dark.json'
   import { default as appTheme } from './appTheme.json';
   import { ThemeType } from 'react-native-ui-kitten/theme';
   

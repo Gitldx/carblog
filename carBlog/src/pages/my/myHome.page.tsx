@@ -20,6 +20,7 @@ import { networkConnected } from '@src/core/uitls/netStatus';
 import debounce from "@src/core/uitls/debounce"
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { JSAPIVERSION_ANDROID } from '@src/core/uitls/constants';
+import { MaterialCommunityIcons } from '@src/assets/icons';
 
 
 type DayNight = "day" | "night"
@@ -56,8 +57,8 @@ export class MyHome extends React.Component<Props, State> {
     const text = mode == "night" ? "夜间模式" : "白天模式"
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text category="p1" style={{ marginRight: 10 }}>{text}</Text>
-        <Icon name={iconName} size={25} color={"yellow"} />
+        <Icon name={iconName} size={25} color={"#fdd835"} />
+        <Text category="p1" style={{ marginLeft: 10 }}>{text}</Text>     
       </View>
     )
   }
@@ -114,7 +115,7 @@ export class MyHome extends React.Component<Props, State> {
 
 
   private gotoMyReport = () => {
-    if(!networkConnected()){
+    if (!networkConnected()) {
       showNoNetworkAlert()
       return
     }
@@ -123,17 +124,17 @@ export class MyHome extends React.Component<Props, State> {
 
 
   private count = 0
-  private debounce = debounce(()=>{
+  private debounce = debounce(() => {
     console.warn(++this.count)
-  },2000,true)
-  private testDebounce=()=>{
+  }, 2000, true)
+  private testDebounce = () => {
     this.debounce()
     // simpleAlert(null,JSAPIVERSION_ANDROID)
   }
 
 
   public componentWillMount = () => {
-    EventRegister.addEventListener(loginEvent, (data:LoginEventData) => {
+    EventRegister.addEventListener(loginEvent, (data: LoginEventData) => {
       const { stateStr, accountHasLogined } = data
       // console.warn(`loginEvent:${accountHasLogined}`)
       if (accountHasLogined == true) {
@@ -160,7 +161,14 @@ export class MyHome extends React.Component<Props, State> {
       <PageView style={themedStyle.container}>
 
         {/* <ButtonBar style={{ marginTop: 5 }} leftText="我的后车箱" onPress={this.gotoShop} /> */}
-        <ButtonBar style={{ marginTop: 5 }} leftText="我的博客"
+        <ButtonBar style={{ marginTop: 5 }}
+          leftKit={() => <View style={{ flexDirection: 'row' }}>
+            <MaterialCommunityIcons size={20} name="script-text-outline" color="#6889ff" />
+            <Text category="p1" style={{ marginLeft: 5 }}>
+              我的博客
+            </Text>
+
+          </View>}
           /* rightKit={() => <View style={{ backgroundColor: 'red', width: 8, height: 8, borderRadius: 4 }} />} */
           onPress={this.gotoMyBlogs}
         />
@@ -168,10 +176,24 @@ export class MyHome extends React.Component<Props, State> {
         {/* <ButtonBar leftText="我的收藏" style={{ marginTop: 5 }}
           onPress={() => this.props.navigation.navigate({ routeName: "MyCollection" })}
         /> */}
-        <ButtonBar leftText="用户信息"
+        <ButtonBar
+          leftKit={() => <View style={{ flexDirection: 'row' }}>
+            <MaterialCommunityIcons size={20} name="account-card-details-outline" color="#afb42b" />
+            <Text category="p1" style={{ marginLeft: 5 }}>
+              用户信息
+            </Text>
+
+          </View>}
           onPress={this.gotoMyInfo}
         />
-        <ButtonBar leftText="积分，游戏规则"
+        <ButtonBar
+          leftKit={() => <View style={{ flexDirection: 'row' }}>
+            <MaterialCommunityIcons size={20} name="gamepad-variant" color="#e040fb" />
+            <Text category="p1" style={{ marginLeft: 5 }}>
+              积分，游戏规则
+            </Text>
+
+          </View>}
           onPress={() => this.props.navigation.navigate({ routeName: "MyScore" })}
         />
 
@@ -185,7 +207,14 @@ export class MyHome extends React.Component<Props, State> {
           )}
         </ThemeContext.Consumer>
 
-        <ButtonBar leftText="意见，投诉，商务沟通"
+        <ButtonBar
+          leftKit={() => <View style={{ flexDirection: 'row' }}>
+            <MaterialCommunityIcons name="headphones-settings" color="#64dd17" size={20}/>
+            <Text category="p1" style={{ marginLeft: 5 }}>
+              意见，投诉，商务沟通
+            </Text>
+
+          </View>}
           onPress={this.gotoMyReport}
         />
 
@@ -207,7 +236,7 @@ export class MyHome extends React.Component<Props, State> {
         </View>
 
 
-          {/* <Text>test0</Text>
+        {/* <Text>test0</Text>
           <Button onPress={this.testDebounce}>测试</Button> */}
       </PageView>
 

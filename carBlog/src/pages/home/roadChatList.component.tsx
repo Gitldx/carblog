@@ -72,7 +72,9 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-
+                {item.image ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                    <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
+                }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
 
                 {item.carNumber && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
@@ -144,26 +146,26 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
         const { item } = info
         const d = item.distance
-
+        const { themedStyle } = this.props
         return (
-            <ListItem style={{ flexDirection: 'row', height: 120 }} onPress={() => {
+            <ListItem style={themedStyle.listItem} onPress={() => {
                 this.onPressed(item)
             }}>
 
                 <View style={{ flex: 1 }}>
                     {this.renderItemHeader(item)}
-                    <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1, justifyContent: 'center' }}>
-                        <Text appearance="default" category="s1" >{item.chat}</Text>
+                    <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1,justifyContent: 'center' }}>
+                        <Text appearance="default" style={themedStyle.listItemContent}>{item.chat}</Text>
                     </View>
                     <View style={{ paddingLeft: 16, paddingBottom: 0 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "space-between", paddingTop: 5 }}>
 
                             <View style={{ flexDirection: 'row' }}>
-                                {d && <Text category="c1">{d >= 1 ? d.toFixed(2) + "公里" : (d * 1000).toFixed(0) + "米"}</Text>}
-                                <Text category="c1" style={{ marginLeft: 10 }}>{item.road}</Text>
+                                {d && <Text appearance="hint" category="c1">{d >= 1 ? d.toFixed(2) + "公里" : (d * 1000).toFixed(0) + "米"}</Text>}
+                                <Text appearance="hint" category="c1" style={{ marginLeft: 5 }}>{item.road}</Text>
                             </View>
                             <View style={{ flexDirection: 'row' }}>
-                                <Text appearance="default" category="c1" style={{ marginRight: 10 }}>{item.time}</Text>
+                                <Text appearance="hint" category="c1" style={{ marginRight: 10 }}>{item.time}</Text>
                             </View>
                         </View>
                     </View>
@@ -185,7 +187,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
         return (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10,paddingLeft:10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10 }}>
                 <Text appearance="hint" category="p2">{`当前道路:${currentRoad}`}</Text>
                 {/* <Button size="small" appearance="ghost" onPress={this.selectRoad} style={style0}>
                     选择其他道路>>
@@ -311,7 +313,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         this.getCityAndRoad((oldCitycode, newCitycode, road, longitude, latitude) => {
 
             if (isEmpty(road)) {//没有定位权限
-              
+
                 this.canUseGeo = false
                 this.setState({ list: [], loading: 2 })
                 return;
@@ -327,15 +329,15 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
     private currentPage = 0
-    private getList = async (citycode, road, lng, lat) => {
+    private getList = async (citycode, road, lng, lat) => {//todo:服务器传image
         this.currentPage = 0
         const rr = await getService(roadChatListUrl(citycode, road, 0, lng, lat))
-        
-        if(rrnol(rr)){
-            this.setState({list:[],loading:2})
+
+        if (rrnol(rr)) {
+            this.setState({ list: [], loading: 2 })
             return
         }
-        
+
         let lst1: RoadChat[] = rj(rr).data.roadchats
 
         const lst2: RoadChat[] = rj(rr).data.nearRoadchats
@@ -371,7 +373,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
         if (!this.listLoaded) {
             return null
-        }        
+        }
 
         const hint = this.canUseGeo ? "暂时空白，点击刷新再试试" : "未能获取到当前城市，请点击刷新或者到设置中心授权app使用定位"
         // console.warn(`renderListEmptyComponent,${hint}`)
@@ -448,5 +450,13 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         backgroundColor: "#FF3333"//theme["color-danger-400"]
+    },
+    listItem: {
+        flexDirection: 'row', height: 120,
+        borderBottomColor: theme['background-basic-color-4'], borderBottomWidth: 1
+    },
+    listItemContent:{
+        fontSize:14,
+        color : theme["contentText-primary"]
     }
 }))

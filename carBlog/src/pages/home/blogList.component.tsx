@@ -58,7 +58,7 @@ export class BlogListComponent extends React.Component<Props, State> {
         loading: 0
     }
 
-    private articles: Article[];
+    private articles: Article[];//todo:区分行人和车主的文章表
     private currentHotPage: number = 0
     private currentNearPage: number = 0
 
@@ -148,16 +148,16 @@ export class BlogListComponent extends React.Component<Props, State> {
     private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
         const { item } = info
         const d = item.distance
-
+        const {themedStyle} = this.props
         return (
-            <ListItem style={{ flexDirection: 'row', height: 120 }} onPress={() => {
+            <ListItem style={themedStyle.listItem} onPress={() => {
                 this.onPressed(item)
             }}>
 
                 <View style={{ flex: 1 }}>
                     {this.renderItemHeader(item)}
                     <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1, justifyContent: 'center' }}>
-                        <Text appearance="default" category="s1" >{item.title}</Text>
+                        <Text appearance="default" category="s1" style={themedStyle.listItemContent} >{item.title}</Text>
                     </View>
                     <View style={{ paddingLeft: 16, paddingBottom: 0 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: this.state.sortType == 0 ? "space-between" : 'flex-end', paddingTop: 5 }}>
@@ -182,7 +182,7 @@ export class BlogListComponent extends React.Component<Props, State> {
                 </View>
 
                 {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-                    <Avatar shape="square" source={/* (item.image as ImageSource).imageSource */thumbnailUri(item.image)} style={{ width: 80, height: 80 }} />
+                    <Avatar shape="square" source={/* (item.image as ImageSource).imageSource */thumbnailUri(item.image)} style={{ width: 80, height: 80,borderRadius:5 }} />
                 </View>}
 
             </ListItem>
@@ -530,5 +530,12 @@ export const BlogList = withStyles(BlogListComponent, (theme: ThemeType) => ({
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         backgroundColor: theme["color-success-400"]
+    },
+    listItem : {
+        flexDirection: 'row', height: 120,
+        borderBottomColor:theme['background-basic-color-4'],borderBottomWidth:1
+    },
+    listItemContent:{
+        color : theme["contentText-primary"]
     }
 }))

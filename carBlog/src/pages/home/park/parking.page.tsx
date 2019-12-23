@@ -98,7 +98,7 @@ class Parking extends React.Component<Props, State> {
         return {
 
             title: '停车',
-            gesturesEnabled : true
+            gesturesEnabled: true
         }
     }
 
@@ -164,7 +164,7 @@ class Parking extends React.Component<Props, State> {
         else {
 
             const rr = await getService(searchParkByCarNumberUrl(this.state.searchText.toUpperCase()))
-            if(rrnol(rr)){
+            if (rrnol(rr)) {
                 return
             }
 
@@ -175,42 +175,42 @@ class Parking extends React.Component<Props, State> {
     }
 
 
-    private phoneCall = ()=>{
+    private phoneCall = () => {
         const tel = `tel:${this.state.searchResult.carPhone}`
         Linking.canOpenURL(tel).then((supported) => {
             if (!supported) {
-              console.warn('Can not handle tel:' + tel)
+                console.warn('Can not handle tel:' + tel)
             } else {
-              return Linking.openURL(tel)
+                return Linking.openURL(tel)
             }
-          }).catch(error => console.warn('tel error', error))
+        }).catch(error => console.warn('tel error', error))
     }
 
-    private delayParkTime = debounce(()=>{
+    private delayParkTime = debounce(() => {
         this.delayParkTimeAction()
-    },5000,true)
+    }, 5000, true)
 
 
     private delayParkTimeAction = async () => {
         // const d = new Date()
         // d.setTime(d.getTime() + Number(this.state.delayTime) * 60 * 1000)
         // this.setState({ leaveTime: toDate(d) })
-        if(isEmpty(this.state.delayTime)){
-            simpleAlert(null,"请填写延长时间")
+        if (isEmpty(this.state.delayTime)) {
+            simpleAlert(null, "请填写延长时间")
             return
         }
 
-        if(isNaN(this.state.delayTime as any)){
-            simpleAlert(null,"请填写正确时间")
+        if (isNaN(this.state.delayTime as any)) {
+            simpleAlert(null, "请填写正确时间")
             return
         }
 
         const rr = await postService(extendParkUrl(this.parkId, this.state.delayTime), null)
-        if(rrnol(rr)){
+        if (rrnol(rr)) {
             return;
         }
 
-        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
+        this.toast.show("操作成功", DURATION.LENGTH_SHORT)
 
 
         const p: Park = rj(rr).data
@@ -220,10 +220,10 @@ class Parking extends React.Component<Props, State> {
     }
 
 
-    private park = debounce(()=>{
+    private park = debounce(() => {
         showOngoingAlert()
         this.parkAction()
-    },5000,true)
+    }, 5000, true)
 
     parkAction = async () => {
         const c = this.currentPosition
@@ -234,11 +234,11 @@ class Parking extends React.Component<Props, State> {
             location: { coordinates: [lng, lat] }, gcjLocation: [c.longitude, c.latitude]
         }
         const res = await postService(parkUrl(this.state.stayTime), data)
-        if(rrnol(res)){
+        if (rrnol(res)) {
             return
         }
         hideMessage()
-        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
+        this.toast.show("操作成功", DURATION.LENGTH_SHORT)
 
         // console.warn(`res:${JSON.stringify(res)}`)
         // EventRegister.emit(parkingEvent, 1)
@@ -247,21 +247,21 @@ class Parking extends React.Component<Props, State> {
         const d = new Date(p.leaveTime)
         // d.setTime(d.getTime() + Number(this.state.stayTime) * 60 * 1000)
         this.setState({ status: 1, btnText: '开车', leaveTime: toDate(d), delayTime: null })
-        saveLastParkData({carNumber,phone:this.state.phone})
+        saveLastParkData({ carNumber, phone: this.state.phone })
         this.callback(p)
     }
 
-    private drive = debounce(()=>{
+    private drive = debounce(() => {
         this.driveAction()
-    },5000,true)
+    }, 5000, true)
 
     driveAction = async () => {
-        if(!networkConnected()){
+        if (!networkConnected()) {
             showNoNetworkAlert()
             return
         }
         await deleteService(driveUrl(this.parkId, UserAccount.getUid()), null)
-        this.toast.show("操作成功",DURATION.LENGTH_SHORT)
+        this.toast.show("操作成功", DURATION.LENGTH_SHORT)
 
         // EventRegister.emit(parkingEvent, 0)
         this.setState({ status: 0, btnText: '停车', leaveTime: '', stayTime: null, delayTime: null })
@@ -273,53 +273,53 @@ class Parking extends React.Component<Props, State> {
 
         const s = onlineAccountState()
         let hint = ""
-        if(s==0||s== -1){
+        if (s == 0 || s == -1) {
             hint = "请先登录"
             showMessage({
-                message:"提示",
-                description:hint,
-                type:'info',
-                icon:'info',
+                message: "提示",
+                description: hint,
+                type: 'info',
+                icon: 'info',
                 // position:'center',
-                floating:true
+                floating: true
             })
 
             return;
         }
-        else if(s == 2){
+        else if (s == 2) {
             hint = "车主才需要停车"
             showMessage({
-                message:"提示",
-                description:hint,
-                type:'info',
-                icon:'info',
+                message: "提示",
+                description: hint,
+                type: 'info',
+                icon: 'info',
                 // position:'center',
-                floating:true
+                floating: true
             })
             return;
         }
 
 
-        
+
 
 
         if (this.state.status == 0) {
-            if(isEmpty(this.state.carNumber) || isEmpty(this.state.phone)){
-                simpleAlert(null,"请填写车牌号和挪车电话")
+            if (isEmpty(this.state.carNumber) || isEmpty(this.state.phone)) {
+                simpleAlert(null, "请填写车牌号和挪车电话")
                 return;
             }
-            if(isEmpty(this.state.stayTime)){
-                simpleAlert(null,"请填写停车时长")
+            if (isEmpty(this.state.stayTime)) {
+                simpleAlert(null, "请填写停车时长")
                 return;
             }
 
-            if(isNaN(this.state.phone as any)){
-                simpleAlert(null,"请填写正确电话号码")
+            if (isNaN(this.state.phone as any)) {
+                simpleAlert(null, "请填写正确电话号码")
                 return
             }
 
-            if(isNaN(this.state.stayTime as any)){
-                simpleAlert(null,"请填写正确时间")
+            if (isNaN(this.state.stayTime as any)) {
+                simpleAlert(null, "请填写正确时间")
                 return
             }
 
@@ -360,7 +360,7 @@ class Parking extends React.Component<Props, State> {
         const { lng, lat } = gcj2wgs(longitude, latitude)
 
         const rr = await getService(matchShareParkPointUrl(lng, lat, 100))
-        if(rrnol(rr)){
+        if (rrnol(rr)) {
             return
         }
 
@@ -389,8 +389,8 @@ class Parking extends React.Component<Props, State> {
         }
     }
 
-    private parkData : Park
-    private callback : (parkData:Park)=>void
+    private parkData: Park
+    private callback: (parkData: Park) => void
 
     public async componentWillMount() {
 
@@ -398,11 +398,11 @@ class Parking extends React.Component<Props, State> {
         this.callback = this.props.navigation.getParam("callback")
 
         const s = onlineAccountState()
-        if(s == 1){
+        if (s == 1) {
 
         }
 
-        
+
 
         if (Platform.OS == "android") {
             await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
@@ -428,25 +428,25 @@ class Parking extends React.Component<Props, State> {
 
         const s = onlineAccountState()
         // console.warn(`p:${JSON.stringify(p)}`)
-        let carNumber = "",phone=""
-        if(p == null && s == 1){
-           
+        let carNumber = "", phone = ""
+        if (p == null && s == 1) {
+
             const localPark = await getLastParkData()
-            if(localPark!=null){
+            if (localPark != null) {
                 carNumber = localPark.carNumber
                 phone = localPark.phone
             }
-            else{
+            else {
                 const ua = UserAccount.instance
                 carNumber = ua.carNumber
                 phone = ua.phone
             }
         }
-        else if(p != null){
+        else if (p != null) {
             carNumber = p.carNumber
             phone = p.carPhone
         }
-        
+
 
         setTimeout(() => {
             this.setState({
@@ -584,29 +584,29 @@ class Parking extends React.Component<Props, State> {
     }
 
 
-    private thank = debounce(()=>{
+    private thank = debounce(() => {
         showOngoingAlert()
         this.thankAction()
-    },5000,true)
+    }, 5000, true)
 
 
     private thankAction = async () => {
 
         const s = onlineAccountState()
         if (s == 0 || s == -1) {
-          showNoAccountOnAlert();
-          return;
+            showNoAccountOnAlert();
+            return;
         }
 
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
         const rr = await postService(thankForParkUrl(), param)//todo:查一下为什么消息的昵称为空
-        if(rrnol(rr)){
+        if (rrnol(rr)) {
             return
         }
         hideMessage()
         // console.warn(JSON.stringify(rr))
-        this.setState({ dialogVisible: false, thankText: '' },()=>{
-            this.toast.show("赠人玫瑰，手留余香",DURATION.LENGTH_LONG)
+        this.setState({ dialogVisible: false, thankText: '' }, () => {
+            this.toast.show("赠人玫瑰，手留余香", DURATION.LENGTH_LONG)
         })
 
         // showMessage({
@@ -624,7 +624,7 @@ class Parking extends React.Component<Props, State> {
         const flag = await hasThanked(parkId)
 
         if (flag == true) {
-            this.toast.show("一次就够了",DURATION.LENGTH_LONG)
+            this.toast.show("一次就够了", DURATION.LENGTH_LONG)
             // showMessage({
             //     message: "一次就够了",
             //     position: "center",
@@ -711,7 +711,7 @@ class Parking extends React.Component<Props, State> {
 
             <ScrollableAvoidKeyboard style={themedStyle.container} extraScrollHeight={this.keyboardOffset}>
 
-                <Toast ref={elm => this.toast = elm} style = {{backgroundColor:COLOR.success}}/>
+                <Toast ref={elm => this.toast = elm} style={{ backgroundColor: COLOR.success }} />
 
                 {this.renderPopup()}
                 {this.renderSearchBar()}
@@ -727,7 +727,7 @@ class Parking extends React.Component<Props, State> {
                     :
                     (searchResult === null ? <Text appearance="hint" style={{ textAlign: 'center' }}>无此车停车记录</Text>
                         : <View style={{ padding: 10, justifyContent: 'center' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5}}>
                                 {/* <Text>{searchResult.carNumber}</Text> */}
                                 <LicensePlate category="p1" carNumber={searchResult.carNumber} />
                             </View>
@@ -737,7 +737,7 @@ class Parking extends React.Component<Props, State> {
                 }
 
 
-                <View style={{ borderRadius: 5, borderWidth: 1, borderColor: "lightgrey", paddingTop: 5, marginHorizontal: 5 }}>
+                <View style={themedStyle.formContainer}>
                     <Text style={{ textAlign: 'center' }} appearance="hint" category="p1">我的停车</Text>
                     <FormRow title="车牌号">
                         <View style={styles.form}>
@@ -755,7 +755,7 @@ class Parking extends React.Component<Props, State> {
                             <FormRow title="开车时间">
                                 <View style={styles.form}>
                                     <Input keyboardType='number-pad' style={{ flex: 4 }} value={this.state.stayTime} onChangeText={(val) => this.setState({ stayTime: val })} placeholder="多少分钟后驶离" />
-                                    <Text category="p2" style={{ flex: 1 }}>分钟后</Text>
+                                    <Text category="p2" style={{ flex: 1,marginLeft:3 }}>分钟后</Text>
                                 </View>
                             </FormRow>
                             :
@@ -769,7 +769,7 @@ class Parking extends React.Component<Props, State> {
                                 <FormRow title="更改时间">
                                     <View style={styles.form}>
                                         <Input keyboardType='number-pad' style={{ flex: 4 }} value={this.state.delayTime} onChangeText={(val) => this.setState({ delayTime: val })} placeholder="多少分钟后驶离" />
-                                        <Text style={{ flex: 2 }}>分钟后</Text>
+                                        <Text style={{ flex: 2,marginLeft:3 }}>分钟后</Text>
                                         <TouchableOpacity onPress={this.delayParkTime} style={{
                                             flex: 1, paddingHorizontal: 3,
                                             backgroundColor: getThemeValue("color-warning-default", themes["App Theme"]), borderRadius: 4
@@ -827,6 +827,10 @@ export const ParkingPage = withStyles(Parking, (theme: ThemeType) => ({
     container: {
         flex: 1,
         backgroundColor: theme['background-basic-color-1'],
+    },
+    formContainer: {
+        borderRadius: 5, borderWidth: 1, borderColor: theme['background-basic-color-4'],
+        paddingTop: 5, marginHorizontal: 5
     },
     searchBar: {
         flexDirection: 'row',
