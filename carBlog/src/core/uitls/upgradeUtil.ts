@@ -1,10 +1,12 @@
-import { Platform } from "react-native"
+import { Platform, NativeModules, Alert } from "react-native"
 import codePush, { DownloadProgress, UpdateDialog } from "react-native-code-push";
 import EventRegister, { upgradeEvent } from "./eventRegister";
 import { NavigationScreenProp, NavigationParams } from "react-navigation";
 import { NavigationRoute } from "react-navigation";
 import { globalFields } from "../model";
 import { APPVERSION_ANDROID, APPVERSION_IOS, JSAPIVERSION_IOS, JSAPIVERSION_ANDROID } from "./constants";
+import { getConnectionType } from "./netStatus";
+import { simpleAlert } from "./alertActions";
 
 
 declare var global: globalFields
@@ -147,22 +149,22 @@ export class Upgrade {
   }
 }
 
-export function currentAppversion(){
+export function currentAppversion() {
   return Platform.select({
-    ios : APPVERSION_IOS,
-    android : APPVERSION_ANDROID 
+    ios: APPVERSION_IOS,
+    android: APPVERSION_ANDROID
   })
 }
 
 
-export function currentJSversion(){
+export function currentJSversion() {
   return Platform.select({
-    ios : JSAPIVERSION_IOS,
-    android : JSAPIVERSION_ANDROID
+    ios: JSAPIVERSION_IOS,
+    android: JSAPIVERSION_ANDROID
   })
 }
 
-function versionInt(versionname:string){
+function versionInt(versionname: string) {
   const vArr = versionname.split(".")
   const vInt = Number(vArr[0]) * 10000 + Number(vArr[1]) * 100 + Number(vArr[2])
   return vInt
@@ -170,22 +172,22 @@ function versionInt(versionname:string){
 
 export function checkAppUnavailable() {
   const minVersion = Platform.select({
-    ios : global.serverParam.minversion_i,
-    android : global.serverParam.minversion_a
-  }) 
+    ios: global.serverParam.minversion_i,
+    android: global.serverParam.minversion_a
+  })
 
-  if(minVersion == "0.0.0"){
+  if (minVersion == "0.0.0") {
     return false
   }
 
   const vInt = versionInt(minVersion)
-  
-  const vCurrent= Platform.select({
-    ios : APPVERSION_IOS,
-    android : APPVERSION_ANDROID
-  }) 
-  const vIntCurrent = versionInt(vCurrent) 
-  
+
+  const vCurrent = Platform.select({
+    ios: APPVERSION_IOS,
+    android: APPVERSION_ANDROID
+  })
+  const vIntCurrent = versionInt(vCurrent)
+
   return vIntCurrent <= vInt;
 }
 
@@ -193,22 +195,22 @@ export function checkAppUnavailable() {
 
 export function checkAppUnavailable_js() {
   const minVersion = Platform.select({
-    ios : global.serverParam.minversion_ji,
-    android : global.serverParam.minversion_ja
-  }) 
+    ios: global.serverParam.minversion_ji,
+    android: global.serverParam.minversion_ja
+  })
 
-  if(minVersion == "0.0.0"){
+  if (minVersion == "0.0.0") {
     return false
   }
 
   const vInt = versionInt(minVersion)
   const vCurrent = Platform.select({
-    ios : JSAPIVERSION_IOS,
-    android : JSAPIVERSION_ANDROID
-  }) 
+    ios: JSAPIVERSION_IOS,
+    android: JSAPIVERSION_ANDROID
+  })
   const vIntCurrent = versionInt(vCurrent)
 
-  
+
   return vIntCurrent <= vInt;
 }
 
@@ -219,10 +221,14 @@ export function checkAppUnavailable_js() {
  * 涉及到原生代码的更新，安卓方面先实验性的使用bugly。如果安卓累计到一定步骤仍未更新，就先触发checkAppUnavailable_Forcedversion，
  * 再尝试一次强迫用户下载，如果再不行，就触发checkAppUnavailable，退出app，强制用户手动到应用市场下载
  */
-export function checkAppUnavailable_Forcedversion(){ //todo:安卓downloadservice
+export async function checkAppUnavailable_Forcedversion() { //todo:安卓downloadservice
+  if (Platform.OS != "android") {
+    return
+  }
+
   const minVersion = global.serverParam.minForcedversion_a
 
-  if(minVersion == "0.0.0"){
+  if (minVersion == "0.0.0") {
     return false
   }
 
@@ -230,5 +236,41 @@ export function checkAppUnavailable_Forcedversion(){ //todo:安卓downloadservic
   const vCurrent = APPVERSION_ANDROID
   const vIntCurrent = versionInt(vCurrent)
 
-  return vIntCurrent <= vInt;
+  if (vIntCurrent <= vInt) {
+    const type = await getConnectionType()
+
+    if (type != 'wifi') {
+      return;
+    }
+    simpleAlert(null, "app稍后将重装升级","知道了",()=>{
+      nativeUpdateApp()
+    })
+    
+  }
+}
+
+
+/**
+ * 自己写的下载更新逻辑
+ */
+function nativeUpdateApp() {
+
+  if (Platform.OS === 'ios') {
+    // NativeModules.iosupgrade.getAppVersion((error, Version) => {
+    //   if(error){
+    //     console.log(error)
+    //   }else{
+    //     iosCurrentVersion = Version;
+    //   }
+    // })
+  } else {
+    const AndroidAutoUpdate = NativeModules.AndroidAutoUpdate
+
+    // RNAndroidAutoUpdate.getVersionName((versionCode) => {
+    //   androidCurrentVersion = versionCode;
+    // });
+    AndroidAutoUpdate.goToDownloadApk(global.serverParam.apkUrl);
+  }
+
+  // this.GetAPPOnlineVersion(showTip);
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import {Vibration} from 'react-native'
 import { SafeAreaView } from '@src/core/navigation/';
 import {
   ThemeProvider,
@@ -93,7 +94,7 @@ class MenuComponent extends React.Component<Props, State> {
   private registerMessageEvent = (): void => {
     EventRegister.addEventListener(messageEvent, async (data: HomeMessage[]) => {
 
-      // Vibration.vibrate(300)  //todo:加权限
+      Vibration.vibrate(300)
 
       const localMsg = await getLocalMsgs()
 

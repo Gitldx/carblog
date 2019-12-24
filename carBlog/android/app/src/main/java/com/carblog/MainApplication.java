@@ -3,6 +3,7 @@ package com.carblog;
 import android.app.Application;
 
 import com.carblog.biz.BizPackage;
+import com.carblog.biz.upgrade.AndroidAutoUpdatePackage;
 import com.carblog.rctmodule.amap3d.AMap3DPackage;
 import com.carblog.rctmodule.amap3d.AMapGeolocationPackage;
 import com.facebook.react.ReactApplication;
@@ -47,7 +48,8 @@ public class MainApplication extends Application implements ReactApplication {
                     new ReanimatedPackage(),
                     new AMap3DPackage(),
                     new AMapGeolocationPackage(),
-                    new BizPackage()
+                    new BizPackage(),
+                    new AndroidAutoUpdatePackage()
             );
         }
 

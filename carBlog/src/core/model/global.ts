@@ -14,7 +14,8 @@ interface serverParam {
     minversion_ja:string,
     minversion_ji:string,
     /**使用downloadservice 强迫下载的最低版本 */
-    minForcedversion_a : string
+    minForcedversion_a : string,
+    apkUrl : string,
 }
 
 export interface globalFields {
