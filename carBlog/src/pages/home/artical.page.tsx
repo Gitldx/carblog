@@ -16,17 +16,17 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { CommentsButton, LikeButton, VisitCounts, ArticleContent } from '@src/components';
 import { RemoteImage } from '@src/assets/images';
 import { articles, author2, author1 } from '@src/core/data/articles';
-import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime, showNoAccountOnAlert, showLittleMsgToast } from '@src/core/uitls/common';
+import { getTimeDiff, toDate, isEmpty, showNoNetworkAlert, displayIssueTime, showNoAccountOnAlert, showLittleMsgToast, showOngoingAlert } from '@src/core/uitls/common';
 import { postService, commentUrl, addArticleVisitCountUrl, likeArticleUrl, RestfulJson, likeCommentUrl, getProfilesUrl, rj, getCommentsProfilesUrl } from '@src/core/uitls/httpService';
 import { UserAccount } from '@src/core/userAccount/userAccount';
-import { showMessage } from 'react-native-flash-message';
+import { showMessage, hideMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { thumbnailUri } from '@src/assets/images/type';
 import { MaterialCommunityIcons } from '@src/assets/icons';
-
+import debounce from '@src/core/uitls/debounce'
 
 type Props = ThemedComponentProps & NavigationScreenProps
 type State = {
@@ -59,7 +59,12 @@ class Article extends React.Component<Props, State> {
   });
 
 
-  private onCommentLikePress = (index: number) => {//todo:长页面的情况下toast 安卓该用原生，ios该用flashmessage
+  private onCommentLikePress = debounce((index? : any)=>{
+    this.onCommentLikePressAction(index);
+  },3000,true)
+
+
+  private onCommentLikePressAction = (index: number) => {//todo:长页面的情况下toast 安卓改用原生，ios改用flashmessage
     if (!networkConnected()) {
       showNoNetworkAlert()
       return
@@ -107,7 +112,12 @@ class Article extends React.Component<Props, State> {
     this.setState({ currentCommentText: text, disableSubmitButton: text.length == 0 });
   };
 
-  private onCommentSubmit = () => {
+  private onCommentSubmit = debounce(()=>{
+    showOngoingAlert()
+    this.onCommentSubmitAction()
+  },5000,true)
+
+  private onCommentSubmitAction = () => {
    
     if (isEmpty(this.state.currentCommentText)) {
       simpleAlert(null, "评论内容不能为空")
@@ -145,6 +155,7 @@ class Article extends React.Component<Props, State> {
         disableSubmitButton: true,
         comments: this.state.comments
       });
+      hideMessage()
     })
 
 
@@ -190,7 +201,11 @@ class Article extends React.Component<Props, State> {
 
   private toast: Toast
 
-  private likeArticle = () => {
+  private likeArticle = debounce(()=>{
+    this.likeArticleAction();
+  },5000,true)
+
+  private likeArticleAction = () => {
     if (!networkConnected()) {
       showNoNetworkAlert()
       return
@@ -238,13 +253,14 @@ class Article extends React.Component<Props, State> {
       const rr = await postService(getCommentsProfilesUrl(), uids)
 
       const uas: UserAccount[] = rj(rr).data
-
+      
       this.article.comments = this.article.comments.map(c => {
         // console.warn(`cdate:${c.date}`)
         const date = new Date(c.date)
 
         c.dateString = displayIssueTime(date) //this.displayTime(getTimeDiff(date).toFixed(0))
-        const ua = uas.find(u => u.id = c.author)
+        const ua = uas.find(u => u.id == c.author)
+
         const profile: Profile = { id:ua.id,nickname: ua.nickname, image: ua.image }
         c.authorProfile = profile
         return c;

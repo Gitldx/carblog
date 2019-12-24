@@ -23,6 +23,8 @@ import { imageUri, thumbnailUri } from '@src/assets/images/type';
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 import { getLastLocationCityCode } from '@src/core/uitls/storage/locationStorage';
 import { networkConnected } from '@src/core/uitls/netStatus';
+import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5'
+
 
 
 declare var global: globalFields
@@ -78,6 +80,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
 
                 {item.carNumber && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
+
+                {item.role == 2 && <FontAwesome5Icon name = "walking" color="#f36c60" size={20} style={{marginLeft:5}}/>}
 
             </View>
         )

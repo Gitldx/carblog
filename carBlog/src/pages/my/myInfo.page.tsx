@@ -40,7 +40,7 @@ interface State {
 
 type Props = ThemedComponentProps & NavigationScreenProps
 
-export class MyInfo extends React.Component<Props, State> {//todo:发表文章，聊天前，如果尚未完善信息，提示用户过来完善信息
+export class MyInfo extends React.Component<Props, State> {
 
   static navigationOptions: NavigationScreenConfig<any> = ({ navigation, screenProps }) => {
     return {

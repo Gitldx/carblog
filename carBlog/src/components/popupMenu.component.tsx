@@ -59,7 +59,7 @@ class PopupMenuComponent extends React.Component<LikeButtonProps, State> {
 
     return (
       <OverflowMenu
-        style={themedStyle.container}
+        style={[themedStyle.container,style]}
         placement={placement}
         visible={this.state.menuVisible}
         items={items}

@@ -124,7 +124,7 @@ class Home extends React.Component<Props, State> {
 
 
     const rightControls = (
-      <PopupMenu items={items} onItemSelect={onItemSelect} customButton={btn} />
+      <PopupMenu style={{width:180}} items={items} onItemSelect={onItemSelect} customButton={btn} />
 
     )
     return {
