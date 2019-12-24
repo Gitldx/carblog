@@ -15,6 +15,7 @@ import ActionSheet from 'react-native-actionsheet'
 import MapLinking from '@src/core/uitls/mapLinking';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { LicensePlate } from '@src/components';
+import { isEmpty } from '@src/core/uitls/common';
 
 
 
@@ -263,7 +264,7 @@ class ParkDetail extends React.Component<Props, State> {
                     <View style={{ flexDirection: 'row' }}>
                         {this.info.publisher && <Text style={{ marginLeft: 10 }}>{this.info.publisher.nickname}</Text>}
                         {
-                            this.info.publisher ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={this.info.publisher.carNumber} />
+                            (this.info.publisher && !isEmpty(this.info.publisher.carNumber)) ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={this.info.publisher.carNumber} />
                                 : null
                         }
 

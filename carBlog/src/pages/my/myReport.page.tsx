@@ -58,7 +58,7 @@ export class MyReport extends React.Component<Props, State> {
   private commitReport = debounce(() => {
     showOngoingAlert()
     this.commitReportAction()
-  }, 5000, true)
+  }, 3000, true)
 
   private commitReportAction = () => {
 

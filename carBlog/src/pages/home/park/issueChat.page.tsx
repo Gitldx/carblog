@@ -82,7 +82,7 @@ class IssueChat extends React.Component<Props, State> {
 
   private issue = debounce(()=>{
     this.issueAction()
-  },5000,true)
+  },3000,true)
 
   private issueAction = async () => { //todo: 服务器设置time
 
@@ -129,7 +129,9 @@ class IssueChat extends React.Component<Props, State> {
     }
 
     this.issueCallback(this.state.selectedRoad,lng,lat)
-    this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+    setTimeout(() => {
+      this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+    }, 0);
 
 
   }

@@ -16,11 +16,12 @@ import { UserAccount } from '@src/core/userAccount/userAccount';
 import { showMessage } from 'react-native-flash-message';
 import { showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
 import { LoginEventData } from '@src/core/userAccount/type';
-import { networkConnected } from '@src/core/uitls/netStatus';
+import { networkConnected, getConnectionType } from '@src/core/uitls/netStatus';
 import debounce from "@src/core/uitls/debounce"
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { JSAPIVERSION_ANDROID } from '@src/core/uitls/constants';
 import { MaterialCommunityIcons } from '@src/assets/icons';
+import { checkAppUnavailable_Forcedversion } from '@src/core/uitls/upgradeUtil';
 
 
 type DayNight = "day" | "night"
@@ -125,7 +126,8 @@ export class MyHome extends React.Component<Props, State> {
 
   private count = 0
   private debounce = debounce(() => {
-    console.warn(++this.count)
+    // console.warn(++this.count)
+    getConnectionType().then(type=>console.warn(type))
   }, 2000, true)
   private testDebounce = () => {
     this.debounce()
@@ -236,8 +238,8 @@ export class MyHome extends React.Component<Props, State> {
         </View>
 
 
-        {/* <Text>test0</Text>
-          <Button onPress={this.testDebounce}>测试</Button> */}
+        <Text>test0</Text>
+          <Button onPress={this.testDebounce}>测试</Button>
       </PageView>
 
     );

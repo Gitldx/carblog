@@ -89,7 +89,7 @@ export class MyInfo extends React.Component<Props, State> {
 
   private save = debounce(()=>{
     this.saveAction()
-  },5000,true)
+  },3000,true)
 
 
   private saveAction = async () => {
@@ -151,7 +151,13 @@ export class MyInfo extends React.Component<Props, State> {
 
 
   private onRadioChecked = (value: AccountRoleType) => {
-    this.setState({ role: value })
+    if(value == 2){
+      this.setState({role:value,carNumber:""})
+    }
+    else{
+      this.setState({ role: value })
+    }
+    
   }
 
   

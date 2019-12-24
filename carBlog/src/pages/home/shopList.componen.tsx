@@ -18,6 +18,7 @@ import { shops, shopList } from '@src/core/data/products';
 import { RestfulJson, getService, shopListUrl } from '@src/core/uitls/httpService';
 import { author2 } from '@src/core/data/articles';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
+import { isEmpty } from '@src/core/uitls/common';
 
 
 // interface BlogListItemData {
@@ -68,7 +69,7 @@ export class ShopListComponent extends React.Component<Props,State> {
                 {/* <View>
                     <Text>{item.carNumber}</Text>
                 </View> */}
-                <LicensePlate carNumber={item.owner.carNumber} category="c1" style={{ marginLeft: 5 }} />
+                {!isEmpty(item.owner.carNumber) && <LicensePlate carNumber={item.owner.carNumber} category="c1" style={{ marginLeft: 5 }} />}
                 {/* <Text appearance="hint" category="c1" style={{ marginLeft: 20 }}>{item.blogTime}</Text> */}
             </View>
         )

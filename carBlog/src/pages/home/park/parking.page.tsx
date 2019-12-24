@@ -188,7 +188,7 @@ class Parking extends React.Component<Props, State> {
 
     private delayParkTime = debounce(() => {
         this.delayParkTimeAction()
-    }, 5000, true)
+    }, 3000, true)
 
 
     private delayParkTimeAction = async () => {
@@ -223,7 +223,7 @@ class Parking extends React.Component<Props, State> {
     private park = debounce(() => {
         showOngoingAlert()
         this.parkAction()
-    }, 5000, true)
+    }, 3000, true)
 
     parkAction = async () => {
         const c = this.currentPosition
@@ -253,7 +253,7 @@ class Parking extends React.Component<Props, State> {
 
     private drive = debounce(() => {
         this.driveAction()
-    }, 5000, true)
+    }, 3000, true)
 
     driveAction = async () => {
         if (!networkConnected()) {
@@ -546,7 +546,7 @@ class Parking extends React.Component<Props, State> {
                 <View style={{ flexDirection: 'row' }}>
                     <Text category="c2">{info.publisher.nickname}</Text>
                     {
-                        info.publisher.carNumber ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={info.publisher.carNumber} />
+                        !isEmpty(info.publisher.carNumber) ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={info.publisher.carNumber} />
                             : null
                     }
 
@@ -587,7 +587,7 @@ class Parking extends React.Component<Props, State> {
     private thank = debounce(() => {
         showOngoingAlert()
         this.thankAction()
-    }, 5000, true)
+    }, 3000, true)
 
 
     private thankAction = async () => {

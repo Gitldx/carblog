@@ -64,7 +64,7 @@ class Article extends React.Component<Props, State> {
   },3000,true)
 
 
-  private onCommentLikePressAction = (index: number) => {//todo:长页面的情况下toast 安卓改用原生，ios改用flashmessage
+  private onCommentLikePressAction = (index: number) => {
     if (!networkConnected()) {
       showNoNetworkAlert()
       return
@@ -115,7 +115,7 @@ class Article extends React.Component<Props, State> {
   private onCommentSubmit = debounce(()=>{
     showOngoingAlert()
     this.onCommentSubmitAction()
-  },5000,true)
+  },3000,true)
 
   private onCommentSubmitAction = () => {
    
@@ -203,7 +203,7 @@ class Article extends React.Component<Props, State> {
 
   private likeArticle = debounce(()=>{
     this.likeArticleAction();
-  },5000,true)
+  },3000,true)
 
   private likeArticleAction = () => {
     if (!networkConnected()) {

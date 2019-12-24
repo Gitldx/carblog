@@ -113,7 +113,9 @@ class SelectRoad extends React.Component<Props, State> {
     private go = () => {
         const { lng, lat, citycode } = this.selectedPoint
         this.selectCallback(citycode, this.state.selectedRoad, lng, lat)
-        this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+        setTimeout(() => {
+            this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+        }, 0);
     }
 
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid, RefreshControl } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -40,7 +40,8 @@ interface State {
      * 0:默认状态，1:正在加载，2:已到末尾
      */
     loading: 0 | 1 | 2,
-    currentRoad: string
+    currentRoad: string,
+    refreshing: boolean
 }
 
 export class RoadChatListComponent extends React.Component<Props, State> {
@@ -54,7 +55,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         list: [],
         sortType: 1,
         loading: 0,
-        currentRoad: ""
+        currentRoad: "",
+        refreshing: false
     }
 
 
@@ -79,9 +81,9 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
 
-                {item.carNumber && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
+                {!isEmpty(item.carNumber) && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
 
-                {item.role == 2 && <FontAwesome5Icon name = "walking" color="#f36c60" size={20} style={{marginLeft:5}}/>}
+                {item.role == 2 && <FontAwesome5Icon name="walking" color="#f36c60" size={20} style={{ marginLeft: 5 }} />}
 
             </View>
         )
@@ -158,7 +160,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
                 <View style={{ flex: 1 }}>
                     {this.renderItemHeader(item)}
-                    <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1,justifyContent: 'center' }}>
+                    <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1, justifyContent: 'center' }}>
                         <Text appearance="default" style={themedStyle.listItemContent}>{item.chat}</Text>
                     </View>
                     <View style={{ paddingLeft: 16, paddingBottom: 0 }}>
@@ -246,7 +248,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             if (!geoAllowed) {
                 callback(null, null, null, null, null)
             }
-        }, 5000);
+        }, 3000);
 
         const citycode: number = await getLastLocationCityCode()
 
@@ -312,14 +314,15 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
 
 
-    private list = () => {
+    private list = () => {//todo:刷新的tip
+        this.setState({ refreshing: true })
         this.listLoaded = true
         this.getCityAndRoad((oldCitycode, newCitycode, road, longitude, latitude) => {
 
             if (isEmpty(road)) {//没有定位权限
 
                 this.canUseGeo = false
-                this.setState({ list: [], loading: 2 })
+                this.setState({ list: [], loading: 2 ,refreshing:false})
                 return;
             }
             else {
@@ -338,7 +341,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         const rr = await getService(roadChatListUrl(citycode, road, 0, lng, lat))
 
         if (rrnol(rr)) {
-            this.setState({ list: [], loading: 2 })
+            this.setState({ list: [], loading: 2,refreshing:false })
             return
         }
 
@@ -356,7 +359,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             c.time = displayIssueTime(new Date(c.time ? "2019/12/13 14:44:22" : null)) //todo:服务器格式化时间
         })
 
-        this.setState({ currentRoad: road, list: lst1, loading: 0 })
+        this.setState({ currentRoad: road, list: lst1, loading: 0,refreshing:false })
     }
 
 
@@ -396,6 +399,13 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
 
+    private onRefreshing = () => {
+        this.list()
+    }
+
+
+
+
     public async componentWillMount() {
         EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
             this.list()
@@ -418,7 +428,12 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         return (
             <React.Fragment>
                 <List
-
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={this.state.refreshing}
+                            onRefresh={this.onRefreshing}
+                        />
+                    }
                     data={this.state.list}
                     renderItem={this.renderItem}
                     ListHeaderComponent={this.renderHeader}
@@ -459,8 +474,8 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
         flexDirection: 'row', height: 120,
         borderBottomColor: theme['background-basic-color-4'], borderBottomWidth: 1
     },
-    listItemContent:{
-        fontSize:14,
-        color : theme["contentText-primary"]
+    listItemContent: {
+        fontSize: 14,
+        color: theme["contentText-primary"]
     }
 }))

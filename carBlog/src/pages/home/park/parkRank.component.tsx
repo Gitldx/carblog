@@ -63,7 +63,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
                 {/* <View>
                     <Text>{item.carNumber}</Text>
                 </View> */}
-                {item.carNumber && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
+                {!isEmpty(item.carNumber) && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
                 {/* <Text appearance="hint" category="c1" style={{ marginLeft: 20 }}>{item.date}</Text> */}
             </View>
         )
@@ -212,7 +212,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
             if (!geoAllowed) {
                 callback(null, null)
             }
-        }, 5000);
+        }, 3000);
 
         const citycode: number = await getLastLocationCityCode()
         if (!global.citycode) {

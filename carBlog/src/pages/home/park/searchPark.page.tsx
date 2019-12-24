@@ -181,7 +181,7 @@ class SearchPark extends React.Component<Props, State> {
                     <View style={{ flexDirection: 'row' }}>
                         <Text category="c2">{item.publisher.nickname}</Text>
                         {
-                            item.publisher.carNumber ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={item.publisher.carNumber} />
+                            !isEmpty(item.publisher.carNumber) ? <LicensePlate style={{ marginLeft: 5 }} category="c2" carNumber={item.publisher.carNumber} />
                                 : null
                         }
 
@@ -355,8 +355,10 @@ class SearchPark extends React.Component<Props, State> {
                 type: 'info',
                 icon: "info",
                 floating: true,
-                duration: 1500,
-                onPress:()=>{this.props.navigation.navigate("MyScore")}
+                duration: 4000,
+                onPress:()=>{setTimeout(() => {
+                    this.props.navigation.navigate("MyScore")
+                }, 0);}
             })
         }
         else {

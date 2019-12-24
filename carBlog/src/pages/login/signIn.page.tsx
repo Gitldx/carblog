@@ -69,7 +69,9 @@ class SignInComponent extends React.Component<SignIn2Props> {
       }
       removeCityCode()
       hideMessage()
-      this.props.navigation.navigate("MyHome")
+      setTimeout(() => {
+        this.props.navigation.navigate("MyHome")
+      }, 0);
     })
     //this.props.onSignInPress(this.state.formData);
   };

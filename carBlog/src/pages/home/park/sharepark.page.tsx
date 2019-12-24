@@ -145,7 +145,7 @@ class SharePark extends React.Component<Props, State> {
     private publish = debounce(()=>{
         this.toast.show("提交中...",DURATION.LENGTH_LONG)
         this.publishAction()
-    },5000,true)
+    },3000,true)
 
 
     private publishAction = async () => {
@@ -165,8 +165,10 @@ class SharePark extends React.Component<Props, State> {
                 type: 'info',
                 icon: "info",
                 floating: true,
-                duration: 10000,
-                onPress:()=>{this.props.navigation.navigate("MyScore")}
+                duration: 4000,
+                onPress:()=>{setTimeout(() => {
+                    this.props.navigation.navigate("MyScore")
+                }, 0);}
             })
             return;
         }
@@ -247,7 +249,9 @@ class SharePark extends React.Component<Props, State> {
         saveLastLocation({ lat: this.state.initLatitude, lng: this.state.initLongitude, time: toDate(new Date(),"yyyy/MM/dd hh:mm:ss") })
 
         this.toast.show("分享成功",DURATION.LENGTH_SHORT,()=>{
-            this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+            setTimeout(() => {
+                this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+            }, 0);
         })
         // showMessage({
         //     message : "分享成功",

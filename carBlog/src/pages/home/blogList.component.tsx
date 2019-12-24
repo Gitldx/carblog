@@ -15,7 +15,7 @@ import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile } from '@src/core/model';
 import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol } from '@src/core/uitls/httpService';
-import { toDate, getTimeDiff, gcj2wgs, displayIssueTime } from '@src/core/uitls/common';
+import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
@@ -87,7 +87,7 @@ export class BlogListComponent extends React.Component<Props, State> {
                 {/* <View>
                     <Text>{item.carNumber}</Text>
                 </View> */}
-                {item.authorProfile.carNumber && <LicensePlate carNumber={item.authorProfile.carNumber} category="c1" style={{ marginLeft: 5 }} />}
+                {!isEmpty(item.authorProfile.carNumber) && <LicensePlate carNumber={item.authorProfile.carNumber} category="c1" style={{ marginLeft: 5 }} />}
 
             </View>
         )

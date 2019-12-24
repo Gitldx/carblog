@@ -215,7 +215,7 @@ class BlogEdit extends React.Component<Props, State> {
 
   private save = debounce(()=>{
     this.saveAction()
-  },5000,true)
+  },3000,true)
 
 
   private saveAction = async () => {
