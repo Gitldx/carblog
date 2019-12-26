@@ -2,8 +2,12 @@ export const SPRINGWEBSERVICEVERSION = "1.0.0"
 export const NODEWEBSERVICEVERSION = "1.0.0"
 export const JSAPIVERSION_ANDROID = '1.0.0'  //todo:统计用户版本
 export const JSAPIVERSION_IOS = '1.0.0'
-export const APPVERSION_ANDROID = '1.0.0'
-export const APPVERSION_IOS = '1.0.0'
+export const APPVERSION_ANDROID = '1.0.0'//原生版本
+export const APPVERSION_IOS = '1.0.0'//原生版本
+
+export const IOSAPPID = "414478124"
+
+
 /**
  * 误差在该范围内视为同一个地点，单位为米
  */

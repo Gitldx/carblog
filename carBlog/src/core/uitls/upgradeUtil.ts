@@ -4,9 +4,11 @@ import EventRegister, { upgradeEvent } from "./eventRegister";
 import { NavigationScreenProp, NavigationParams } from "react-navigation";
 import { NavigationRoute } from "react-navigation";
 import { globalFields } from "../model";
-import { APPVERSION_ANDROID, APPVERSION_IOS, JSAPIVERSION_IOS, JSAPIVERSION_ANDROID } from "./constants";
+import { APPVERSION_ANDROID, APPVERSION_IOS, JSAPIVERSION_IOS, JSAPIVERSION_ANDROID, IOSAPPID } from "./constants";
 import { getConnectionType } from "./netStatus";
-import { simpleAlert } from "./alertActions";
+import { simpleAlert, towActionAlert } from "./alertActions";
+import { toDate, timeDiffInSeconds, isEmpty } from "./common";
+import { Upgradehistory, getUpgradeHistory, saveUpgradeHistory } from "./storage/localConfig";
 
 
 declare var global: globalFields
@@ -61,14 +63,14 @@ export class Upgrade {
       ios: "jgNxPKr9RBwC5Tt4iFKQPsnVef3tVJV4lBVUg",
       android: "n6lr6Cqg19Mmwm7i-GbEvm7yqUifjeHel_f0Z"
     })
-    const productionkey = Platform.select({
+    const productionkey = Platform.select({//todo:上线前更换成这个
       ios: "NUXmaeb45usx8amOwqmKx8WcIjgCF37oDUkIdX",
       android: "U_6W3QJwM96H053p1Y_Gx4IoZf-paedRjKIjHg"
     })
     const deploymentKey = debugkey
     // console.warn("codepush")
     codePush.checkForUpdate(deploymentKey).then((update) => {
-      console.warn(`codepush:${JSON.stringify(update)}`)
+      // console.warn(`codepush:${JSON.stringify(update)}`)
       if (!update) {
         codePush.notifyAppReady() //已是最新版本
       } else {
@@ -157,7 +159,7 @@ export function currentAppversion() {
 }
 
 
-export function currentJSversion() {
+function currentJSversion() {
   return Platform.select({
     ios: JSAPIVERSION_IOS,
     android: JSAPIVERSION_ANDROID
@@ -170,10 +172,13 @@ function versionInt(versionname: string) {
   return vInt
 }
 
+/**
+ * 小于支持版本就强制退出app
+ */
 export function checkAppUnavailable() {
   const minVersion = Platform.select({
-    ios: global.serverParam.minversion_i,
-    android: global.serverParam.minversion_a
+    ios: global.serverParam.minversion_ios,
+    android: global.serverParam.minversion_an
   })
 
   if (minVersion == "0.0.0") {
@@ -182,10 +187,7 @@ export function checkAppUnavailable() {
 
   const vInt = versionInt(minVersion)
 
-  const vCurrent = Platform.select({
-    ios: APPVERSION_IOS,
-    android: APPVERSION_ANDROID
-  })
+  const vCurrent = currentAppversion()
   const vIntCurrent = versionInt(vCurrent)
 
   return vIntCurrent <= vInt;
@@ -195,8 +197,8 @@ export function checkAppUnavailable() {
 
 export function checkAppUnavailable_js() {
   const minVersion = Platform.select({
-    ios: global.serverParam.minversion_ji,
-    android: global.serverParam.minversion_ja
+    ios: global.serverParam.minversion_jios,
+    android: global.serverParam.minversion_jan
   })
 
   if (minVersion == "0.0.0") {
@@ -204,10 +206,7 @@ export function checkAppUnavailable_js() {
   }
 
   const vInt = versionInt(minVersion)
-  const vCurrent = Platform.select({
-    ios: JSAPIVERSION_IOS,
-    android: JSAPIVERSION_ANDROID
-  })
+  const vCurrent = currentJSversion()
   const vIntCurrent = versionInt(vCurrent)
 
 
@@ -215,54 +214,58 @@ export function checkAppUnavailable_js() {
 }
 
 
-/**
- * 更新策略
- * 频繁的更新通过codepush 更新js代码。当js更新累计到一定步骤，仍未更新，就通过checkAppUnavailable_js退出app，强制用户手动到应用市场下载
- * 涉及到原生代码的更新，安卓方面先实验性的使用bugly。如果安卓累计到一定步骤仍未更新，就先触发checkAppUnavailable_Forcedversion，
- * 再尝试一次强迫用户下载，如果再不行，就触发checkAppUnavailable，退出app，强制用户手动到应用市场下载
- */
-export async function checkAppUnavailable_Forcedversion() { //todo:安卓downloadservice
-  if (Platform.OS != "android") {
-    return
-  }
 
-  const minVersion = global.serverParam.minForcedversion_a
 
-  if (minVersion == "0.0.0") {
-    return false
-  }
-
-  const vInt = versionInt(minVersion)
-  const vCurrent = APPVERSION_ANDROID
-  const vIntCurrent = versionInt(vCurrent)
-
-  if (vIntCurrent <= vInt) {
-    const type = await getConnectionType()
-
-    if (type != 'wifi') {
-      return;
-    }
-    simpleAlert(null, "app稍后将重装升级","知道了",()=>{
-      nativeUpdateApp()
-    })
-    
-  }
+async function getAppleStoreVersion() {
+  const url = `https://itunes.apple.com/cn/lookup?id=${IOSAPPID}`
+  const res = await fetch(url).then((response) => response.json())
+  return res.results[0].version
 }
+
+
+// export async function checkAppUnavailable_Forcedversion() {
+
+
+//   const minVersion = global.serverParam.minForcedversion_an
+
+//   if (minVersion == "0.0.0") {
+//     return false
+//   }
+
+//   const vInt = versionInt(minVersion)
+//   const vCurrent = APPVERSION_ANDROID
+//   const vIntCurrent = versionInt(vCurrent)
+
+//   if (vIntCurrent <= vInt) {
+//     const type = await getConnectionType()
+
+//     if (type != 'wifi') {
+//       return;
+//     }
+
+//     simpleAlert(null, "app稍后将重装升级", "知道了", () => {
+//       nativeUpdateApp()
+//     })
+//     upgradeStrategy()
+
+//   }
+// }
 
 
 /**
  * 自己写的下载更新逻辑
  */
-function nativeUpdateApp() {
+export function nativeUpdateApp() {
 
   if (Platform.OS === 'ios') {
-    // NativeModules.iosupgrade.getAppVersion((error, Version) => {
+    // NativeModules.upgrade.getAppVersion((error, Version) => {
     //   if(error){
     //     console.log(error)
     //   }else{
-    //     iosCurrentVersion = Version;
+    //     console.warn(Version)
     //   }
     // })
+    NativeModules.upgrade.openAPPStore(IOSAPPID)
   } else {
     const AndroidAutoUpdate = NativeModules.AndroidAutoUpdate
 
@@ -273,4 +276,110 @@ function nativeUpdateApp() {
   }
 
   // this.GetAPPOnlineVersion(showTip);
+}
+
+
+function popupMessage(hint) {
+  if (Platform.OS == "android") {
+    simpleAlert(null, hint, "知道了", () => {
+      nativeUpdateApp()
+    })
+  }
+  else {
+    towActionAlert(null, hint, "稍后", null, "更新", () => { nativeUpdateApp() })
+  }
+}
+
+
+/**
+ * 更新策略
+ * 频繁的更新通过codepush 更新js代码。当js更新累计到一定步骤，仍未更新，就通过checkAppUnavailable_js退出app，强制用户手动到应用市场下载
+ * 涉及到原生代码的更新，安卓方面先实验性的使用bugly。如果安卓累计到一定步骤仍未更新，就先触发upgradeStrategy，
+ * 再尝试一次强迫用户下载，如果再不行，就触发checkAppUnavailable，退出app，强制用户手动到应用市场下载
+ */
+export async function upgradeStrategy() {//todo:上线前测一下
+
+  const version = Platform.select({
+    ios: global.serverParam.newVersion_ios,
+    android: global.serverParam.minForcedversion_an
+  })
+  if (version == "0.0.0") {
+    return;
+  }
+  const currentV = currentAppversion()
+  if (versionInt(currentV) >= versionInt(version)) {
+    return
+  }
+  const type = await getConnectionType()
+
+  if (type != 'wifi') {
+    return;
+  }
+
+  if (Platform.OS == "ios") {
+    const appstoreversion = await getAppleStoreVersion()
+    if (versionInt(appstoreversion) <= versionInt(version)) {
+      return;
+    }
+  }
+
+
+  let history: Upgradehistory = await getUpgradeHistory()
+
+  const d1 = new Date()
+  const d1str = toDate(d1, "yyyy/MM/dd hh:mm:ss")
+  const upgradeInfo = Platform.select({
+    ios: global.serverParam.upgradeInfo_ios,
+    android: global.serverParam.upgradeInfo_an
+  })
+  const hint = isEmpty(upgradeInfo) ? "有新版本可以更新了" : upgradeInfo
+  if (history == null) {//第一次
+
+    history = { version: version, times: d1str }
+    saveUpgradeHistory(history)
+    popupMessage(hint)
+  }
+  else {
+    
+    if (history.version != version) {//新版本，提醒
+      history.version = version
+      history.times = d1str
+      // towActionAlert(null, hint, "稍后", null, "更新", () => { nativeUpdateApp() })
+      saveUpgradeHistory(history)
+      popupMessage(hint)
+    }
+    else {//在相同版本的情况下，最多3次提醒用户
+      const timesArr = history.times.split("||")
+      if (timesArr.length >= 3) {//已经达到3次
+
+      }
+      else {
+        const last = timesArr[timesArr.length - 1]
+        const lastTime = new Date(last)
+        const dayDiff = timeDiffInSeconds(d1, lastTime) / (60 * 60 * 24)
+        if (dayDiff >= 3) {//隔3天提醒一次
+          // towActionAlert(null, hint, "稍后", null, "更新", () => { nativeUpdateApp() })
+          timesArr.push(d1str)
+          history.times = timesArr.join("||")
+          saveUpgradeHistory(history)
+          popupMessage(hint)
+        }
+
+      }
+    }
+  }
+
+
+  /*  const d2 = new Date()
+   d2.setTime(d2.getTime() + 24 * 60 * 60 * 1000)
+   const str = toDate(d1,"yyyy/MM/dd hh:mm:ss") + "||"  + toDate(d2,"yyyy/MM/dd hh:mm:ss")
+ 
+   console.warn(str)
+ 
+   const arr = str.split("||")
+   console.warn(new Date(arr[1]))
+   const d3 = new Date(d2.getTime() +  + 24 * 60 * 60 * 1000)
+   arr.push(toDate(d3,"yyyy/MM/dd hh:mm:ss"))
+   const diff = timeDiffInSeconds(new Date(arr[0]),new Date(arr[2]))/(24*60*60)
+   console.warn(diff) */
 }

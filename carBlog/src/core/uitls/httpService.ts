@@ -70,7 +70,7 @@ export function postService(url: string, body: {}, version: string = SPRINGWEBSE
 
         getOnlineOffline((isOnline) => {
             if (!isOnline) {
-                Alert.alert("网络状况：" + isOnline);
+                // Alert.alert("网络状况：" + isOnline);
                 resolve(false)
             }
             else {

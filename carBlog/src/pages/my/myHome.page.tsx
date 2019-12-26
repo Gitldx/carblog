@@ -21,7 +21,7 @@ import debounce from "@src/core/uitls/debounce"
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { JSAPIVERSION_ANDROID } from '@src/core/uitls/constants';
 import { MaterialCommunityIcons } from '@src/assets/icons';
-import { checkAppUnavailable_Forcedversion } from '@src/core/uitls/upgradeUtil';
+import { upgradeStrategy } from '@src/core/uitls/upgradeUtil';
 
 
 type DayNight = "day" | "night"
@@ -124,10 +124,12 @@ export class MyHome extends React.Component<Props, State> {
   }
 
 
-  private count = 0
+
   private debounce = debounce(() => {
-    // console.warn(++this.count)
-    getConnectionType().then(type=>console.warn(type))
+    // getConnectionType().then(type=>console.warn(type))
+    // checkAppUnavailable_Forcedversion()
+    // nativeUpdateApp()
+    // upgradeStrategy()
   }, 2000, true)
   private testDebounce = () => {
     this.debounce()

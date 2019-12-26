@@ -9,13 +9,16 @@ interface serverParam {
     nip: string,
     jip: string,
 
-    minversion_a: string,
-    minversion_i: string,
-    minversion_ja:string,
-    minversion_ji:string,
+    minversion_an: string,
+    minversion_ios: string,
+    minversion_jan: string,
+    minversion_jios: string,
     /**使用downloadservice 强迫下载的最低版本 */
-    minForcedversion_a : string,
-    apkUrl : string,
+    minForcedversion_an: string,
+    newVersion_ios: string,
+    apkUrl: string,//todo:注意，七牛云的地址后面不能有apk后缀，否则不能下载。安卓代码里会在下载后在文件名后加上后缀
+    upgradeInfo_ios: string,
+    upgradeInfo_an: string
 }
 
 export interface globalFields {

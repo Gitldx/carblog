@@ -22,8 +22,11 @@ import { Config } from './core/uitls/config';
 import FlashMessage from "react-native-flash-message";
 import { NavigationScreenProps } from 'react-navigation';
 import EventRegister, { initAppOnlineCompleteEvent } from './core/uitls/eventRegister';
-import { checkAppUnavailable, currentAppversion, checkAppUnavailable_js, checkAppUnavailable_Forcedversion } from './core/uitls/upgradeUtil';
+import { checkAppUnavailable, currentAppversion, checkAppUnavailable_js, upgradeStrategy } from './core/uitls/upgradeUtil';
 import { simpleAlert } from './core/uitls/alertActions';
+import SplashScreen from 'react-native-splash-screen'
+
+
 
 const NativeAPI = NativeModules.NativeAPI
 
@@ -75,7 +78,8 @@ export default class App extends React.Component<NavigationScreenProps, State>{
 
         EventRegister.addEventListener(initAppOnlineCompleteEvent,()=>{
             
-            checkAppUnavailable_Forcedversion()
+            // checkAppUnavailable_Forcedversion()
+            upgradeStrategy()
 
             if(checkAppUnavailable() || checkAppUnavailable_js()){
                 simpleAlert("警告",`当前版本 ${currentAppversion()} 已停止服务支持，这可能是因为各种原因您长期未升级app，请到应用市场重新下载app`,"退出",()=>{
@@ -88,7 +92,7 @@ export default class App extends React.Component<NavigationScreenProps, State>{
 
 
     public componentDidMount(): void {
-        // SplashScreen.hide()
+        SplashScreen.hide()
     }
 
 
