@@ -2,7 +2,7 @@ import {AbstractState} from './abstractState'
 import * as constants from './constants'
 // import {KdNum} from './KdNum'
 import {UserAccount} from './userAccount'
-import { saveAsyncStorage, getDeviceId,getStorageAsync, getAsyncStorage, isEmpty, removeAsyncStorage } from '../uitls/common'
+import { saveAsyncStorage,getStorageAsync, getAsyncStorage, isEmpty, removeAsyncStorage } from '../uitls/common'
 import {updateGlobalUserAccount} from './functions'
 import { State } from './userState';
 // import { getDeviceId } from '../../common/deviceId'

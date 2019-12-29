@@ -21,6 +21,8 @@ import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
 import { imageUri, thumbnailUri } from '@src/assets/images/type';
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
+import { onlineAccountState } from '@src/core/userAccount/functions';
+import { showMessage } from 'react-native-flash-message';
 
 
 interface BlogListItemData {
@@ -227,14 +229,22 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
     private writeBlog = () => {
+        const s = onlineAccountState()
+        if(s==0 || -1){
+            showMessage({
+                message:'提示',
+                description:"撰写博客请先注册或登录账号",
+                icon : "info",
+                type:"info",
+                position:'center',
+                duration:3000
+            })
+            return;
+        }
         this.props.navigation.navigate("myBlog")
     }
 
 
-
-
-
-    private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
     private pressMore = () => {
         this.setState({ loading: 1 })

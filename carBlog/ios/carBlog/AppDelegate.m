@@ -14,6 +14,8 @@
 
 #import <AMapFoundationKit/AMapFoundationKit.h>
 #import "MapTypeViewController.h"
+#import "RNSplashScreen.h"
+
 
 @implementation AppDelegate
 
@@ -35,8 +37,8 @@
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
 
-
-
+  [RNSplashScreen show];
+  
   return YES;
 }
 

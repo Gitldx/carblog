@@ -4,14 +4,14 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, OverflowMenuItemType, } from 'react-native-ui-kitten';
+import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, OverflowMenuItemType, Avatar, } from 'react-native-ui-kitten';
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
 import { PageView } from '../pageView';
 import { BlogList } from './blogList.component';
 import { ScrollPageView } from '../scrollPageView';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import { Input } from '@src/components/common';
-import { MaterialCommunityIcons } from '@src/assets/icons';
+import { MaterialCommunityIcons, HelicopterImage, CarImage, Car2Image, BlockImage } from '@src/assets/icons';
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
 import { Config } from '@src/core/uitls/config';
 import { TopNavigationOptions } from '@src/core/navigation/options';
@@ -34,6 +34,8 @@ import codePush, { DownloadProgress, UpdateDialog } from "react-native-code-push
 import Spinner from 'react-native-loading-spinner-overlay';
 import { RoadChatList } from './roadChatList.component';
 import { Upgrade } from '@src/core/uitls/upgradeUtil';
+import { networkConnected } from '@src/core/uitls/netStatus';
+import { showNoNetworkAlert } from '@src/core/uitls/common';
 
 const NativeAPI = NativeModules.NativeAPI
 
@@ -117,7 +119,8 @@ class Home extends React.Component<Props, State> {
     const btn = (cb: () => void) => {
       return (
         <TouchableOpacity onPress={cb}>
-          <MaterialCommunityIcons name="car" color={getThemeValue("color-success-default", themes["App Theme"])} />
+          {/* <MaterialCommunityIcons name="car" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
+          <Avatar shape="square" source={CarImage.imageSource} resizeMode="contain" style={{width:35,height:35}}/>
         </TouchableOpacity>
       )
     }
@@ -190,6 +193,10 @@ class Home extends React.Component<Props, State> {
 
 
   private sharePark = () => {
+    if(!networkConnected()){
+      showNoNetworkAlert()
+      return
+    }
     this.props.navigation.navigate("SharePark")
   }
 
@@ -325,10 +332,13 @@ class Home extends React.Component<Props, State> {
         /> */}
         {parkStatus == 1 &&
           <TouchableOpacity onPress={this.park}
-            style={{ flexDirection: 'row', paddingVertical: 5, backgroundColor: '#ff5722', justifyContent: 'center' }}>
-            <FontAwesomeIcon size={18} name="truck" color="white" />
+            style={{ flexDirection: 'row', paddingVertical: 0, backgroundColor: '#ff8a65', justifyContent: 'center',alignItems:'center' }}>
+            {/* <FontAwesomeIcon size={18} name="truck" color="white" /> */}
+            <Avatar source={BlockImage.imageSource} style={{width:25,height:25}}/>
+            
             <Text style={{ color: 'white', fontSize: 18, marginHorizontal: 5 }}>停车中</Text>
-            <EntypoIcon size={18} name="traffic-cone" color="white" />
+            {/* <EntypoIcon size={18} name="traffic-cone" color="white" /> */}
+            <Avatar  source={Car2Image.imageSource} resizeMode="contain" style={{height:35,width:35}}/>
           </TouchableOpacity>
         }
         {/* <TouchableOpacity onPress={this.sharePark}

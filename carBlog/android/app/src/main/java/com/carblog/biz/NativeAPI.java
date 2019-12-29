@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -26,6 +27,9 @@ import com.qiniu.android.storage.UploadManager;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.security.Security;
+import java.util.HashMap;
+import java.util.Map;
 
 import top.zibin.luban.CompressionPredicate;
 import top.zibin.luban.Luban;
@@ -44,6 +48,52 @@ public class NativeAPI extends ReactContextBaseJavaModule {
     @Override
     public String getName() {
         return "NativeAPI";
+    }
+
+
+    @Override
+    public Map<String, Object> getConstants() {
+
+        final Map<String, Object> constants = new HashMap<>();
+        constants.put("systemVersion", this.getSystemVersion());
+        constants.put("systemModel", this.getSystemModel());
+        constants.put("brand",this.getDeviceBrand());
+        constants.put("deviceId", this.getAndroidId());
+        return constants;
+    }
+
+
+    private String getAndroidId() {
+        return Settings.Secure.getString(this.reactContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+
+    /**
+     * 获取当前手机系统版本号
+     *
+     * @return  系统版本号
+     */
+    private String getSystemVersion() {
+        return android.os.Build.VERSION.RELEASE;
+    }
+
+
+    /**
+     * 获取手机型号
+     *
+     * @return  手机型号
+     */
+    private String getSystemModel() {
+        return android.os.Build.MODEL;
+    }
+
+    /**
+     * 获取手机厂商
+     *
+     * @return  手机厂商
+     */
+    private String getDeviceBrand() {
+        return android.os.Build.BRAND;
     }
 
 
@@ -93,6 +143,35 @@ public class NativeAPI extends ReactContextBaseJavaModule {
     }
 
 
+    private void qiniuAction(File file,final String token,final String key, final Promise promise,boolean delete){
+
+        Configuration config = new Configuration.Builder().zone(AutoZone.autoZone).build();
+        final UploadManager uploadManager = new UploadManager(config);
+        uploadManager.put(file, key, token,
+                new UpCompletionHandler() {
+                    @Override
+                    public void complete(String key, ResponseInfo info, JSONObject res) {
+                        //res包含hash、key等信息，具体字段取决于上传策略的设置
+                        if(info.isOK()) {
+
+                            Log.i("qiniu", "Upload Success");
+
+                            if(delete){
+                                NativeAPI.this.deleteImage(file.getAbsolutePath());
+                            }
+                            promise.resolve(1);
+                        } else {
+
+                            Log.i("qiniu", "Upload Fail");
+                            //如果失败，这里可以把info信息上报自己的服务器，便于后面分析上传错误原因
+                            promise.resolve(0);
+                        }
+                        Log.i("qiniu", key + ",\r\n " + info + ",\r\n " + res);
+                    }
+                }, null);
+    }
+
+
     private void uploadAction(int size,String path,final String token,final String key, final Promise promise){
         Configuration config = new Configuration.Builder().zone(AutoZone.autoZone).build();
         final UploadManager uploadManager = new UploadManager(config);
@@ -100,6 +179,12 @@ public class NativeAPI extends ReactContextBaseJavaModule {
 
 //        byte[] data = PictureUpload.compressUpImage2Byte(path,quality);
 
+        File imgFile = new File(path);
+        if(imgFile.length() <= size * 1024){
+            this.qiniuAction(imgFile,token,key,promise,false);
+
+            return;
+        }
 
         File tempFile = null;
         try {
@@ -111,6 +196,8 @@ public class NativeAPI extends ReactContextBaseJavaModule {
             promise.resolve(0);
             return;
         }
+
+
 
         Luban.with(this.reactContext)
                 .load(path)

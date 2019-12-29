@@ -11,7 +11,6 @@ import { Input, ScrollableAvoidKeyboard } from '@src/components/common';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import ImagePicker from 'react-native-image-picker';
 import { ImageSource } from '@src/assets/images';
-import { LocalImage, RemoteImage } from '@src/assets/images/type';
 import { MaterialCommunityIcons } from '@src/assets/icons';
 import { blogList, author1, articles } from '@src/core/data/articles';
 import { RestfulJson, postService, writeArticleUrl, qiniuImgUrl, getService, getQiniuTokenUrl, rrnol, rj, RestfulResult, updateArticleUrl, roadChatUrl } from '@src/core/uitls/httpService';
@@ -84,7 +83,7 @@ class IssueChat extends React.Component<Props, State> {
     this.issueAction()
   },3000,true)
 
-  private issueAction = async () => { //todo: 服务器设置time
+  private issueAction = async () => {
 
     if(isEmpty(this.state.content)){
       simpleAlert(null,"内容不能为空")
@@ -114,6 +113,7 @@ class IssueChat extends React.Component<Props, State> {
       uid: ua.id,
       role: ua.role,
       nickname: ua.nickname,
+      image : ua.image,
       carNumber: ua.carNumber,
       chat: this.state.content,
       cityCode: global.citycode,

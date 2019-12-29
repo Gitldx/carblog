@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid, RefreshControl } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid, RefreshControl, ImageBackground, Image } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -8,7 +8,7 @@ import { Button, withStyles, ThemeType, ThemedComponentProps, List, ListItem, Li
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
 import { PageView } from '../pageView';
 import { AvatarContentBox, LicensePlate, LikeButton, VisitCounts } from '@src/components';
-import { MaterialCommunityIcons, MessageCircleIconOutline } from '@src/assets/icons';
+import { MaterialCommunityIcons, MessageCircleIconOutline, RedGreenImage, HelicopterImage, Road2mage } from '@src/assets/icons';
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
 import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
@@ -193,14 +193,28 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
         return (
+            // <ImageBackground
+            //     style={{height:40,flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10}}
+            //     source={Road1Image.imageSource}
+            // >
+
+            //     <Text style={{color:"black"}} category="p2">{`当前道路:${currentRoad}`}</Text>
+
+            //     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            //         {/* <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
+            //         <Avatar source={HelicopterImage.imageSource} style={{ height: 30, width: 30 }} />
+            //         <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={{ color: "#black"}}>
+            //             道路漫游>>
+            //         </Button>
+            //     </View>
+
+            // </ImageBackground>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10 }}>
                 <Text appearance="hint" category="p2">{`当前道路:${currentRoad}`}</Text>
-                {/* <Button size="small" appearance="ghost" onPress={this.selectRoad} style={style0}>
-                    选择其他道路>>
-                </Button> */}
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} />
+                    {/* <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
+                    <Avatar source={HelicopterImage.imageSource} resizeMode="contain" style={{ height: 35, width: 35 }} />
                     <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={{ color: getThemeValue("color-success-default", themes["App Theme"]) }}>
                         道路漫游>>
                     </Button>
@@ -211,6 +225,10 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
 
     private selectRoad = () => {
+        if (!networkConnected()) {
+            showNoNetworkAlert()
+            return
+        }
         this.props.navigation.navigate("SelectRoad", { selectCallback: this.selectCallback })
     }
 
@@ -221,6 +239,10 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
 
     private issueChat = () => {
+        if (!networkConnected()) {
+            showNoNetworkAlert()
+            return
+        }
         this.props.navigation.navigate("IssueChat", { issueCallback: this.issueCallback })
     }
 
@@ -250,7 +272,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             }
         }, 3000);
 
-        const citycode: number = await getLastLocationCityCode()
+        // const citycode: number = await getLastLocationCityCode()
 
 
         Geolocation.getCurrentPosition(({ coords }) => {
@@ -260,7 +282,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
                 geoAllowed = true
                 global.citycode = reGeocode.citycode
-                callback(citycode, reGeocode.citycode, reGeocode.road, longitude, latitude)
+                callback(null, reGeocode.citycode, reGeocode.road, longitude, latitude)
             })
         })
 
@@ -288,6 +310,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
     private getMore = async () => {
         this.currentPage++;
+        console.warn(this.currentPage)
         const rr = await getService(roadChatListUrl(global.citycode, this.state.currentRoad, this.currentPage,
             this.currentlocation_wgs.longitude, this.currentlocation_wgs.latitude))
         if (rrnol(rr)) {
@@ -315,6 +338,9 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
 
     private list = () => {//todo:刷新的tip
+        if (!networkConnected()) {
+            return;
+        }
         this.setState({ refreshing: true })
         this.listLoaded = true
         this.getCityAndRoad((oldCitycode, newCitycode, road, longitude, latitude) => {
@@ -322,7 +348,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             if (isEmpty(road)) {//没有定位权限
 
                 this.canUseGeo = false
-                this.setState({ list: [], loading: 2 ,refreshing:false})
+                this.setState({ list: [], loading: 2, refreshing: false })
                 return;
             }
             else {
@@ -336,12 +362,12 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
     private currentPage = 0
-    private getList = async (citycode, road, lng, lat) => {//todo:服务器传image
+    private getList = async (citycode, road, lng, lat) => {//note:上线前所有的分页改大一些
         this.currentPage = 0
         const rr = await getService(roadChatListUrl(citycode, road, 0, lng, lat))
 
         if (rrnol(rr)) {
-            this.setState({ list: [], loading: 2,refreshing:false })
+            this.setState({ list: [], loading: 2, refreshing: false })
             return
         }
 
@@ -356,10 +382,10 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             })
         }
         lst1.forEach(c => {
-            c.time = displayIssueTime(new Date(c.time ? "2019/12/13 14:44:22" : null)) //todo:服务器格式化时间
+            c.time = displayIssueTime(new Date(c.time))
         })
 
-        this.setState({ currentRoad: road, list: lst1, loading: 0,refreshing:false })
+        this.setState({ currentRoad: road, list: lst1, loading: 0, refreshing: false })
     }
 
 
@@ -379,20 +405,27 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     private renderListEmptyComponent = (): React.ReactElement => {
 
         if (!this.listLoaded) {
-            return null
+            return (
+                <View style={{ height: 600, paddingHorizontal: 10, flex: 1, justifyContent: 'center', alignItems: 'center' }} >
+                    <Avatar shape="square" source={Road2mage.imageSource} style={{ height: 100, width: 100 }} />
+                </View>
+            )
+
         }
 
         const hint = this.canUseGeo ? "暂时空白，点击刷新再试试" : "未能获取到当前城市，请点击刷新或者到设置中心授权app使用定位"
         // console.warn(`renderListEmptyComponent,${hint}`)
         return (
             <TouchableOpacity onPress={this.list}
-                style={{ height: 600, paddingHorizontal: 10, flex: 1, alignItems: 'center' }}>
-                {/* <Button 
-                    icon={(styles) => MaterialCommunityIcons({ name: "emoticon-neutral-outline", color: styles.tintColor }) as any}
-                    appearance="ghost" size="giant">{hint}</Button> */}
-                <View style={{ flexDirection: 'row', paddingHorizontal: 10, marginTop: 250, justifyContent: 'center', alignItems: 'center' }}>
-                    <MaterialCommunityIcons name="emoticon-neutral-outline" color="lightgrey" size={30} />
-                    <Text style={{ marginLeft: 10 }}>{hint}</Text>
+                style={{ height: 600, flex: 1, alignItems: 'center' }}>
+
+                <View style={{ paddingHorizontal: 10, marginTop: 250, justifyContent: 'center', alignItems: 'center' }}>
+                    {/* <MaterialCommunityIcons name="emoticon-neutral-outline" color="lightgrey" size={30} /> */}
+                    {/* <View style={{ paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' }}> */}
+                        <Avatar source={Road2mage.imageSource} shape="square" style={{ height: 50, width: 50}} resizeMode="contain" />
+                        <Text style={{ marginLeft: 10 }}>{hint}</Text>
+                    {/* </View> */}
+
                 </View>
             </TouchableOpacity>
         )
@@ -447,7 +480,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                     onMomentumScrollBegin={this.onMomentumScrollBegin}
                 />
                 <TouchableOpacity style={themedStyle.addButton} onPress={this.issueChat}>
-                    <MaterialCommunityIcons name="traffic-light" size={30} color="white" />
+                    {/* <MaterialCommunityIcons name="traffic-light" size={30} color="white" /> */}
+                    <Avatar source={RedGreenImage.imageSource} resizeMode="contain" style={{ height: 45 }} />
                 </TouchableOpacity>
             </React.Fragment>
             // {/* <View style={themedStyle.bottomPadding}></View> */}
@@ -468,7 +502,7 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
     addButton: {
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
-        backgroundColor: "#FF3333"//theme["color-danger-400"]
+        backgroundColor: "#72d572"//theme["color-danger-400"]
     },
     listItem: {
         flexDirection: 'row', height: 120,

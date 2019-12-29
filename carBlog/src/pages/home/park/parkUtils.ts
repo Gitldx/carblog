@@ -53,7 +53,11 @@ export async function calculateSearchScore(parks:SharePark[]){
     return count
 }
 
-
+export async function saveThankParkId(parkId:string){
+    const localData : localThankPark[] = await getThankParks()
+    localData.push({id:parkId,time: new Date()})
+    saveThankParks(localData)
+}
 
 export async function hasThanked(parkId : string){
 
@@ -96,8 +100,8 @@ export async function hasThanked(parkId : string){
         return true
     }
     else{
-        localData.push({id:parkId,time: new Date()})
-        saveThankParks(localData)
+        // localData.push({id:parkId,time: new Date()})
+        // saveThankParks(localData)
         return false
     }
     

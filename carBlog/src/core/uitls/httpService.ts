@@ -303,8 +303,8 @@ function getNodeIp() {
     return 'http://' + getNIP()
 }
 
-function getImgIp() {
-    return 'http://q1opwedmp.bkt.clouddn.com/' //'http://psnuywep3.bkt.clouddn.com/'
+function getImgIp() {//note:未申请到域名前不能上线
+    return 'http://q37949lcs.bkt.clouddn.com/'//'http://q1opwedmp.bkt.clouddn.com/'
 }
 
 
@@ -693,7 +693,8 @@ function matchShareParkPointUrl(lng, lat, deviation: number) {
 
 
 function rankParkUrl(citycode, sortType, page) {
-    return http() + `/park/rankPark?cityCode=${citycode}&sortType=${sortType}&page=${page}`
+    const url = `/park/rankPark?cityCode=${citycode}&sortType=${sortType}&page=${page}`
+    return http() + url
 }
 
 
@@ -856,8 +857,14 @@ function roadChatListUrl(cityCode,road,page,lng,lat){
 }
 
 
-function countRoadChatUrl(cityCode,road){ //todo:去掉java多余的page path变量
-    return http() + `/road/count/${cityCode}/${road}/0`
+function countRoadChatUrl(cityCode,road){
+    return http() + `/road/count/${cityCode}/${road}`
+}
+
+
+
+function userStatisticUrl(){
+    return http() + `/account/statistic`
 }
 
 
@@ -881,5 +888,6 @@ export {
     writeArticleUrl, updateArticleUrl, deleteArticleUrl, listArticleUrl, getProfileByCarNumberUrl, listNearbyArticleUrl, listMyArticlesUrl,
     readArticleUrl, addArticleVisitCountUrl, commentUrl, likeArticleUrl, likeCommentUrl,
     shopListUrl, shopGetUrl, productListUrl, shopGetByUid, shopEditUrl, productEditUrl, productCloseUrl, productOpenUrl,
-    roadChatUrl,roadChatListUrl,countRoadChatUrl
+    roadChatUrl,roadChatListUrl,countRoadChatUrl,
+    userStatisticUrl
 }

@@ -31,7 +31,7 @@ function* initAppState() {
     EventRegister.emitEvent(initAppUserStateCompleteEvent)
     yield readParameter()
 
-    // yield afterLocalLaunch()
+    yield afterLocalLaunch()
 
     launchMessageLooper()
     readBulletin()

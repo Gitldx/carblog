@@ -8,7 +8,7 @@
     <!--<string moduleConfig="true" name="reactNativeCodePush_androidDeploymentKey">-->
         <!--n6lr6Cqg19Mmwm7i-GbEvm7yqUifjeHel_f0Z -->
     <!--</string>-->
-    <string name="app_name">carBlog</string>
+    <string name="app_name">车皮士</string>
 
 
     <string name="android_auto_update_dialog_title">发现新版本</string>

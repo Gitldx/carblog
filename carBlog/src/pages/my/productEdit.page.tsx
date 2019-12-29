@@ -112,7 +112,7 @@ class ProductEdit extends React.Component<Props, State> {
         skipBackup: true,
         path: 'images',
       },
-      quality: 0.2,
+      quality: 0.5,
       title: '选择照片',
       cancelButtonTitle: '取消',
       takePhotoButtonTitle: '拍照',

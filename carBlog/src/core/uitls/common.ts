@@ -8,11 +8,17 @@ import { showMessage } from 'react-native-flash-message'
 // export { toDate } from './prototype'
 import { NativeModules } from 'react-native'
 import { simpleAlert } from './alertActions';
-import {wgs84togcj02,gcj02towgs84} from 'coordtransform'
+import { wgs84togcj02, gcj02towgs84 } from 'coordtransform'
+import { postService, userStatisticUrl } from './httpService';
+import { UserStatistic } from '../model/userStatistic.model';
+import { getDeviceInfo } from './deviceInfo';
+import { UserAccount } from '../userAccount/userAccount';
+import { currentAppversion, currentJSversion } from './upgradeUtil';
+import { saveStatisticHistory, getStatisticHistory } from './storage/localConfig';
 
 
 
-(<any>Date.prototype).format = function (format : string) :string {
+(<any>Date.prototype).format = function (format: string): string {
     let date = {
         "M+": this.getMonth() + 1,
         "d+": this.getDate(),
@@ -35,13 +41,13 @@ import {wgs84togcj02,gcj02towgs84} from 'coordtransform'
 };
 
 //转换成日期
-export function toDate(timestamp : any, format1 : string = 'yyyy-MM-dd hh:mm:ss') {
-    
+export function toDate(timestamp: any, format1: string = 'yyyy-MM-dd hh:mm:ss') {
+
     try {
         if (timestamp > 10000) {
             let date = new Date();
             date.setTime(timestamp);
-            
+
             return (<any>date).format(format1);//2014-07-10 10:21:12
         } else {
             return '';
@@ -51,18 +57,13 @@ export function toDate(timestamp : any, format1 : string = 'yyyy-MM-dd hh:mm:ss'
     }
 }
 
-export function getTimeDiff(timeStamp : Date){
+export function getTimeDiff(timeStamp: Date) {
     const d = new Date();
-    return Math.abs((d.getTime() - timeStamp.getTime()))/(60*1000);
+    return Math.abs((d.getTime() - timeStamp.getTime())) / (60 * 1000);
 }
 
 
 
-// const NativeAPI = NativeModules.NativeAPI
-
-export function getDeviceId(): string {
-    return "deviceId"//NativeAPI.deviceId
-}
 
 
 /**
@@ -98,41 +99,41 @@ export function showNoNetworkAlert() {
 }
 
 
-export function showNoAccountOnAlert(){
+export function showNoAccountOnAlert() {
     showMessage({
-        message:"提示",
-        description : "请先注册或者登录账号",
-        type : "warning",
-        icon : "warning",
-        position : 'center'
-      })
+        message: "提示",
+        description: "请先注册或者登录账号",
+        type: "warning",
+        icon: "warning",
+        position: 'center'
+    })
 }
 
 
-export function showOngoingAlert(msg?:string){
+export function showOngoingAlert(msg?: string) {
     showMessage({
-        message : "提示",
-        description : msg ? msg : "提交中...",
-        type :"info",
-        icon : "info",
-        position : 'center',
-        duration : 3000
+        message: "提示",
+        description: msg ? msg : "提交中...",
+        type: "info",
+        icon: "info",
+        position: 'center',
+        duration: 3000
     })
 }
 
 
 
-export function showLittleMsgToast(msg:string){
-    if(Platform.OS == 'android'){
-        ToastAndroid.showWithGravity(msg,ToastAndroid.SHORT,ToastAndroid.CENTER)
+export function showLittleMsgToast(msg: string) {
+    if (Platform.OS == 'android') {
+        ToastAndroid.showWithGravity(msg, ToastAndroid.SHORT, ToastAndroid.CENTER)
     }
-    else{
+    else {
         showMessage({
-            message : msg,
-            type : 'info',
-            position : 'center',
-            duration : 1500,
-            floating : true
+            message: msg,
+            type: 'info',
+            position: 'center',
+            duration: 1500,
+            floating: true
         })
     }
 }
@@ -214,7 +215,7 @@ export function saveAsyncStorage(key, value, successCallback = () => { },
 /**
  * yyyyMMddhhmmssms
  */
-export function getTimestampStr(){
+export function getTimestampStr() {
     const d = new Date()
     const y = d.getFullYear()
     const m = d.getMonth() + 1
@@ -223,47 +224,47 @@ export function getTimestampStr(){
     const mm = d.getMinutes()
     const s = d.getSeconds()
     const ms = d.getMilliseconds()
-    
-    return (y.toString() + 
-       ( m<10?'0'+m.toString():m.toString() )+
-       ( dd<10?'0'+dd.toString():dd.toString() ) + 
-       ( h<10?'0'+h.toString():h.toString() )+
-       ( mm<10?'0'+mm.toString():mm.toString() )+
-       ( s<10?'0'+s.toString():s.toString()  )+
-       ( ms<10?'00'+ms.toString():(ms<100?"0"+ms.toString():ms.toString()) )
-        )
+
+    return (y.toString() +
+        (m < 10 ? '0' + m.toString() : m.toString()) +
+        (dd < 10 ? '0' + dd.toString() : dd.toString()) +
+        (h < 10 ? '0' + h.toString() : h.toString()) +
+        (mm < 10 ? '0' + mm.toString() : mm.toString()) +
+        (s < 10 ? '0' + s.toString() : s.toString()) +
+        (ms < 10 ? '00' + ms.toString() : (ms < 100 ? "0" + ms.toString() : ms.toString()))
+    )
 
 }
 
 
-export function formatTimeStampStr(timeStamp,displayYear = false,displaySeconds = false){
+export function formatTimeStampStr(timeStamp, displayYear = false, displaySeconds = false) {
 
-    let result = timeStamp.substr(4,2)+ "/" + timeStamp.substr(6,2) + " " + timeStamp.substr(8,2) + ":" + timeStamp.substr(10,2)
+    let result = timeStamp.substr(4, 2) + "/" + timeStamp.substr(6, 2) + " " + timeStamp.substr(8, 2) + ":" + timeStamp.substr(10, 2)
 
 
-    if(displayYear){
-        result = timeStamp.substr(0,4) + "/" + result 
+    if (displayYear) {
+        result = timeStamp.substr(0, 4) + "/" + result
     }
 
-    if(displaySeconds){
-        result = result + ":" + timeStamp.substr(12,2)
+    if (displaySeconds) {
+        result = result + ":" + timeStamp.substr(12, 2)
     }
-    
+
 
 
     return result
-    
+
 }
 
 
-export function timeDiffInSeconds(time1:Date,time2:Date){
-    const diff = Math.abs(time1.getTime()-time2.getTime())
+export function timeDiffInSeconds(time1: Date, time2: Date) {
+    const diff = Math.abs(time1.getTime() - time2.getTime())
     // console.warn(`diff:${diff/1000}`)
-    return diff/1000
+    return diff / 1000
 }
 
 
-export function displayIssueTime(time:Date) {
+export function displayIssueTime(time: Date) {
 
     const minutes = getTimeDiff(time).toFixed(0)
 
@@ -285,7 +286,45 @@ export function displayIssueTime(time:Date) {
 }
 
 
-export function gcj2wgs(lng,lat){
-    const d = gcj02towgs84(lng,lat)
-    return {lng:d[0],lat:d[1]}
+export function gcj2wgs(lng, lat) {
+    const d = gcj02towgs84(lng, lat)
+    return { lng: d[0], lat: d[1] }
+}
+
+
+export async function getStatisticInfo() {
+
+    const day = await getStatisticHistory()
+    
+    if(day!= null){
+       const now = new Date() 
+       if(day.getDate() == now.getDate()){
+           return null
+       }
+    }
+    
+
+    const deviceInfo = getDeviceInfo()
+    let deviceId = deviceInfo.deviceId
+    if (isEmpty(deviceId)) {
+        deviceId = UserAccount.getUid()
+    }
+
+    if(isEmpty(deviceId)){
+        return null
+    }
+
+    const phoneModel = Platform.select({
+        ios: "iphone",
+        android: deviceInfo.systemModel
+    })
+    const data: UserStatistic = {
+        id: deviceId, systemVersion: deviceInfo.systemVersion,
+        appVersion: currentAppversion(), jsVersion: currentJSversion(), phoneModel
+    }
+
+    saveStatisticHistory()
+
+    return data
+    // postService(userStatisticUrl(),data)
 }

@@ -1,7 +1,7 @@
-import { getDeviceId } from '../uitls/common'
-import { getStorageAsync, isEmpty } from '../uitls/common'
 
-import { postService, userAccountRegisterUrl, userAccountLoginUrl, RestfulJson, rj } from '../uitls/httpService'
+import { getStorageAsync, isEmpty, getStatisticInfo } from '../uitls/common'
+
+import { postService, userAccountRegisterUrl, userAccountLoginUrl, RestfulJson, rj, userStatisticUrl } from '../uitls/httpService'
 // import { KdNum } from './KdNum'
 // import { UserState } from './UserState'
 // import { AccountState } from './AccountState'
@@ -21,9 +21,12 @@ import { EmptyState } from './emptyState';
 import { string } from 'prop-types';
 import { updateGlobalUserAccount, saveUserAccountLocally } from './functions';
 import { ImageSource } from '@src/assets/images';
+import { UserStatistic } from '../model/userStatistic.model';
 
 
 declare var global: globalFields
+
+type LoginData = {ua : UserAccount,us : UserStatistic}
 
 // type Role = 0|1|2//"visitor" | "driver" | "pedestrian"
 
@@ -106,10 +109,12 @@ export class UserAccount {
     static async loginWithAccount(accountName: string, password: string, callback: (data: any) => void) {
 
         // const existKdnum = await KdNum.existLocalKdNum()
-        const machineId = getDeviceId()
+        // const machineId = getDeviceId()
 
         try {
-            const rr = await postService(userAccountLoginUrl(), { accountName, password });
+            const us = await getStatisticInfo()
+            const d : LoginData = {ua : { accountName, password } as any , us}
+            const rr = await postService(userAccountLoginUrl(),d);
             // console.warn(`rj:${JSON.stringify(rj)}`)
 
 
@@ -168,32 +173,37 @@ export class UserAccount {
 
 
 
-    static async loginWithLocalAccount(accountName: string, password: string) {
+    static async loginWithLocalAccount(accountName: string, password: string) : Promise<UserAccount> {
 
+        const us = await getStatisticInfo()
         if (isEmpty(accountName) || isEmpty(password)) {
+            postService(userStatisticUrl(),us)
             return null
         }
 
 
         try {
-            const rr = await postService(userAccountLoginUrl(), { accountName, password });
+            
+            const d : LoginData = {ua : { accountName, password } as any , us}
+            const rr = await postService(userAccountLoginUrl(), d);
 
 
             if (rj(rr).ok) {
 
                 if (rj(rr).code == 0) {
-                    const data = rj(rr).data//rj.returnData
+                    const data : UserAccount = rj(rr).data//rj.returnData
 
                     return data;
                 }
                 else {
                     simpleAlert(null, rj(rr).message)
+                    return null
                 }
 
             }
 
         } catch (err) {
-            simpleAlert(null, "useraccount login" + JSON.stringify(err))
+            simpleAlert(null, "用户登录错误：" + JSON.stringify(err))
         }
 
         return null;
@@ -203,10 +213,19 @@ export class UserAccount {
     }
 
 
-    static async serverLogin() {
+    static async serverLogin() {//todo:程序刚启动时方位服务器请求有点多，优化一下
 
         const data = await UserAccount.loginWithLocalAccount(UserAccount.instance.accountName, UserAccount.instance.password)
-
+        // console.warn(`serverLogin : ${JSON.stringify(data)}`)
+        if(!isEmpty(data)){
+            data.accountHasLogined = true
+            updateGlobalUserAccount(data,true,true)
+            saveUserAccountLocally(data)
+        }
+        else{
+            UserAccount.instance.logout()
+        }
+        
         return !isEmpty(data)
     }
 
@@ -218,7 +237,7 @@ export class UserAccount {
 
 
 
-        const machineId = getDeviceId()
+        // const machineId = getDeviceId()
 
         try {
             const rr = await postService(userAccountRegisterUrl(), { accountName, password, role })

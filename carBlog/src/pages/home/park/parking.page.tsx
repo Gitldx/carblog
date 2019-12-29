@@ -30,7 +30,7 @@ import { ParkItem } from './type';
 import { SharePark } from '@src/core/model/park';
 import Dialog from 'react-native-dialog'
 import { showMessage, hideMessage } from 'react-native-flash-message';
-import { hasThanked } from './parkUtils';
+import { hasThanked, saveThankParkId } from './parkUtils';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { getLastParkData, saveLastParkData } from '@src/core/uitls/storage/park';
@@ -598,12 +598,25 @@ class Parking extends React.Component<Props, State> {
             return;
         }
 
+        if(s == 2){
+            showMessage({
+                message: "提示",
+                description: "车主才需要停车",
+                type: 'info',
+                icon: 'info',
+                // position:'center',
+                floating: true
+            })
+            return;
+        }
+
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
         const rr = await postService(thankForParkUrl(), param)//todo:查一下为什么消息的昵称为空
         if (rrnol(rr)) {
             return
         }
         hideMessage()
+        saveThankParkId(this.toThankParkId)
         // console.warn(JSON.stringify(rr))
         this.setState({ dialogVisible: false, thankText: '' }, () => {
             this.toast.show("赠人玫瑰，手留余香", DURATION.LENGTH_LONG)

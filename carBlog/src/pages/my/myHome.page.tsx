@@ -4,7 +4,7 @@ import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { Button, Toggle, Text, withStyles, ThemeType, ThemedComponentProps, Layout } from 'react-native-ui-kitten';
+import { Button, Toggle, Text, withStyles, ThemeType, ThemedComponentProps, Layout, Avatar } from 'react-native-ui-kitten';
 import { Config } from '@src/core/uitls/config';
 import { ButtonBar } from '@src/components/common';
 import { ThemeContext, ThemeContextType } from '@src/core/themes';
@@ -20,8 +20,9 @@ import { networkConnected, getConnectionType } from '@src/core/uitls/netStatus';
 import debounce from "@src/core/uitls/debounce"
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { JSAPIVERSION_ANDROID } from '@src/core/uitls/constants';
-import { MaterialCommunityIcons } from '@src/assets/icons';
+import { MaterialCommunityIcons, HelicopterImage } from '@src/assets/icons';
 import { upgradeStrategy } from '@src/core/uitls/upgradeUtil';
+import { getDeviceInfo } from '@src/core/uitls/deviceInfo';
 
 
 type DayNight = "day" | "night"
@@ -130,6 +131,7 @@ export class MyHome extends React.Component<Props, State> {
     // checkAppUnavailable_Forcedversion()
     // nativeUpdateApp()
     // upgradeStrategy()
+    console.warn(`${JSON.stringify(getDeviceInfo())}`)
   }, 2000, true)
   private testDebounce = () => {
     this.debounce()
@@ -240,8 +242,10 @@ export class MyHome extends React.Component<Props, State> {
         </View>
 
 
-        <Text>test0</Text>
+        {/* <Text>test0</Text>
           <Button onPress={this.testDebounce}>测试</Button>
+
+          <Avatar source={HelicopterImage.imageSource} style={{height:50,width:50}}/> */}
       </PageView>
 
     );

@@ -326,7 +326,7 @@ class SearchPark extends React.Component<Props, State> {
     }
 
 
-    private netRequest = async (wgsLongitude, wgsLatitude) => {
+    private netRequest = async (wgsLongitude, wgsLatitude) => {//todo:余额不足的提示
         const role = UserAccount.instance.role
         const rr = await getService(searchNearParkUrl(wgsLongitude, wgsLatitude, this.currentPage, UserAccount.getUid(),role))
         

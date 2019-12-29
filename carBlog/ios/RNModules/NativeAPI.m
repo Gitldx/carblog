@@ -14,6 +14,14 @@
 
 RCT_EXPORT_MODULE();
 
+- (NSDictionary *)constantsToExport
+{
+  return @{
+           @"systemVersion":  [[UIDevice currentDevice] systemVersion],
+           @"deviceId" : [[UIDevice currentDevice] identifierForVendor].UUIDString
+          };
+}
+
 RCT_EXPORT_METHOD(uploadImgQiniu: (NSString *)path token:(NSString *) token key:(NSString *) key resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {

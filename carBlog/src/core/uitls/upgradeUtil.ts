@@ -63,7 +63,7 @@ export class Upgrade {
       ios: "jgNxPKr9RBwC5Tt4iFKQPsnVef3tVJV4lBVUg",
       android: "n6lr6Cqg19Mmwm7i-GbEvm7yqUifjeHel_f0Z"
     })
-    const productionkey = Platform.select({//todo:上线前更换成这个
+    const productionkey = Platform.select({//note:上线前更换成这个
       ios: "NUXmaeb45usx8amOwqmKx8WcIjgCF37oDUkIdX",
       android: "U_6W3QJwM96H053p1Y_Gx4IoZf-paedRjKIjHg"
     })
@@ -159,7 +159,7 @@ export function currentAppversion() {
 }
 
 
-function currentJSversion() {
+export function currentJSversion() {
   return Platform.select({
     ios: JSAPIVERSION_IOS,
     android: JSAPIVERSION_ANDROID

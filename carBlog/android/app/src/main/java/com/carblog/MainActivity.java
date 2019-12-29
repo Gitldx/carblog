@@ -9,6 +9,7 @@ import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
 import com.tencent.bugly.Bugly;
 import com.tencent.bugly.beta.Beta;
 
+import org.devio.rn.splashscreen.SplashScreen;
 
 
 public class MainActivity extends ReactFragmentActivity {//ReactActivity {
@@ -17,6 +18,7 @@ public class MainActivity extends ReactFragmentActivity {//ReactActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.show(this);
         super.onCreate(null);
         String buglyAppId = "5c4a859ffd";
         Bugly.init(getApplicationContext(),buglyAppId,false);

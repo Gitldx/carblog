@@ -81,7 +81,7 @@ class BlogEdit extends React.Component<Props, State> {
         skipBackup: true,
         path: 'images',
       },
-      quality: 0.2,
+      quality: 0.5,
       title: '选择照片',
       cancelButtonTitle: '取消',
       takePhotoButtonTitle: '拍照',
@@ -187,7 +187,7 @@ class BlogEdit extends React.Component<Props, State> {
   }
 
 
-  private uploadImg = async () => {
+  private uploadImg = async () => {//todo:上传图片似乎容易出错，调试一下
 
     const { imgPath } = this.state
     if (imgPath.startsWith("file://")) {
@@ -261,6 +261,9 @@ class BlogEdit extends React.Component<Props, State> {
           }, 500)
         })
 
+      }
+      else{
+        this.setState({spinner:false})
       }
 
     }
@@ -357,11 +360,11 @@ class BlogEdit extends React.Component<Props, State> {
         <Input label="正文" placeholder="..." multiline={true} value={content} onChangeText={val => this.setState({ content: val })} />
 
 
-        <Button status="success" style={{ marginTop: 100 }} onPress={this.save}>保存</Button>
+        <Button status="success" style={{ marginTop: 100 ,marginBottom: 20,}} onPress={this.save}>保存</Button>
 
         {
           this.article && this.article.id &&
-          <Button status="danger" style={{ marginTop: 20, marginBottom: 50 }} onPress={this.delete}>删除</Button>
+          <Button status="danger" style={{ marginBottom: 50 }} onPress={this.delete}>删除</Button>
 
         }
 

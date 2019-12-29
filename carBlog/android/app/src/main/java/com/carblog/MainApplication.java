@@ -7,6 +7,7 @@ import com.carblog.biz.upgrade.AndroidAutoUpdatePackage;
 import com.carblog.rctmodule.amap3d.AMap3DPackage;
 import com.carblog.rctmodule.amap3d.AMapGeolocationPackage;
 import com.facebook.react.ReactApplication;
+import org.devio.rn.splashscreen.SplashScreenReactPackage;
 import com.microsoft.codepush.react.CodePush;
 import com.reactnativecommunity.viewpager.RNCViewPagerPackage;
 import com.imagepicker.ImagePickerPackage;
@@ -39,6 +40,7 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
             return Arrays.<ReactPackage>asList(
                     new MainReactPackage(),
+            new SplashScreenReactPackage(),
             new CodePush(getResources().getString(R.string.reactNativeCodePush_androidDeploymentKey), getApplicationContext(), BuildConfig.DEBUG),
                     new RNCViewPagerPackage(),
                     new ImagePickerPackage(),

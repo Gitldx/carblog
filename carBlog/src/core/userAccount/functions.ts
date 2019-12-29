@@ -1,6 +1,6 @@
 import { UserAccount } from "./userAccount";
 import EventRegister, { loginEvent } from "../uitls/eventRegister";
-import { getDeviceId, saveAsyncStorage, isEmpty } from "../uitls/common";
+import { saveAsyncStorage, isEmpty, removeAsyncStorage } from "../uitls/common";
 import { globalFields } from "../model/global";
 import { UserState, State } from "./userState";
 import *  as constants from './constants'
@@ -33,6 +33,7 @@ export function hasInitAppUserState(){
 
 
 export async function initUserState() {
+    // await removeAsyncStorage(UserAccount.storageKey,()=>{},()=>{})
     const localUa = await UserAccount.getLocalAccount()
 
     const stateStr = UserState.getInitStateStr(localUa)

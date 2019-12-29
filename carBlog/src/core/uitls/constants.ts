@@ -5,7 +5,7 @@ export const JSAPIVERSION_IOS = '1.0.0'
 export const APPVERSION_ANDROID = '1.0.0'//原生版本
 export const APPVERSION_IOS = '1.0.0'//原生版本
 
-export const IOSAPPID = "414478124"
+export const IOSAPPID = "414478124"//note:上线前换成自己的id
 
 
 /**

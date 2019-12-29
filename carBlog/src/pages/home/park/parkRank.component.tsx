@@ -241,6 +241,10 @@ export class ParkRankComponent extends React.Component<Props, State> {
         this.listLoaded = true
         // removeCityCode()
         this.currentPage = 0
+        if(!networkConnected()){
+            this.setState({list:[],loading:2})
+            return
+        }
         this.getcitycode(async (oldcode, newcode) => {
 
             if (isEmpty(newcode)) {//没有定位权限
@@ -273,10 +277,11 @@ export class ParkRankComponent extends React.Component<Props, State> {
             this.setState({ list: rj(rankrr).data, loading })
 
             if (isEmpty(oldcode) || oldcode != newcode) {
+                saveLastCityCode(newcode)
                 // console.warn(`old:${oldcode},new:${newcode}`)
                 const _us = onlineAccountState()
                 if (_us == 1 || _us == 2) {
-                    saveLastCityCode(newcode)
+                    
                     await postService(setUserCityCodeUrl(UserAccount.getUid(), newcode), null)
                 }
 
@@ -293,7 +298,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
         const citycode: number = await getLastLocationCityCode()
         const rankrr = await getService(rankParkUrl(citycode, this.state.rankSort, this.currentPage))
-
+        // console.warn(`getMore:${JSON.stringify(rankrr)},currentPage:${this.currentPage}`)
         if (rrnol(rankrr)) {
             this.currentPage--;
             return;
