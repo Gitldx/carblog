@@ -197,7 +197,7 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
               onChange={() => this.onRadioChecked(1)}
             />
             <Radio status = "success"
-              text="我没车"
+              text="我是乘客"
               checked={role == 2}
               onChange={() => this.onRadioChecked(2)}
             />

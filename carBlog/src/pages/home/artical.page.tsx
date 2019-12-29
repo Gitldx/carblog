@@ -135,6 +135,14 @@ class Article extends React.Component<Props, State> {
       return;
     }
 
+
+    if(isEmpty(UserAccount.instance.nickname)){
+      simpleAlert(null,"先花几秒钟完善一下个人信息吧","好的",()=>{
+        this.props.navigation.navigate({ routeName: "MyInfo" })
+      })
+      return
+    }
+
     // const articleCopy: Article = this.state.article;
     // articleCopy.comments.push({
     //   author: profiles[Math.floor(Math.random() * profiles.length)],
@@ -322,7 +330,7 @@ class Article extends React.Component<Props, State> {
         <ArticleContent article={article} />
         <View style={themedStyle.articleAuthorContainer}>
           <TouchableOpacity onPress={this.gotoblogs}>
-            {this.profile.image ? <Avatar source={thumbnailUri(this.profile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
+            {!isEmpty(this.profile.image) ? <Avatar source={thumbnailUri(this.profile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
               <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
             }
           </TouchableOpacity>

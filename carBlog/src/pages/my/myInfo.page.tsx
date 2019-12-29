@@ -64,7 +64,8 @@ export class MyInfo extends React.Component<Props, State> {
   private uploadImg = async () => {
 
     const { imgPath } = this.state
-    if (imgPath.startsWith("file://")) {
+    
+    if (!isEmpty(imgPath) && imgPath.startsWith("file://")) {
       const uriStr = this.state.imgPath.replace('file://', '')
 
       const now = Date.now()
@@ -111,6 +112,7 @@ export class MyInfo extends React.Component<Props, State> {
       // return;
       const toDeleteImg = this.serverUserInfo.image != image ? this.serverUserInfo.image : ""
       const rr = await postService(setUserInfoUrl(toDeleteImg), reqData)
+      console.warn(`rr:${JSON.stringify(rr)}`)
       if (rj(rr).ok) {
         this.setState({ spinner: false }, () => {
           UserAccount.instance.setInfo({ ...this.state,image })
@@ -250,30 +252,20 @@ export class MyInfo extends React.Component<Props, State> {
 
   }
 
-  private testImage = new RemoteImage("http://q1opwedmp.bkt.clouddn.com/20191130/5db116f1eb819b0a0eba3cd6_1575120008450")
-  //new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
 
   public render(): React.ReactNode {
 
     const { themedStyle } = this.props
-    const { role, nickname, carNumber, phone, imgLocalFileSource, imgPath } = this.state
+    const { role, nickname, carNumber, phone, imgPath } = this.state
     let image: ImageSourcePropType = PersonImage.imageSource
     let style = { tintColor: 'lightgrey' }
-    // if(imgLocalFileSource){
-    //   image = imgLocalFileSource.imageSource
-    //   style = null
-    // }
-    // else if(!isEmpty(imgPath)){
-    //   const path = qiniuImgUrl(imgPath)
-    //   image = new RemoteImage(path).imageSource
-    //   style = null
-    // }
-    if (!isEmpty(imgPath)) {
-      if (!imgPath.startsWith("file://")) {
+    
+    if (!isEmpty(imgPath)) {//有图片
+      if (!imgPath.startsWith("file://")) {//是服务器的图片
         const path = qiniuImgUrl(imgPath)
         image = new RemoteImage(path).imageSource
       }
-      else {
+      else {//相册图片
         image = new LocalImage(imgPath).imageSource
       }
 
@@ -303,7 +295,7 @@ export class MyInfo extends React.Component<Props, State> {
             onChange={() => this.onRadioChecked(1)}
           />
           <Radio status="success"
-            text="我没车"
+            text="我是乘客"
             checked={role == 2}
             onChange={() => this.onRadioChecked(2)}
           />

@@ -15,7 +15,7 @@ import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile } from '@src/core/model';
 import { getService, listArticleUrl, RestfulJson, postService, getProfilesUrl } from '@src/core/uitls/httpService';
-import { toDate, getTimeDiff } from '@src/core/uitls/common';
+import { toDate, getTimeDiff, isEmpty } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 
@@ -43,41 +43,19 @@ interface State {
 
 export class AskParkListComponent extends React.Component<Props, State> {
 
-    // private data: BlogListItemData[] = [
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 },
-    //     { authorName: '蓝色天空', blogTime: '25天前', carNumber: "粤B·GH6YO9", blogTitle: '很舒服很放松很放松放松', commentCount: 13, likesCount: 100,visitCount:300,
-    //     image : new RemoteImage('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg')
-    //  },
-    //     { authorName: '自由遨翔', blogTime: '14:53', carNumber: "粤B·WHYO9K", blogTitle: '解放军圣诞节弗拉索夫吉林省地方扉哦你距离封疆大吏房间里睡觉发呆放松疗法手机放楼上的', commentCount: 45, likesCount: 300,visitCount:673 }
-    // ]
+
 
     public state: State = {
         list: []
     }
 
-    // private data: BlogListItemData[] = blogList.map<BlogListItemData>(elm => { return { id:elm.id,authorName: elm.author.nickname, authorAvatar: elm.author.photo, blogTime: elm.date, carNumber: elm.author.carNumber, blogTitle: elm.title, commentCount: elm.comments.length, likesCount: elm.likes, visitCount: elm.visitCounts, image: elm.image } })
     private articles: Article[];
 
     private renderItemHeader(item: Article): React.ReactElement {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {item.authorProfile.image ? <Avatar source={item.authorProfile.image.imageSource} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.authorProfile.image) ? <Avatar source={item.authorProfile.image.imageSource} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.authorProfile.nickname}</Text>

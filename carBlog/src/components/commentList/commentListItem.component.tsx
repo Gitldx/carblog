@@ -26,6 +26,7 @@ import {ActivityAuthoring} from './activityAuthoring.component'
 import { CommentsButton } from '../commentsButton.component';
 import { LikeButton } from '../likeButton.component';
 import { thumbnailUri } from '@src/assets/images/type';
+import { isEmpty } from '@src/core/uitls/common';
 
 
 interface ComponentProps {
@@ -108,7 +109,7 @@ class CommentListItemComponent extends React.Component<CommentListItemProps, Sta
             navigation ={this.props.navigation}
             profile = {comment.authorProfile}
             style={themedStyle.activityAuthoring}
-            photo={comment.authorProfile.image ? thumbnailUri(comment.authorProfile.image) : null}
+            photo={!isEmpty(comment.authorProfile.image)? thumbnailUri(comment.authorProfile.image) : null}
             name={comment.authorProfile.nickname}
             date={comment.dateString}
           />

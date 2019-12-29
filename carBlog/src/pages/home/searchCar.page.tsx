@@ -16,7 +16,7 @@ import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 import { LicensePlate, VisitCounts, CommentsButton, LikeButton } from '@src/components';
 import { Article, Profile } from '@src/core/model';
 import { UserAccount } from '@src/core/userAccount/userAccount';
-import { isEmpty, getTimeDiff, displayIssueTime } from '@src/core/uitls/common';
+import { isEmpty, getTimeDiff, displayIssueTime, truncateText } from '@src/core/uitls/common';
 import { RestfulJson, getService, getProfileByCarNumberUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { author1 } from '@src/core/data/articles';
 import { RemoteImage } from '@src/assets/images';
@@ -77,20 +77,16 @@ export class SearchCar extends React.Component<Props, State> {
     const temp: Article[] = articles.map(m => {
       const date = new Date(m.date)
 
-      m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
+      m.date = displayIssueTime(date)
       const profile: Profile = {
         id:ua.id,
-        nickname: ua.nickname.length > 11 ? ua.nickname.substr(0, 10) + "..." : ua.nickname
+        nickname: truncateText(ua.nickname,11)//ua.nickname.length > 11 ? ua.nickname.substr(0, 10) + "..." : ua.nickname
         , carNumber: ua.carNumber
       }
       m.authorProfile = profile
-      // m.image = this.testimage
-
+    
       return m;
 
-      // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-      //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-      //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
     })
 
     this.setState({ userInfo: ua, articles : temp })
@@ -147,7 +143,7 @@ export class SearchCar extends React.Component<Props, State> {
                     </View>
                 </View>
 
-                {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
+                {!isEmpty(item.image) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
                     <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80 }} />
                 </View>}
 

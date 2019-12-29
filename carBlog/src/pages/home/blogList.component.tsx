@@ -15,7 +15,7 @@ import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile } from '@src/core/model';
 import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol } from '@src/core/uitls/httpService';
-import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty } from '@src/core/uitls/common';
+import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty, truncateText } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
@@ -82,7 +82,7 @@ export class BlogListComponent extends React.Component<Props, State> {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {item.authorProfile.image ? <Avatar source={thumbnailUri(item.authorProfile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.authorProfile.image) ? <Avatar source={thumbnailUri(item.authorProfile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.authorProfile.nickname}</Text>
@@ -95,39 +95,6 @@ export class BlogListComponent extends React.Component<Props, State> {
         )
     }
 
-    // private renderItem1 = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
-    //     const { item } = info
-    //     const d = item.distance
-
-    //     return (
-    //         <ListItem onPress={() => {
-    //             this.onPressed(item)
-    //         }}>
-    //             <AvatarContentBox imagePosition="right" customTitleBox={() => this.renderItemHeader(item)} textParagraph={item.title}
-    //                 paragraphApparent="default" paragraphCategory="s1" imageSource={item.image ? item.image.imageSource : null}
-    //                 imageSize={80} imageShape="square"
-    //             >
-    //                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: this.state.sortType == 0 ? "space-between" : 'flex-end', paddingTop: 5 }}>
-
-    //                     {this.state.sortType == 0 && <Text category="c1">{d >= 1 ? d.toFixed(2) + "公里" : (d * 1000).toFixed(0) + "米"}</Text>}
-
-    //                     <View style={{ flexDirection: 'row' }}>
-    //                         <VisitCounts rKTextProps={{ category: "c1", appearance: "default" }}>
-    //                             {item.visitCounts.toString()}
-    //                         </VisitCounts>
-
-    //                         <CommentsButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
-    //                             {item.comments ? item.comments.length.toString() : "0"}
-    //                         </CommentsButton>
-    //                         <LikeButton rKTextProps={{ category: "c1", appearance: "default" }} iconSize={18}>
-    //                             {item.likes ? item.likes.length.toString() : "0"}
-    //                         </LikeButton>
-    //                     </View>
-    //                 </View>
-    //             </AvatarContentBox>
-    //         </ListItem>
-    //     )
-    // }
 
 
     private renderFooter = (): React.ReactElement => {
@@ -187,8 +154,8 @@ export class BlogListComponent extends React.Component<Props, State> {
                     </View>
                 </View>
 
-                {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-                    <Avatar shape="square" source={/* (item.image as ImageSource).imageSource */thumbnailUri(item.image)} style={{ width: 80, height: 80,borderRadius:5 }} />
+                {!isEmpty(item.image) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
+                    <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80,borderRadius:5 }} />
                 </View>}
 
             </ListItem>
@@ -274,22 +241,14 @@ export class BlogListComponent extends React.Component<Props, State> {
         const temp: Article[] = articles.map(m => {
             const date = new Date(m.date)
 
-            m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
-            // const profile: Profile = {
-            //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
-            //     , image: author1.image, carNumber: author1.carNumber
-            // }
+            m.date = displayIssueTime(date)
+            
             const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
-            profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
-            // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
+            profile.nickname = truncateText(profile.nickname,11)// profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
             m.authorProfile = profile
-            // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
 
             return m;
 
-            // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-            //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-            //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
         })
 
 
@@ -330,22 +289,16 @@ export class BlogListComponent extends React.Component<Props, State> {
             const temp: Article[] = articles.map(m => {
                 const date = new Date(m.date)
 
-                m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
-                // const profile: Profile = {
-                //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
-                //     , image: author1.image, carNumber: author1.carNumber
-                // }
+                m.date = displayIssueTime(date)
+                
                 const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
-                profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
-                // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
+                profile.nickname = truncateText(profile.nickname,11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+                
                 m.authorProfile = profile
-                // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
 
                 return m;
 
-                // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-                //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-                //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
+                
             })
 
 
@@ -374,23 +327,16 @@ export class BlogListComponent extends React.Component<Props, State> {
         const temp: Article[] = articles.map(m => {
             const date = new Date(m.date)
 
-            m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
-            // const profile: Profile = {
-            //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
-            //     , image: author1.image, carNumber: author1.carNumber
-            // }
+            m.date = displayIssueTime(date)
+            
             const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
             // console.warn(`profile:${JSON.stringify(profile)}`)
-            profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+            profile.nickname = truncateText(profile.nickname,11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
             // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
             m.authorProfile = profile
-            // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
 
             return m;
 
-            // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-            //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-            //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
         })
         // console.warn(JSON.stringify(new Date("2019/10/27 16:30:23"))) 
 
@@ -432,25 +378,17 @@ export class BlogListComponent extends React.Component<Props, State> {
         const temp: Article[] = articles.map(m => {
             const date = new Date(m.date)
 
-            m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))//getTimeDiff(date).toFixed(0) + "小时前"
-            // const profile: Profile = {
-            //     nickname: author1.nickname.length > 11 ? author1.nickname.substr(0, 10) + "..." : author1.nickname
-            //     , image: author1.image, carNumber: author1.carNumber
-            // }
+            m.date = displayIssueTime(date)
+         
             const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
             // console.warn(`profile:${JSON.stringify(profile)}`)
-            profile.nickname = profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
-            // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
+            profile.nickname = truncateText( profile.nickname,11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
             m.authorProfile = profile
-            // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
 
             return m;
 
-            // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-            //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-            //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
+           
         })
-        // console.warn(JSON.stringify(new Date("2019/10/27 16:30:23"))) 
 
         this.articles = temp
         this.currentHotPage = 0

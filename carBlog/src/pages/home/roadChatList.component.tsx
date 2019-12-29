@@ -76,7 +76,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {item.image ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.image) ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
@@ -193,22 +193,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
         return (
-            // <ImageBackground
-            //     style={{height:40,flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10}}
-            //     source={Road1Image.imageSource}
-            // >
-
-            //     <Text style={{color:"black"}} category="p2">{`当前道路:${currentRoad}`}</Text>
-
-            //     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            //         {/* <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
-            //         <Avatar source={HelicopterImage.imageSource} style={{ height: 30, width: 30 }} />
-            //         <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={{ color: "#black"}}>
-            //             道路漫游>>
-            //         </Button>
-            //     </View>
-
-            // </ImageBackground>
+            
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10 }}>
                 <Text appearance="hint" category="p2">{`当前道路:${currentRoad}`}</Text>
 
@@ -337,7 +322,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
 
 
-    private list = () => {//todo:刷新的tip
+    private list = () => {
         if (!networkConnected()) {
             return;
         }
@@ -501,8 +486,9 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
     },
     addButton: {
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
+        borderWidth : 1,borderColor : "#72d572",
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
-        backgroundColor: "#72d572"//theme["color-danger-400"]
+        // backgroundColor: "#72d572"//theme["color-danger-400"]
     },
     listItem: {
         flexDirection: 'row', height: 120,

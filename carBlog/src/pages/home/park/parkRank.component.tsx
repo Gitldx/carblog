@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity, PermissionsAndroid, Platform, TouchableWithoutFeedback, TouchableHighlight } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, PermissionsAndroid, Platform, TouchableWithoutFeedback, TouchableHighlight, RefreshControl } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -38,6 +38,7 @@ interface State {
     * 0:默认状态，1:正在加载，2:已到末尾
     */
     loading: 0 | 1 | 2,
+    refreshing: boolean
 }
 
 export class ParkRankComponent extends React.Component<Props, State> {
@@ -48,6 +49,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
         list: [],
         rankSort: 0,
         loading: 0,
+        refreshing: false
     }
 
     // private data: BlogListItemData[] = blogList.map<BlogListItemData>(elm => { return { id:elm.id,authorName: elm.author.nickname, authorAvatar: elm.author.photo, blogTime: elm.date, carNumber: elm.author.carNumber, blogTitle: elm.title, commentCount: elm.comments.length, likesCount: elm.likes, visitCount: elm.visitCounts, image: elm.image } })
@@ -56,7 +58,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
     private renderItemHeader(item: UserAccount): React.ReactElement {
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5, }}>
-                {item.image ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.image) ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
@@ -239,17 +241,20 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
     private rank = (sort = 0) => {
         this.listLoaded = true
-        // removeCityCode()
+        
         this.currentPage = 0
         if(!networkConnected()){
             this.setState({list:[],loading:2})
             return
         }
+
+        this.setState({ refreshing: true })
+
         this.getcitycode(async (oldcode, newcode) => {
 
             if (isEmpty(newcode)) {//没有定位权限
                 this.canUseGeo = false
-                this.setState({ list: [], loading: 2 })
+                this.setState({ list: [], loading: 2,refreshing:false })
                 return;
             }
             else {
@@ -258,7 +263,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
             const rankrr = await getService(rankParkUrl(newcode, sort, 0))
             if (rrnol(rankrr)) {
-                this.setState({ list: [], loading: 2 })
+                this.setState({ list: [], loading: 2,refreshing:false })
                 return
             }
             // console.warn(`old:${oldcode},new:${newcode}`)
@@ -274,7 +279,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
 
 
-            this.setState({ list: rj(rankrr).data, loading })
+            this.setState({ list: rj(rankrr).data, loading,refreshing:false })
 
             if (isEmpty(oldcode) || oldcode != newcode) {
                 saveLastCityCode(newcode)
@@ -376,6 +381,11 @@ export class ParkRankComponent extends React.Component<Props, State> {
     }
 
 
+    private onRefreshing = () => {
+        this.rank()
+    }
+
+
     public async componentWillMount() {
         // console.warn(`parkRank mount`)
         EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
@@ -407,7 +417,12 @@ export class ParkRankComponent extends React.Component<Props, State> {
             // <View style={{ height: '100%' }}>
             <React.Fragment>
                 <List style={{ height: '100%' }}
-                    // data={this.data}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={this.state.refreshing}
+                            onRefresh={this.onRefreshing}
+                        />
+                    }
                     data={this.state.list}
                     renderItem={this.renderItem}
                     getItemLayout={(data, index) => (

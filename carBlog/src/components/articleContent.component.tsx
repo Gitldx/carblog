@@ -10,6 +10,7 @@ import { Article as ArticleModel, Comment, Profile } from '@src/core/model';
 import { textStyle, Input, ScrollableAvoidKeyboard } from '@src/components/common';
 
 import { imageUri, LocalImage } from '@src/assets/images/type';
+import { isEmpty } from '@src/core/uitls/common';
 
 
 
@@ -43,7 +44,7 @@ class ArticleContentComponent extends React.Component<Props> {
           {article.title}
         </Text>
 
-        {article.image && <ImageBackground
+        {!isEmpty(article.image) && <ImageBackground
           style={[{ aspectRatio: article.imgRatio ? article.imgRatio : 1 }, themedStyle.image]}
           source={article.image.startsWith("file://") ? new LocalImage(article.image).imageSource : imageUri(article.image)}
         />}

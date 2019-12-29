@@ -328,3 +328,12 @@ export async function getStatisticInfo() {
     return data
     // postService(userStatisticUrl(),data)
 }
+
+
+export function truncateText(text : string,maxLength : number){
+    if(isEmpty(text)){
+        return ""
+    }
+
+    return text.length > maxLength ? text.substr(0, maxLength-1) + "..." : text
+}

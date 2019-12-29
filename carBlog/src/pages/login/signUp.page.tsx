@@ -89,7 +89,7 @@ class SignUp2Component extends React.Component<SignUp2Props, State> {
     UserAccount.instance.register(accountName, password, role, () => {
       removeCityCode()
       hideMessage()
-      simpleAlert(null, "注册成功", null, () => {//todo:注册成功后每个用户赠送10个车位币
+      simpleAlert(null, "注册成功", null, () => {
         this.props.navigation.navigate("MyScore")
       })
     })

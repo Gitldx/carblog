@@ -187,10 +187,10 @@ class BlogEdit extends React.Component<Props, State> {
   }
 
 
-  private uploadImg = async () => {//todo:上传图片似乎容易出错，调试一下
+  private uploadImg = async () => {
 
     const { imgPath } = this.state
-    if (imgPath.startsWith("file://")) {
+    if (!isEmpty(imgPath) && imgPath.startsWith("file://")) {
       const uriStr = this.state.imgPath.replace('file://', '')
 
       const now = Date.now()
@@ -220,7 +220,7 @@ class BlogEdit extends React.Component<Props, State> {
 
   private saveAction = async () => {
 
-    if(isEmpty(this.state.title || this.state.content)){
+    if(isEmpty(this.state.title)|| isEmpty(this.state.content)){
       simpleAlert(null,"请填写标题和文章内容")
       return
     }
@@ -256,7 +256,11 @@ class BlogEdit extends React.Component<Props, State> {
         this.setState({ spinner: false }, () => {
           setTimeout(() => {
             simpleAlert(null, "保存成功", null, () => {
-              // this.props.navigation.goBack(KEY_NAVIGATION_BACK)
+              if(isEmpty(UserAccount.instance.nickname)){
+                simpleAlert(null,"花几秒钟完善一下个人信息吧","好的",()=>{
+                  this.props.navigation.navigate({ routeName: "MyInfo" })
+                })
+              }
             })
           }, 500)
         })
@@ -286,7 +290,7 @@ class BlogEdit extends React.Component<Props, State> {
   }
 
 
-  private delete = () => { //todo:服务器删除图片
+  private delete = () => {
     towActionAlert("提示", "确认删除", "取消", null, "删除", async () => {
 
       const rr = await deleteService(deleteArticleUrl(this.article.id), null)

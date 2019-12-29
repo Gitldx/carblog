@@ -16,7 +16,7 @@ import { PageView } from '@src/pages/pageView';
 import { VisitCounts, CommentsButton, LikeButton } from '@src/components';
 import { author1 } from '@src/core/data/articles';
 import { RemoteImage } from '@src/assets/images';
-import { getTimeDiff, displayIssueTime } from '@src/core/uitls/common';
+import { getTimeDiff, displayIssueTime, isEmpty, truncateText } from '@src/core/uitls/common';
 import { imageUri, thumbnailUri } from '@src/assets/images/type';
 
 
@@ -34,7 +34,7 @@ export class UserBlogs extends React.Component<Props, State> {
   static navigationOptions: NavigationScreenConfig<any> = ({ navigation, screenProps }) => {
     const ua: UserAccount = navigation.getParam("ua")
     return {
-      title: `${ua.nickname}的博客`
+      title: `${isEmpty(ua.nickname)?"Ta":ua.nickname}的博客`
     }
   }
 
@@ -88,7 +88,7 @@ export class UserBlogs extends React.Component<Props, State> {
           </View>
         </View>
 
-        {item.image && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
+        {!isEmpty(item.image ) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
           <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
         </View>}
 
@@ -104,10 +104,7 @@ export class UserBlogs extends React.Component<Props, State> {
     )
   }
 
-
-
-
-  private testimage = new RemoteImage("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567446943433&di=26741cd7c2d234a484213844918f727e&imgtype=0&src=http%3A%2F%2Fimg5.xiazaizhijia.com%2Fwalls%2F20140618%2Fmid_5da9e14022bebcd.jpg")
+  private
 
 
   private listArticles = async (uid: string) => {
@@ -119,20 +116,18 @@ export class UserBlogs extends React.Component<Props, State> {
     const temp: Article[] = rj(rr).data.map(m => {
       const date = new Date(m.date)
 
-      m.date = displayIssueTime(date)//this.displayTime(getTimeDiff(date).toFixed(0))
+      m.date = displayIssueTime(date)
       const profile: Profile = {
         id: this.ua.id,
-        nickname: this.ua.nickname.length > 11 ? this.ua.nickname.substr(0, 10) + "..." : this.ua.nickname
-        , image: this.ua.image //? new RemoteImage(qiniuImgUrl(this.ua.image)) : null 
+        nickname: truncateText(this.ua.nickname,11)//this.ua.nickname.length > 11 ? this.ua.nickname.substr(0, 10) + "..." : this.ua.nickname
+        , image: this.ua.image 
         , carNumber: this.ua.carNumber
       }
       m.authorProfile = profile
-      // m.image =m.image ? new RemoteImage(qiniuImgUrl(m.image)) : null//this.testimage
+      
       return m;
 
-      // return {id:m.id,authorName:author1.nickname.length >6 ? author1.nickname.substr(0,5)+"..." : author1.nickname,authorAvatar:author1.avatar,carNumber:author1.carNumber,blogTitle:m.title,content:m.content,likesCount:m.likes ? m.likes.length:0,
-      //     comments:m.comments,visitCount : m.visitCounts,commentCount:m.comments?m.comments.length:0,
-      //     image:this.testimage,blogTime:getTimeDiff(date).toFixed(0)+"小时前"}
+     
     })
 
     this.setState({ list: temp })
