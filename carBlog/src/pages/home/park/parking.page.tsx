@@ -611,7 +611,7 @@ class Parking extends React.Component<Props, State> {
         }
 
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
-        const rr = await postService(thankForParkUrl(), param)//todo:查一下为什么消息的昵称为空
+        const rr = await postService(thankForParkUrl(), param)
         if (rrnol(rr)) {
             return
         }

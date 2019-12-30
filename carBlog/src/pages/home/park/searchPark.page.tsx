@@ -104,7 +104,7 @@ class SearchPark extends React.Component<Props, State> {
     private currentPage: number = 0
 
     private toast: Toast
-
+    private toast2: Toast
 
     public state: State = {
         selectedItem: 0,
@@ -326,7 +326,12 @@ class SearchPark extends React.Component<Props, State> {
     }
 
 
-    private netRequest = async (wgsLongitude, wgsLatitude) => {//todo:余额不足的提示
+    private netRequest = async (wgsLongitude, wgsLatitude) => {
+        // if(true){
+        //     this.toast.show(`您的车位币余额${-0.4}已经小于零，要想办法多多生产车位币哦`, 5000)
+        //     this.setState({spinner:false})
+        // }
+        // return;
         const role = UserAccount.instance.role
         const rr = await getService(searchNearParkUrl(wgsLongitude, wgsLatitude, this.currentPage, UserAccount.getUid(),role))
         
@@ -334,7 +339,7 @@ class SearchPark extends React.Component<Props, State> {
             this.currentPage--
             return { shareParks:[], currentLatitude:0, currentLongitude:0, selectedItem:0, loading:0 }
         }
-        
+        const myMoney : UserAccount = rj(rr).data.ua//注意非车主此处为空
         const uas: UserAccount[] = rj(rr).data.uas
         const shareParks: any[] = rj(rr).data.park || []
         // console.warn(`shareparks:${JSON.stringify(shareParks)}`)
@@ -365,7 +370,13 @@ class SearchPark extends React.Component<Props, State> {
             const score = await calculateSearchScore(shareParks)
 
             if (score > 0) {
-                this.toast.show("- " + (score * 0.1), DURATION.LENGTH_SHORT)
+                if(myMoney && myMoney.parkMoney < 0){
+                    this.toast2.show(`您的车位币余额${myMoney.parkMoney}已经小于零，要想办法多多生产车位币哦`, 5000)
+                }
+                else{
+                    this.toast.show("- " + (score * 0.1), DURATION.LENGTH_SHORT)
+                }
+                
             }
         }
 
@@ -630,6 +641,7 @@ class SearchPark extends React.Component<Props, State> {
                     textStyle={{ color: 'white' }}
                 />
                 <Toast ref={elm => this.toast = elm} opacity={0.8} style={{ backgroundColor: COLOR.warning }} />
+                <Toast ref={elm => this.toast2 = elm} opacity={0.8} style={{ backgroundColor: COLOR.danger }} />
                 <ActionSheet
                     ref={o => this.ActionSheet = o}
                     title={'使用以下地图导航'}
