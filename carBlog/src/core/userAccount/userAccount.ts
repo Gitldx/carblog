@@ -1,7 +1,7 @@
 
 import { getStorageAsync, isEmpty, getStatisticInfo } from '../uitls/common'
 
-import { postService, userAccountRegisterUrl, userAccountLoginUrl, RestfulJson, rj, userStatisticUrl } from '../uitls/httpService'
+import { postService, userAccountRegisterUrl, userAccountLoginUrl, RestfulJson, rj, userStatisticUrl, appInitUrl } from '../uitls/httpService'
 // import { KdNum } from './KdNum'
 // import { UserState } from './UserState'
 // import { AccountState } from './AccountState'
@@ -185,13 +185,15 @@ export class UserAccount {
         try {
             
             const d : LoginData = {ua : { accountName, password } as any , us}
-            const rr = await postService(userAccountLoginUrl(), d);
-
-
+            // const rr = await postService(userAccountLoginUrl(), d);
+            const rr = await postService(appInitUrl(), d);
+            
             if (rj(rr).ok) {
 
                 if (rj(rr).code == 0) {
-                    const data : UserAccount = rj(rr).data//rj.returnData
+                    const data : UserAccount = rj(rr).data.ua //rj(rr).data
+                    const park = rj(rr).data.park
+                    global.appInitData = {park:park}
 
                     return data;
                 }

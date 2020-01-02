@@ -197,7 +197,7 @@ export class BlogListComponent extends React.Component<Props, State> {
 
     private writeBlog = () => {
         const s = onlineAccountState()
-        if(s==0 || -1){
+        if(s==0 || s == -1){
             showMessage({
                 message:'提示',
                 description:"撰写博客请先注册或登录账号",

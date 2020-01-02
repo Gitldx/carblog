@@ -4,7 +4,7 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, List, ListItem, } from 'react-native-ui-kitten';
+import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, List, ListItem, ButtonGroup, } from 'react-native-ui-kitten';
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
 import { PageView } from '../../pageView';
 import { BlogList } from '../blogList.component';
@@ -57,7 +57,8 @@ type State = {
     * 0:默认状态，1:正在加载，2:已到末尾
     */
     loading: number,
-    spinner:boolean
+    spinner:boolean,
+    mapType : "standard" | "satellite"
 }
 
 const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
@@ -118,8 +119,8 @@ class SearchPark extends React.Component<Props, State> {
         selectedLatitude: null,
         selectedLongitude: null,
         loading: 0,
-        spinner : false
-
+        spinner : false,
+        mapType :'standard'
     }
 
 
@@ -583,6 +584,7 @@ class SearchPark extends React.Component<Props, State> {
                 showsZoomControls={true}
                 showsCompass={true}
                 zoomLevel={15}
+                mapType = {this.state.mapType}
                 coordinate={{
                     latitude: initLatitude,//22.536853,
                     longitude: initLongitude//114.057108
@@ -657,7 +659,12 @@ class SearchPark extends React.Component<Props, State> {
 
                 <View style={{ marginBottom: 20, height: 250 }}>
                     {this.state.mapShow ? this.renderMapview() : null}
-                    {/* <View style={{backgroundColor:'yellow',width:300,height:28,position:'absolute',zIndex:9999,bottom:0,left:0}}></View> */}
+                    <View style={{width:300,height:35,position:'absolute',zIndex:9999,bottom:0,left:0}}>
+                        <ButtonGroup size='small'>
+                            <Button onPress={()=>this.setState({mapType:'satellite'})}>卫星地图</Button>
+                            <Button onPress={()=>this.setState({mapType:'standard'})}>标准地图</Button>
+                        </ButtonGroup>
+                    </View>
                 </View>
 
                 <View style={{ flex: 1 }}>

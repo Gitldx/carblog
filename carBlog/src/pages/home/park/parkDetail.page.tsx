@@ -4,7 +4,7 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, List, ListItem, } from 'react-native-ui-kitten';
+import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, List, ListItem, ButtonGroup, } from 'react-native-ui-kitten';
 
 import { PageView } from '../../pageView';
 
@@ -35,6 +35,7 @@ type State = {
     currentLongitude: number,
     // selectedAddress: string,
     // tooltipVisible: boolean
+    mapType: "standard" | "satellite"
 }
 
 const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
@@ -59,11 +60,11 @@ class ParkDetail extends React.Component<Props, State> {
         // info: "",
         // mapHeight: 0,
         mapShow: false,
-        currentLatitude: 22.536853,
-        currentLongitude: 114.057108
+        currentLatitude: null,
+        currentLongitude: null,
         // selectedAddress: '',
         // tooltipVisible: false
-
+        mapType: 'standard'
     }
 
 
@@ -209,6 +210,7 @@ class ParkDetail extends React.Component<Props, State> {
                 showsZoomControls={true}
                 showsCompass={true}
                 zoomLevel={18}
+                mapType={this.state.mapType}
                 coordinate={{
                     latitude: this.state.currentLatitude,
                     longitude: this.state.currentLongitude
@@ -257,7 +259,12 @@ class ParkDetail extends React.Component<Props, State> {
 
                 <View style={{ marginBottom: 20, height: 400 }}>
                     {this.state.mapShow ? this.renderMapview() : null}
-                    {/* <View style={{backgroundColor:'yellow',width:300,height:28,position:'absolute',zIndex:9999,bottom:0,left:0}}></View> */}
+                    <View style={{ width: 300, height: 35, position: 'absolute', zIndex: 9999, bottom: 0, left: 0 }}>
+                        <ButtonGroup size='small'>
+                            <Button onPress={() => this.setState({ mapType: 'satellite' })}>卫星地图</Button>
+                            <Button onPress={() => this.setState({ mapType: 'standard' })}>标准地图</Button>
+                        </ButtonGroup>
+                    </View>               
                 </View>
 
                 <View style={{ flex: 1 }}>

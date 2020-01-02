@@ -1,5 +1,6 @@
 import { UserAccount } from "../userAccount/userAccount";
 import { UserState } from "../userAccount/userState";
+import { Park } from "./park";
 
 interface serverParam {
     /**服务器时间和手机时间差，精确到分钟即可 */
@@ -21,6 +22,11 @@ interface serverParam {
     upgradeInfo_an: string
 }
 
+/**
+ * code:0:错误，1:有serverparam，无用户消息，2:有serverparam,有用户消息
+ */
+export type nodeInitData = {code: number, messageData: any, time: string, serverParam: serverParam, serverTime: string}
+
 export interface globalFields {
     networkConnected: boolean,
     timeSpan: number,
@@ -34,7 +40,12 @@ export interface globalFields {
     hasInitLocalSearchParksKey: boolean,
     hasInitLocalThankParksKey: boolean,
     lastBackPressed: number,
-    citycode: number
+    citycode: number,
+    /**
+     * 程序启动时从服务器请求的初始数据
+     */
+    appInitData : {park:Park}
+    nodeInitData : nodeInitData
 
 }
 

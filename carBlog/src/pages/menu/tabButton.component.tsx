@@ -18,7 +18,7 @@ export class TabButton extends React.Component<TabButtonrops> {
 
 
     public render() {
-        const iconElement = React.cloneElement(this.props.children, { color: this.props.selected ? "#12c700" : "#90a4ae" })
+        const iconElement = React.cloneElement(this.props.children, { color: this.props.selected ? "#6889ff" : "#90a4ae" })
         return (
             <TouchableOpacity
                 activeOpacity={0.65}
@@ -28,7 +28,7 @@ export class TabButton extends React.Component<TabButtonrops> {
                 <View style={{ alignItems: 'center' }}>
                     {iconElement}
 
-                    <Text style={{ color: this.props.selected ? "#12c700" : "#90a4ae" }} category="c1">{this.props.lable}</Text>
+                    <Text style={{ color: this.props.selected ? "#6889ff" : "#90a4ae" }} category="c1">{this.props.lable}</Text>
 
 
                     {Number(this.props.badge) > 0 && (

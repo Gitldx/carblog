@@ -14,16 +14,17 @@ import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile, RoadChat, globalFields } from '@src/core/model';
-import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol, roadChatUrl, roadChatListUrl } from '@src/core/uitls/httpService';
+import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol, roadChatUrl, roadChatListUrl, postService, setUserCityCodeUrl } from '@src/core/uitls/httpService';
 import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty, showNoNetworkAlert } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
 import { imageUri, thumbnailUri } from '@src/assets/images/type';
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
-import { getLastLocationCityCode } from '@src/core/uitls/storage/locationStorage';
+import { getLastLocationCityCode, saveLastCityCode } from '@src/core/uitls/storage/locationStorage';
 import { networkConnected } from '@src/core/uitls/netStatus';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5'
+import { onlineAccountState } from '@src/core/userAccount/functions';
 
 
 
@@ -184,13 +185,13 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
 
     private renderHeader = () => {
-
+        const {themedStyle} = this.props
         const { sortType, currentRoad } = this.state
-        const textStyle0 = sortType == 0 ? { color: "white" } : null
-        const style0 = sortType == 0 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
+        // const textStyle0 = sortType == 0 ? { color: "white" } : null
+        // const style0 = sortType == 0 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
-        const textStyle1 = sortType == 1 ? { color: "white" } : null
-        const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
+        // const textStyle1 = sortType == 1 ? { color: "white" } : null
+        // const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
         return (
             
@@ -200,7 +201,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     {/* <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
                     <Avatar source={HelicopterImage.imageSource} resizeMode="contain" style={{ height: 35, width: 35 }} />
-                    <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={{ color: getThemeValue("color-success-default", themes["App Theme"]) }}>
+                    <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={themedStyle.contentText/* { color: getThemeValue("color-success-default", themes["App Theme"]) } */}>
                         道路漫游>>
                     </Button>
                 </View>
@@ -257,7 +258,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             }
         }, 3000);
 
-        // const citycode: number = await getLastLocationCityCode()
+        const citycode: number = await getLastLocationCityCode()
 
 
         Geolocation.getCurrentPosition(({ coords }) => {
@@ -267,7 +268,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
                 geoAllowed = true
                 global.citycode = reGeocode.citycode
-                callback(null, reGeocode.citycode, reGeocode.road, longitude, latitude)
+                callback(citycode, reGeocode.citycode, reGeocode.road, longitude, latitude)
             })
         })
 
@@ -328,7 +329,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         }
         this.setState({ refreshing: true })
         this.listLoaded = true
-        this.getCityAndRoad((oldCitycode, newCitycode, road, longitude, latitude) => {
+        this.getCityAndRoad(async (oldCitycode, newCitycode, road, longitude, latitude) => {
 
             if (isEmpty(road)) {//没有定位权限
 
@@ -342,6 +343,20 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
             const { lng, lat } = gcj2wgs(longitude, latitude)
             this.currentlocation_wgs = { longitude: lng, latitude: lat }
+
+            
+            if (isEmpty(oldCitycode) || oldCitycode != newCitycode) {
+                console.warn(`roadchatlist.list:${oldCitycode},${newCitycode}`)
+                saveLastCityCode(newCitycode)
+       
+                const _us = onlineAccountState()
+                if (_us == 1 || _us == 2) {
+                    
+                    await postService(setUserCityCodeUrl(UserAccount.getUid(), newCitycode), null)
+                }
+
+            }
+
             this.getList(newCitycode, road, lng, lat)
         })
     }
@@ -426,7 +441,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
     public async componentWillMount() {
         EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
-            this.list()
+            this.list()//A-8
 
         })
 
@@ -486,7 +501,7 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
     },
     addButton: {
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
-        borderWidth : 1,borderColor : "#72d572",
+        borderWidth : 1,borderColor : "#f4433c",
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         // backgroundColor: "#72d572"//theme["color-danger-400"]
     },
@@ -497,5 +512,8 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
     listItemContent: {
         fontSize: 14,
         color: theme["contentText-primary"]
+    },
+    contentText:{
+        color:theme["contentText-primary"]
     }
 }))

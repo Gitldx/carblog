@@ -183,6 +183,65 @@ export class MessageLooper {
 
 
 
+    readMessageOnlaunch() {
+        
+        if (UserAccount.instance.accountHasLogined == false || global.nodeInitData.code != 1) 
+        { return; }
+        this.lastMessageTime = new Date()
+
+       
+        const data = global.nodeInitData.messageData
+        
+        const keys = Object.keys(data)
+
+
+
+
+        const messages: HomeMessage[] = []
+
+
+
+        keys.forEach((key) => {
+            const item = JSON.parse(data[key]);
+            // console.warn(item)
+
+            if (item.type == MESSAGETYPE.user_chat) {
+
+                const info = this.toChat(item, key)
+                messages.push(info)
+            }
+            else if (item.type == MESSAGETYPE.user_sysEmail) {
+                const info = this.toSysEmail(item, key)
+
+                messages.push(info)
+            }
+            else if (item.type == MESSAGETYPE.user_web) {
+                const info = this.toWebMessage(item, key)
+                messages.push(info)
+            }
+            else if(item.type == MESSAGETYPE.user_park){
+                const info = this.toPark(item,key)
+                messages.push(info)
+            }
+            // else if(item.type == MESSAGETYPE.sys_bulletinWeb){
+            //     const info = this.toWebBulletin(item,key)
+
+            //     messages.push(info)
+            // }
+        })
+
+        if (messages.length != 0) {
+            // console.warn(`messages:${JSON.stringify(messages)}`)
+            EventRegister.emitEvent(messageEvent, messages)
+        }
+
+
+        // this.msgRead(receiverId)
+
+
+
+    }
+
     async readLoopJob() {
 
         if (networkConnected() == false) { return; }
@@ -474,7 +533,8 @@ export function launchMessageLooper() {
     //         ml.startListen()
     //     }
     // }, 1000)
-    ml.startListen()
+    ml.readMessageOnlaunch()
+    // ml.startListen()//A-3
 }
 
 
@@ -482,6 +542,6 @@ export function launchMessageLooper() {
 export function readBulletin() {
     const ml = MessageLooper.instance
     setTimeout(() => {
-        ml.readBulletin();
+        ml.readBulletin();//A-4
     }, 10000);
 }

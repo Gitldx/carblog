@@ -197,7 +197,7 @@ export function deleteService(url, body, version = SPRINGWEBSERVICEVERSION): Pro
  */
 export function getNodeService(url, version = NODEWEBSERVICEVERSION): Promise<NodeSerivceJson> {
 
-    return Promise.race([getPromise(url, version), delay()]).then(obj => {
+    return Promise.race([getNodePromise(url, version), delay()]).then(obj => {
         return obj as any;
     }).catch(err => {
         if (err.message == "网络超时") {
@@ -210,7 +210,7 @@ export function getNodeService(url, version = NODEWEBSERVICEVERSION): Promise<No
 
 export function loopService(url, version = NODEWEBSERVICEVERSION): Promise<NodeSerivceJson> {
 
-    return getPromise(url, version).then(obj => {
+    return getNodePromise(url, version).then(obj => {
         return obj as any;
     }).catch(err => {
         // simpleAlert(null,err.message)
@@ -219,6 +219,33 @@ export function loopService(url, version = NODEWEBSERVICEVERSION): Promise<NodeS
 
 }
 
+
+function getNodePromise(url, version, headers = {}): Promise<RestfulResult> {
+    return new Promise((resolve, reject) => {
+
+        const isConnected = networkConnected()
+        if (!isConnected) {
+            showNoNetworkAlert()
+            resolve(NOTONLINE)
+            return;
+        }
+
+        fetch(url, {
+            // method: 'GET',
+            headers: new Headers({
+                'api-version': version,
+                ...headers
+            })
+        })
+            .then((response) => {
+                const obj: RestfulJson = response.json() as any;
+                resolve(obj)
+            })
+            .catch((err) => {
+                reject(err)
+            })
+    })
+}
 
 
 /**
@@ -413,6 +440,10 @@ function userAccountRegisterUrl() {
 function userAccountLoginUrl() {
 
     return http() + '/account/login'
+}
+
+function appInitUrl(){
+    return http() + '/account/appInit'
 }
 
 
@@ -870,7 +901,7 @@ function userStatisticUrl(){
 
 export {
     uploadImgUrl, uploadAvatarUrl, uploadRowImgUrl, imgUrl, avatarUrl, bigHeadUrl, qiniuThumbImgUrl, qiniuImgUrl, qiniuDeleteImgUrl, getQiniuTokenUrl, getQiniuAvatarTokenUrl,
-    userAccountLoginUrl, userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl, setUserInfoUrl, setUserCityCodeUrl,
+    userAccountLoginUrl, appInitUrl,userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl, setUserInfoUrl, setUserCityCodeUrl,
     getProfilesUrl, getCommentsProfilesUrl, getProfileUrl,
     kdNumRegisterUrl, kdNumEditUrl, sellerConfigUrl, extendServiceUrl, visitKdNumUrl, existsKdNumCodeUrl,
     setTextRowTemplateUrl, setImgRowTemplateUrl, deleteRowTemplateUrl,

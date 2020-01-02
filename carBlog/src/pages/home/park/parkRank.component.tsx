@@ -224,7 +224,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
                 Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
 
                     geoAllowed = true
-                    global.citycode = reGeocode.citycode
+                    global.citycode = reGeocode.citycode//todo:审视一下global.citycode 的用途
                     callback(citycode, reGeocode.citycode)
                 })
             })
@@ -266,24 +266,16 @@ export class ParkRankComponent extends React.Component<Props, State> {
                 this.setState({ list: [], loading: 2,refreshing:false })
                 return
             }
-            // console.warn(`old:${oldcode},new:${newcode}`)
+
 
             const loading = rj(rankrr).data.length > 0 ? 0 : 2
 
-            // const temp = (rankrj.data as UserAccount[]).map((u:UserAccount)=>{
-
-            //     const ua = Object.assign({},u)
-            //     ua.image = !!!isEmpty(u.image) ? new RemoteImage(qiniuImgUrl(u.image)) : null
-            //     return ua
-            // })
-
-
 
             this.setState({ list: rj(rankrr).data, loading,refreshing:false })
-
+            console.warn(`parkrank.rank:${oldcode},${newcode}`)
             if (isEmpty(oldcode) || oldcode != newcode) {
                 saveLastCityCode(newcode)
-                // console.warn(`old:${oldcode},new:${newcode}`)
+
                 const _us = onlineAccountState()
                 if (_us == 1 || _us == 2) {
                     

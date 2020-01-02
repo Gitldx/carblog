@@ -4,7 +4,7 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, } from 'react-native-ui-kitten';
+import { Button, withStyles, ThemeType, ThemedComponentProps, Tab, TabView, Text, TabBar, CheckBox, Radio, Tooltip, ButtonGroup, } from 'react-native-ui-kitten';
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
 import { Input, ScrollableAvoidKeyboard } from '@src/components/common';
 import { MaterialCommunityIcons, ArrowIosBackFill } from '@src/assets/icons';
@@ -50,7 +50,8 @@ type State = {
     initLongitude: number,
     selectedAddress: string,
     tooltipVisible: boolean,
-    limitRegion: any
+    limitRegion: any,
+    mapType : "standard" | "satellite"
 }
 
 // const { width: deviceWidth, height: deviceHeight } = Dimensions.get('window')
@@ -112,7 +113,8 @@ class SharePark extends React.Component<Props, State> {
         initLongitude: null,
         selectedAddress: '',
         tooltipVisible: false,
-        limitRegion: null
+        limitRegion: null,
+        mapType : "standard"
     }
 
 
@@ -419,6 +421,7 @@ class SharePark extends React.Component<Props, State> {
                 showsCompass={true}
                 minZoomLevel={16}
                 zoomLevel={18}
+                mapType={this.state.mapType}
                 // scrollEnabled={false}
                 // limitRegion={{
                 //     latitude: 22.633373,
@@ -504,7 +507,12 @@ class SharePark extends React.Component<Props, State> {
                 </View>
                 <View style={{ marginBottom: 20, height: 300 }}>
                     {this.state.mapShow ? this.renderMapview() : null}
-                    {/* <View style={{backgroundColor:'yellow',width:300,height:28,position:'absolute',zIndex:9999,bottom:0,left:0}}></View> */}
+                    <View style={{height:35,position:'absolute',zIndex:9999,bottom:0,left:0}}>
+                        <ButtonGroup size='small'>
+                            <Button onPress={()=>this.setState({mapType:'satellite'})}>卫星地图</Button>
+                            <Button onPress={()=>this.setState({mapType:'standard'})}>标准地图</Button>
+                        </ButtonGroup>
+                    </View>
                 </View>
                 {
                     this.state.selectedAddress ?

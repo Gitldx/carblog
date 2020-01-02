@@ -223,6 +223,20 @@ class Home extends React.Component<Props, State> {
   private initParkStatus = async () => {
     const uid = UserAccount.getUid()
     if (uid != null) {
+      // const rj = await getService(parkGetUrl(UserAccount.getUid())) as RestfulJson
+
+      const p: Park = global.appInitData.park//rj.data
+      this.parkData = p
+      if (this.parkData) {
+        this.setState({ parkStatus: 1 })
+      }
+    }
+
+  }
+
+  private getParkStatus = async () => {
+    const uid = UserAccount.getUid()
+    if (uid != null) {
       const rj = await getService(parkGetUrl(UserAccount.getUid())) as RestfulJson
 
       const p: Park = rj.data
@@ -234,11 +248,12 @@ class Home extends React.Component<Props, State> {
 
   }
 
+
   private listenLoginEvent = () => {
     EventRegister.addEventListener(loginEvent, (data: LoginEventData) => {
       if (!data.onLaunch) {
         if (data.accountHasLogined) {
-          this.initParkStatus()
+          this.getParkStatus()
         }
         else {
           this.parkData = null
@@ -294,14 +309,14 @@ class Home extends React.Component<Props, State> {
 
   public componentDidMount() {
     if (hasInitOnlineAppState()) {
-      this.initParkStatus()
+      this.initParkStatus()//A-6
     }
     else {
       EventRegister.addEventListener(initAppOnlineCompleteEvent, () => {
         this.initParkStatus()
 
         const upgrade = new Upgrade(this.props.navigation)
-        upgrade.codePush()
+        upgrade.codePush()//A-7
         // this.props.navigation.navigate("UpgradeModel", { isMandatory: true })
       })
     }
