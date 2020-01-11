@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid } from 'react-native'
+import { View, ListRenderItemInfo, TouchableOpacity, ImageSourcePropType, Platform, PermissionsAndroid, RefreshControl } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -48,7 +48,8 @@ interface State {
     /**
      * 0:默认状态，1:正在加载，2:已到末尾
      */
-    loading: 0 | 1 | 2
+    loading: 0 | 1 | 2,
+    refreshing: boolean
 }
 
 export class BlogListComponent extends React.Component<Props, State> {
@@ -57,7 +58,8 @@ export class BlogListComponent extends React.Component<Props, State> {
     public state: State = {
         list: [],
         sortType: 1,
-        loading: 0
+        loading: 0,
+        refreshing : false
     }
 
     private articles: Article[];//todo:区分行人和车主的文章表
@@ -74,7 +76,7 @@ export class BlogListComponent extends React.Component<Props, State> {
         // })
         this.props.navigation.push(
             'Article',
-            { profile:article.authorProfile,title: article.authorProfile.nickname, article/* : this.articles.find(i => i.id == article.id) */ }
+            { profile: article.authorProfile, title: article.authorProfile.nickname, article/* : this.articles.find(i => i.id == article.id) */ }
         )
     }
 
@@ -98,8 +100,12 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
     private renderFooter = (): React.ReactElement => {
-       
-        const { loading } = this.state
+
+        const { loading,list } = this.state
+
+        if(isEmpty(list)){
+            return null
+        }
 
         if (loading == 2) {
             return (
@@ -121,7 +127,7 @@ export class BlogListComponent extends React.Component<Props, State> {
     private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
         const { item } = info
         const d = item.distance
-        const {themedStyle} = this.props
+        const { themedStyle } = this.props
         return (
             <ListItem style={themedStyle.listItem} onPress={() => {
                 this.onPressed(item)
@@ -155,7 +161,7 @@ export class BlogListComponent extends React.Component<Props, State> {
                 </View>
 
                 {!isEmpty(item.image) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-                    <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80,borderRadius:5 }} />
+                    <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
                 </View>}
 
             </ListItem>
@@ -197,14 +203,14 @@ export class BlogListComponent extends React.Component<Props, State> {
 
     private writeBlog = () => {
         const s = onlineAccountState()
-        if(s==0 || s == -1){
+        if (s == 0 || s == -1) {
             showMessage({
-                message:'提示',
-                description:"撰写博客请先注册或登录账号",
-                icon : "info",
-                type:"info",
-                position:'center',
-                duration:3000
+                message: '提示',
+                description: "撰写博客请先注册或登录账号",
+                icon: "info",
+                type: "info",
+                position: 'center',
+                duration: 3000
             })
             return;
         }
@@ -223,7 +229,7 @@ export class BlogListComponent extends React.Component<Props, State> {
         }
     }
 
-    isNotOnline(rj:RestfulJson){
+    isNotOnline(rj: RestfulJson) {
         return (rj as RestfulResult) == NOTONLINE
     }
 
@@ -231,7 +237,7 @@ export class BlogListComponent extends React.Component<Props, State> {
         this.currentNearPage++;
         const rr = await getService(listNearbyArticleUrl(this.currentLongitude_wgs, this.currentLatitude_wgs, this.currentNearPage))
         // console.warn(`rj:${JSON.stringify(rj)}`)
-        if(rrnol(rr)){
+        if (rrnol(rr)) {
             return;
         }
 
@@ -242,9 +248,9 @@ export class BlogListComponent extends React.Component<Props, State> {
             const date = new Date(m.date)
 
             m.date = displayIssueTime(date)
-            
-            const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
-            profile.nickname = truncateText(profile.nickname,11)// profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+
+            const profile = Object.assign({}, profiles.find(p => p.id == m.uid))
+            profile.nickname = truncateText(profile.nickname, 11)// profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
             m.authorProfile = profile
 
             return m;
@@ -276,9 +282,10 @@ export class BlogListComponent extends React.Component<Props, State> {
 
             this.currentLatitude_wgs = lat
             this.currentLongitude_wgs = lng
-
+            this.setState({ refreshing: true })
             const rr = await getService(listNearbyArticleUrl(lng, lat, 0))
-            if(rrnol(rr)){
+            if (rrnol(rr)) {
+                this.setState({ refreshing: false })
                 return;
             }
 
@@ -290,15 +297,15 @@ export class BlogListComponent extends React.Component<Props, State> {
                 const date = new Date(m.date)
 
                 m.date = displayIssueTime(date)
-                
-                const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
-                profile.nickname = truncateText(profile.nickname,11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
-                
+
+                const profile = Object.assign({}, profiles.find(p => p.id == m.uid))
+                profile.nickname = truncateText(profile.nickname, 11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+
                 m.authorProfile = profile
 
                 return m;
 
-                
+
             })
 
 
@@ -306,7 +313,7 @@ export class BlogListComponent extends React.Component<Props, State> {
             this.currentNearPage = 0
 
 
-            this.setState({ list: temp, sortType: 0, loading: 0 })
+            this.setState({ list: temp, sortType: 0, loading: 0 ,refreshing:false})
 
         })
     }
@@ -317,7 +324,7 @@ export class BlogListComponent extends React.Component<Props, State> {
 
         const rr = await getService(listArticleUrl(this.currentHotPage))
 
-        if(rrnol(rr)){
+        if (rrnol(rr)) {
             return;
         }
 
@@ -328,10 +335,10 @@ export class BlogListComponent extends React.Component<Props, State> {
             const date = new Date(m.date)
 
             m.date = displayIssueTime(date)
-            
-            const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
+
+            const profile = Object.assign({}, profiles.find(p => p.id == m.uid))
             // console.warn(`profile:${JSON.stringify(profile)}`)
-            profile.nickname = truncateText(profile.nickname,11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+            profile.nickname = truncateText(profile.nickname, 11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
             // profile.image = profile.image ? new RemoteImage(qiniuImgUrl(profile.image as string)) : null
             m.authorProfile = profile
 
@@ -354,8 +361,10 @@ export class BlogListComponent extends React.Component<Props, State> {
 
 
     private listHottest = async () => {
+        this.setState({ refreshing: true })
         const rr = await getService(listArticleUrl(0))
-        if(rrnol(rr)){
+        if (rrnol(rr)) {
+            this.setState({ refreshing: false })
             return;
         }
         const articles: Article[] = rj(rr).data.articles
@@ -379,21 +388,21 @@ export class BlogListComponent extends React.Component<Props, State> {
             const date = new Date(m.date)
 
             m.date = displayIssueTime(date)
-         
-            const profile = Object.assign({},profiles.find(p => p.id == m.uid)) 
+
+            const profile = Object.assign({}, profiles.find(p => p.id == m.uid))
             // console.warn(`profile:${JSON.stringify(profile)}`)
-            profile.nickname = truncateText( profile.nickname,11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
+            profile.nickname = truncateText(profile.nickname, 11) //profile.nickname.length > 11 ? profile.nickname.substr(0, 10) + "..." : profile.nickname
             m.authorProfile = profile
 
             return m;
 
-           
+
         })
 
         this.articles = temp
         this.currentHotPage = 0
 
-        this.setState({ list: temp, sortType: 1, loading: 0 })
+        this.setState({ list: temp, sortType: 1, loading: 0,refreshing:false })
     }
 
 
@@ -404,6 +413,16 @@ export class BlogListComponent extends React.Component<Props, State> {
 
     private onMomentumScrollBegin = () => {
         this.canGetNext = true;
+    }
+
+    private onRefreshing = () => {
+        const sortType = this.state.sortType
+        if (sortType == 0) {
+            this.listNear()
+        }
+        else {
+            this.listHottest()
+        }
     }
 
     public async componentWillMount() {
@@ -447,7 +466,12 @@ export class BlogListComponent extends React.Component<Props, State> {
             // <View style={{ height: '100%' }}>
             <React.Fragment>
                 <List
-
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={this.state.refreshing}
+                            onRefresh={this.onRefreshing}
+                        />
+                    }
                     data={this.state.list}
                     renderItem={this.renderItem}
                     ListHeaderComponent={this.renderHeader}
@@ -483,11 +507,11 @@ export const BlogList = withStyles(BlogListComponent, (theme: ThemeType) => ({
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         backgroundColor: theme["color-success-400"]
     },
-    listItem : {
+    listItem: {
         flexDirection: 'row', height: 120,
-        borderBottomColor:theme['background-basic-color-4'],borderBottomWidth:1
+        borderBottomColor: theme['background-basic-color-4'], borderBottomWidth: 1
     },
-    listItemContent:{
-        color : theme["contentText-primary"]
+    listItemContent: {
+        color: theme["contentText-primary"]
     }
 }))

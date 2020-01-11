@@ -70,7 +70,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     private currentlocation_wgs: { longitude: number, latitude: number }
 
     private onPressed = (roadChat: RoadChat) => {
-
+        const ua : UserAccount = {id:roadChat.uid,nickname:roadChat.nickname,image:roadChat.image,carNumber:roadChat.carNumber} as any
+        this.props.navigation.navigate("UserBlog", { ua })
     }
 
     private renderItemHeader(item: RoadChat): React.ReactElement {
