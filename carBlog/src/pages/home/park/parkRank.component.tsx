@@ -224,7 +224,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
                 Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
 
                     geoAllowed = true
-                    global.citycode = reGeocode.citycode//todo:审视一下global.citycode 的用途
+                    global.citycode = reGeocode.citycode
                     callback(citycode, reGeocode.citycode)
                 })
             })

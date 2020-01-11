@@ -349,7 +349,8 @@ export class MessageLooper {
                     const title = b.title
                     const content = b.content
                     const url = b.url
-                    const temp = this.toBulletin({ title, content,url }, key)
+                    const img = b.img
+                    const temp = this.toBulletin({ title, content,url,img }, key)
                     bulletins.push(temp)
                 }
 
@@ -378,7 +379,7 @@ export class MessageLooper {
             strContent: content.strContent,
             chatType: content.chatType,
             read: false
-        }
+        } as HomeMessage
     }
 
 
@@ -393,7 +394,7 @@ export class MessageLooper {
             title: `你收到了${item.sender}的1个车位币`,
             strContent: content.strContent,
             read: false
-        }
+        }  as HomeMessage
     }
 
 
@@ -403,10 +404,11 @@ export class MessageLooper {
             id: key,
             type: MESSAGETYPE.sys_bulletin,
             url: item.url,
+            img : item.img,
             title: item.title,
             content: item.content,
             read : false
-        }
+        }  as HomeMessage
     }
 
 
@@ -429,11 +431,11 @@ export class MessageLooper {
             title: '系统邮件',
             content: item.content,
             read:false
-        }
+        }  as HomeMessage
     }
 
 
-    toWebMessage(item, key): WebMessage {
+    toWebMessage(item, key): HomeMessage {
         console.warn(`toWebMessage:${JSON.stringify(item)}`)
         return {
             id: key,
@@ -443,7 +445,7 @@ export class MessageLooper {
             title: item.title,
             content: item.content,
             read : false
-        }
+        }  as HomeMessage
     }
 
 
@@ -454,7 +456,7 @@ export class MessageLooper {
         const uid = this.getMsgIdentifier()
         body.senderId = uid
 
-        await fetch(this.server + '/sendMsg', {//todo:超时处理
+        await fetch(this.server + '/sendMsg', {
             method: 'POST',
             headers: {
                 Accept: 'application/json',

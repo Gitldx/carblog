@@ -54,6 +54,7 @@ export class Upgrade {
   }
 
   private downloadProgressCallback = (progress: DownloadProgress) => {
+    // console.warn(`progress,totalBytes: ${progress.totalBytes}, receivedBytes: ${progress.receivedBytes}`)
     EventRegister.emitEvent(upgradeEvent, { eventType: 0, totalBytes: progress.totalBytes, receivedBytes: progress.receivedBytes, })
   }
 
@@ -67,10 +68,11 @@ export class Upgrade {
       ios: "NUXmaeb45usx8amOwqmKx8WcIjgCF37oDUkIdX",
       android: "U_6W3QJwM96H053p1Y_Gx4IoZf-paedRjKIjHg"
     })
-    const deploymentKey = debugkey
+    const deploymentKey = productionkey
     // console.warn("codepush")
+
     codePush.checkForUpdate(deploymentKey).then((update) => {
-      // console.warn(`codepush:${JSON.stringify(update)}`)
+      console.warn(`codepush:${JSON.stringify(update)}`)
       if (!update) {
         codePush.notifyAppReady() //已是最新版本
       } else {
@@ -151,6 +153,9 @@ export class Upgrade {
   }
 }
 
+/**
+ * 原生代码版本
+ */
 export function currentAppversion() {
   return Platform.select({
     ios: APPVERSION_IOS,
@@ -158,7 +163,9 @@ export function currentAppversion() {
   })
 }
 
-
+/**
+ * js代码版本
+ */
 export function currentJSversion() {
   return Platform.select({
     ios: JSAPIVERSION_IOS,
@@ -217,6 +224,7 @@ export function checkAppUnavailable_js() {
 
 
 async function getAppleStoreVersion() {
+  // return '1.0.4' //note: 上线前恢复以下代码
   const url = `https://itunes.apple.com/cn/lookup?id=${IOSAPPID}`
   const res = await fetch(url).then((response) => response.json())
   return res.results[0].version
@@ -255,7 +263,7 @@ async function getAppleStoreVersion() {
 /**
  * 自己写的下载更新逻辑
  */
-export function nativeUpdateApp() {
+function nativeUpdateApp() {
 
   if (Platform.OS === 'ios') {
     // NativeModules.upgrade.getAppVersion((error, Version) => {
@@ -275,7 +283,7 @@ export function nativeUpdateApp() {
     AndroidAutoUpdate.goToDownloadApk(global.serverParam.apkUrl);
   }
 
-  // this.GetAPPOnlineVersion(showTip);
+  
 }
 
 
@@ -292,8 +300,8 @@ function popupMessage(hint) {
 
 
 /**
- * 更新策略
- * 频繁的更新通过codepush 更新js代码。当js更新累计到一定步骤，仍未更新，就通过checkAppUnavailable_js退出app，强制用户手动到应用市场下载
+ * 原生代码更新策略
+ * 频繁的更新通过codepush 更新js代码。当js更新累计到一定步骤，仍未更新，就通过checkAppUnavailable或者checkAppUnavailable_js退出app，强制用户手动到应用市场下载
  * 涉及到原生代码的更新，安卓方面先实验性的使用bugly。如果安卓累计到一定步骤仍未更新，就先触发upgradeStrategy，
  * 再尝试一次强迫用户下载，如果再不行，就触发checkAppUnavailable，退出app，强制用户手动到应用市场下载
  */
@@ -306,6 +314,7 @@ export async function upgradeStrategy() {//todo:上线前测一下
   if (version == "0.0.0") {
     return;
   }
+  
   const currentV = currentAppversion()
   if (versionInt(currentV) >= versionInt(version)) {
     return
@@ -315,15 +324,16 @@ export async function upgradeStrategy() {//todo:上线前测一下
   if (type != 'wifi') {
     return;
   }
-
+ 
   if (Platform.OS == "ios") {
     const appstoreversion = await getAppleStoreVersion()
-    if (versionInt(appstoreversion) <= versionInt(version)) {
+   
+    if (versionInt(appstoreversion) <= versionInt(version)) {//服务器标记的ios版本不能大于苹果商场上的版本，否则用户被提示更新，却没有实际更新到该版本
       return;
     }
   }
 
-
+  
   let history: Upgradehistory = await getUpgradeHistory()
 
   const d1 = new Date()

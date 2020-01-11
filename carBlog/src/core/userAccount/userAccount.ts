@@ -215,7 +215,7 @@ export class UserAccount {
     }
 
 
-    static async serverLogin() {//todo:程序刚启动时方位服务器请求有点多，优化一下
+    static async serverLogin() {
 
         const data = await UserAccount.loginWithLocalAccount(UserAccount.instance.accountName, UserAccount.instance.password)
         // console.warn(`serverLogin : ${JSON.stringify(data)}`)

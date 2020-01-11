@@ -68,4 +68,4 @@ export interface ParkMessage{
 }
 
 
-export type HomeMessage = WebMessage | ChatMessage
+export type HomeMessage = WebMessage & ChatMessage & ParkMessage

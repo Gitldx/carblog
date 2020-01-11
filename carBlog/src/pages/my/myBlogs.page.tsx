@@ -70,7 +70,7 @@ export class MyBlogs extends React.Component<Props, State> {
     return (
       <PageView style={themedStyle.container}>
 
-          <Button status="success" appearance="ghost" style={{marginBottom:20}} onPress={()=>this.edit()}>写文章</Button>
+          <Button status="success" appearance="ghost" style={{marginHorizontal:10}} onPress={()=>this.edit()}>写文章</Button>
 
           <List data={this.state.list} renderItem={this.renderItem} style={{flex:1}}/>
       </PageView>

@@ -189,10 +189,10 @@ class SharePark extends React.Component<Props, State> {
 
             // console.warn(`distance:${distance},lasttime:${lastLocation.time}`)
 
-            // if (distance < NEARDEVIATION && (timeDiffInSeconds(new Date(), new Date(lastLocation.time)) / 60) <= 5) {
-            //     simpleAlert(null, "你已经在此地点发布过信息，请移步到其他地点发布，或者5分钟后再刷新")
-            //     return;
-            // }//todo:记得去掉注释
+            if (distance < NEARDEVIATION && (timeDiffInSeconds(new Date(), new Date(lastLocation.time)) / 60) <= 5) {
+                simpleAlert(null, "你已经在此地点发布过信息，请移步到其他地点发布，或者5分钟后再刷新")
+                return;
+            }//todo:记得去掉注释
         }
 
         // return;

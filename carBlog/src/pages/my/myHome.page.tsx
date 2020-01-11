@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native'
+import { View, TouchableOpacity, Alert } from 'react-native'
 import { NavigationScreenProps } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -21,8 +21,8 @@ import debounce from "@src/core/uitls/debounce"
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { JSAPIVERSION_ANDROID } from '@src/core/uitls/constants';
 import { MaterialCommunityIcons, HelicopterImage } from '@src/assets/icons';
-import { upgradeStrategy } from '@src/core/uitls/upgradeUtil';
 import { getDeviceInfo } from '@src/core/uitls/deviceInfo';
+import { removeUpgradeHistory } from '@src/core/uitls/storage/localConfig';
 
 
 type DayNight = "day" | "night"
@@ -131,7 +131,9 @@ export class MyHome extends React.Component<Props, State> {
     // checkAppUnavailable_Forcedversion()
     // nativeUpdateApp()
     // upgradeStrategy()
-    console.warn(`${JSON.stringify(getDeviceInfo())}`)
+    // console.warn(`${JSON.stringify(getDeviceInfo())}`)
+    // simpleAlert(null,"2");
+    removeUpgradeHistory()
   }, 2000, true)
   private testDebounce = () => {
     this.debounce()
@@ -242,10 +244,10 @@ export class MyHome extends React.Component<Props, State> {
         </View>
 
 
-        {/* <Text>test0</Text>
-          <Button onPress={this.testDebounce}>测试</Button>
+        {/* <Text>test0</Text> */}
+          {/* <Button onPress={this.testDebounce}>测试</Button> */}
 
-          <Avatar source={HelicopterImage.imageSource} style={{height:50,width:50}}/> */}
+          {/* <Avatar source={HelicopterImage.imageSource} style={{height:50,width:50}}/> */}
       </PageView>
 
     );

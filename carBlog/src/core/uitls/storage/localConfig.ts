@@ -27,9 +27,9 @@ export async function getUpgradeHistory(){
     return h ? JSON.parse(h) : null
 }
 
-// export function removeUpgradeHistory(){
-//     AsyncStorage.removeItem(UpgradehistoryKey)
-// }
+export function removeUpgradeHistory(){
+    AsyncStorage.removeItem(UpgradehistoryKey)
+}
 
 export function saveStatisticHistory(){
     const d = new Date()

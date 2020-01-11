@@ -34,7 +34,7 @@ import { themes } from '@src/core/themes';
 
 interface ComponentProps {
   index?: number;
-  message: ChatMessage;//ConversationModel;
+  message: HomeMessage//ChatMessage;//ConversationModel;
   onPressed: (index: number) => void;
   // messageStatus : MessageStatus;
   deleteItem(index: number)
@@ -124,9 +124,15 @@ class MessageComponent extends React.Component<MessageProps> {
         )
 
       case MESSAGETYPE.sys_bulletin:
+        // console.warn(`bulletin:${JSON.stringify(this.props.message)}`)
         return (
           <View style={[styles.icon, { backgroundColor: '#f9a825', justifyContent: 'center', alignItems: 'center' }]}>
+            {this.props.message.img ? 
+            <Image style={{ /* position: 'absolute', left: 0, top: 0, */ width: 45, height: 45, /* zIndex: 2, */ borderRadius: 4 }} source={{ uri: this.props.message.img }} />
+            :
             <MaterialCommunityIcons name="bell" size={35} color={'white'} />
+          }
+            
           </View>
         )
 
@@ -137,11 +143,16 @@ class MessageComponent extends React.Component<MessageProps> {
             <MaterialCommunityIcons name="email" size={35} color={'white'} />
           </View>
         )
-      case MESSAGETYPE.user_web:
+      case MESSAGETYPE.user_web://todo:测试一下自己网站的情况
         return (
           <View style={[styles.icon, { backgroundColor: '#DDDDDD', justifyContent: 'center', alignItems: 'center' }]}>
-            <Image style={{ position: 'absolute', left: 0, top: 0, width: 45, height: 45, zIndex: 2, borderRadius: 4 }} source={{ uri: 'http://img32.photophoto.cn/20140709/0046044459284152_s.jpg' }} />
-            <MaterialCommunityIcons name="email" size={35} color={'white'} />
+            {
+              this.props.message.img ? 
+              <Image style={{/*  position: 'absolute', left: 0, top: 0, */ width: 45, height: 45, /* zIndex: 2, */ borderRadius: 4 }} source={{ uri: this.props.message.img/* 'http://img32.photophoto.cn/20140709/0046044459284152_s.jpg' */ }} />
+              :
+              <MaterialCommunityIcons name="email" size={35} color={'white'} />
+            }
+            
           </View>
         )
       case MESSAGETYPE.user_park:

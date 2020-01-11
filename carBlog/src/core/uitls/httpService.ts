@@ -40,7 +40,7 @@ function http(): string {
 }
 
 
-const delay = (timeOut: number = 10 * 1000): Promise<RestfulResult> => {//todo:post,put,delete也要做超时处理
+const delay = (timeOut: number = 15 * 1000): Promise<RestfulResult> => {//todo:post,put,delete也要做超时处理
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             reject(new Error('网络超时'));
@@ -57,8 +57,20 @@ const delay = (timeOut: number = 10 * 1000): Promise<RestfulResult> => {//todo:p
  */
 export function postService(url: string, body: {}, version: string = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {//todo:服务器关闭的情况
 
+    return Promise.race([postPromise(url, body,version), delay()]).then(obj => {
+        return obj as any;
+    }).catch(err => {
+        if (err.message == "网络超时") {
+            simpleAlert(null, err.message)
+        }
+    })
 
 
+}
+
+
+
+export function postPromise(url: string, body: {},version) : Promise<RestfulResult>{
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()

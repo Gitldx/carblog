@@ -5,6 +5,8 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
 import { Button, Toggle, Text, withStyles, ThemeType, ThemedComponentProps, Layout, List, Radio, ButtonProps } from 'react-native-ui-kitten';
+import { UserAccount } from '@src/core/userAccount/userAccount';
+import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
 
 
 
@@ -50,32 +52,57 @@ export class Web extends React.Component<Props, State> {
     if (this.canGoback) {
       this.webView.goBack();
     }
-    else{
+    else {
       this.props.navigation.goBack()
     }
 
   }
 
 
-    // 监听原生返回键事件
-    private addBackAndroidListener(navigator) {
-      if (Platform.OS === 'android') {
-        BackHandler.addEventListener('hardwareBackPress', this.onBackAndroid);
-      }
+  // 监听原生返回键事件
+  private addBackAndroidListener(navigator) {
+    if (Platform.OS === 'android') {
+      BackHandler.addEventListener('hardwareBackPress', this.onBackAndroid);
+    }
+  }
+
+  private onBackAndroid = () => {
+    if (this.canGoback) {
+      this.webView.goBack();
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+
+  private setUid = () => {
+    if (UserAccount.instance.accountHasLogined == true) {
+      this.webView.postMessage(UserAccount.getUid())
+    }
+  }
+
+  private onMessage = (e) => {
+    let string_data = e.nativeEvent.data
+    
+    if(Platform.OS === "ios"){
+      // IOS returns the data url encoded/percent-encoding twice
+      // unescape('%257B') -> %7B
+      // unescape(%7B) -> {
+      string_data = unescape(unescape(string_data));
+    }
+    const msg = JSON.parse(string_data)
+    const event = msg.event
+
+    if (event == 'finish') {
+       this.props.navigation.goBack(KEY_NAVIGATION_BACK)
     }
   
-    private onBackAndroid = () => {
-      if (this.canGoback) {
-        this.webView.goBack();
-        return true;
-      } else {
-        return false;
-      }
-    };
+}
 
 
-  private url : string
-  public componentWillMount(){
+  private url: string
+  public componentWillMount() {
 
     this.props.navigation.setParams({//给导航中增加监听事件
       goBackPage: this.goBack
@@ -93,14 +120,17 @@ export class Web extends React.Component<Props, State> {
     const { } = this.state
     return (
       <View style={{ flex: 1 }}>
-      {/* <Button onPress={this.goBack}>返回</Button> */}
-      <WebView
-        source={{ uri: this.url }}
-        // style={{marginTop: 20}}
-        ref={ref => this.webView = ref}
-        onNavigationStateChange={this.onNavigationStateChange}
-      />
-    </View>
+        {/* <Button onPress={this.goBack}>返回</Button> */}
+        <WebView
+          
+          source={{ uri: this.url }}
+          // style={{marginTop: 20}}
+          ref={ref => this.webView = ref}
+          onNavigationStateChange={this.onNavigationStateChange}
+          onLoadEnd={this.setUid}
+          onMessage = {this.onMessage}
+        />
+      </View>
     );
   }
 }

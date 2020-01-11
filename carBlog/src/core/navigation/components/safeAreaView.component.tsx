@@ -9,7 +9,7 @@ import {
 export class SafeAreaView extends React.Component<SafeAreaViewProps> {
 
   private statusBarHeight: number = Platform.select({
-    ios: 0,//todo:本地获取刘海高度
+    ios: 0,
     android: 0,
   });
 

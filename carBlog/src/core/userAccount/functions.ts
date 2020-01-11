@@ -111,7 +111,7 @@ export function updateGlobalUserAccount(d: UserAccount, accountHasLogined: boole
 
 export async function afterLocalLaunch() {
 
-    const bool_flag = await UserAccount.serverLogin()
+    const bool_flag = await UserAccount.serverLogin()//A-2
 
 
     if (!bool_flag) {

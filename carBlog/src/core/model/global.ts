@@ -17,7 +17,7 @@ interface serverParam {
     /**使用downloadservice 强迫下载的最低版本 */
     minForcedversion_an: string,
     newVersion_ios: string,
-    apkUrl: string,//todo:注意，七牛云的地址后面不能有apk后缀，否则不能下载。安卓代码里会在下载后在文件名后加上后缀
+    apkUrl: string,//note:注意，七牛云的地址后面不能有apk后缀，否则不能下载。安卓代码里会在下载后在文件名后加上后缀,小米，oppo,vivo后台在做应用更新时是必须增大版本号versioncode，否则手机会安装失败
     upgradeInfo_ios: string,
     upgradeInfo_an: string
 }

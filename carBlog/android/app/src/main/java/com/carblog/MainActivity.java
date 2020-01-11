@@ -21,6 +21,9 @@ public class MainActivity extends ReactFragmentActivity {//ReactActivity {
         SplashScreen.show(this);
         super.onCreate(null);
         String buglyAppId = "5c4a859ffd";
+        Beta.largeIconId = R.mipmap.launcher;
+        Beta.smallIconId = R.mipmap.launcher;
+        Beta.defaultBannerId = R.mipmap.launcher;
         Bugly.init(getApplicationContext(),buglyAppId,false);
 
     }

@@ -51,7 +51,7 @@ export const DynamicStatusBar = withStyles(DynamicStatusBarComponent, (theme: Th
   container: {
     backgroundColor: theme['background-basic-color-1'],
     height: Platform.select({
-      ios: 0,//todo：本地获取刘海高度
+      ios: 0,
       android: 0,
     }),
   },

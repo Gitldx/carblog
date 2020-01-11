@@ -79,7 +79,7 @@ export default class App extends React.Component<NavigationScreenProps, State>{
         EventRegister.addEventListener(initAppOnlineCompleteEvent,()=>{
             
             // checkAppUnavailable_Forcedversion()
-            upgradeStrategy()
+            upgradeStrategy()//A-5
 
             if(checkAppUnavailable() || checkAppUnavailable_js()){
                 simpleAlert("警告",`当前版本 ${currentAppversion()} 已停止服务支持，这可能是因为各种原因您长期未升级app，请到应用市场重新下载app`,"退出",()=>{
