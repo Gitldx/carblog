@@ -240,11 +240,13 @@ class SharePark extends React.Component<Props, State> {
             },
             offStreetPark
         }
-        const rr = await postService(shareParkUrl(), data)
+
+        const rr = await postService(shareParkUrl(), data) //todo:服务器测试一下为什么offstreetpark id=null会报错
 
         
 
         const rjData: { sharePark: ShareParkModel, offStreetPark: OffStreetPark } = rj(rr).data
+        
         this.currentPark = rjData.sharePark;
         this.currentOffStreetPark = rjData.offStreetPark;
 

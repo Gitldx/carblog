@@ -16,7 +16,7 @@ export function rj(rr: RestfulResult) {
 }
 
 export function rrnol(rr: RestfulResult) {
-    return rr == NOTONLINE
+    return rr == NOTONLINE || rr == false
 }
 
 export interface RestfulJson {
@@ -32,7 +32,9 @@ export interface NodeSerivceJson {
     data: any
 }
 
-
+/**
+ * notOnline : 手机未联网，false: 服务器服务没打开
+ */
 export type RestfulResult = RestfulJson | "notOnline" | boolean
 
 function http(): string {
@@ -40,7 +42,7 @@ function http(): string {
 }
 
 
-const delay = (timeOut: number = 15 * 1000): Promise<RestfulResult> => {//todo:post,put,delete也要做超时处理
+const delay = (timeOut: number = 15 * 1000): Promise<RestfulResult> => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             reject(new Error('网络超时'));
@@ -55,13 +57,17 @@ const delay = (timeOut: number = 15 * 1000): Promise<RestfulResult> => {//todo:p
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function postService(url: string, body: {}, version: string = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {//todo:服务器关闭的情况
+export function postService(url: string, body: {}, version: string = SPRINGWEBSERVICEVERSION, headers = {}): Promise<RestfulResult> {
 
-    return Promise.race([postPromise(url, body,version), delay()]).then(obj => {
+    return Promise.race([postPromise(url, body,version,headers), delay()]).then(obj => {
         return obj as any;
     }).catch(err => {
         if (err.message == "网络超时") {
             simpleAlert(null, err.message)
+        }
+        else{
+            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            return false
         }
     })
 
@@ -70,7 +76,7 @@ export function postService(url: string, body: {}, version: string = SPRINGWEBSE
 
 
 
-export function postPromise(url: string, body: {},version) : Promise<RestfulResult>{
+export function postPromise(url: string, body: {},version, headers = {}) : Promise<RestfulResult>{
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
@@ -91,7 +97,8 @@ export function postPromise(url: string, body: {},version) : Promise<RestfulResu
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
-                        'api-version': version
+                        'api-version': version,
+                        ...headers
                     },
                     body: typeof body == 'string' ? body : JSON.stringify(body),
                 })
@@ -128,7 +135,22 @@ export function postPromise(url: string, body: {},version) : Promise<RestfulResu
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function putService(url, body, version = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {
+export function putService(url, body, version = SPRINGWEBSERVICEVERSION, headers = {}): Promise<RestfulResult> {
+    return Promise.race([putPromise(url, body,version,headers), delay()]).then(obj => {
+        return obj as any;
+    }).catch(err => {
+        if (err.message == "网络超时") {
+            simpleAlert(null, err.message)
+        }
+        else{
+            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            return false
+        }
+    })
+}
+
+
+function putPromise(url, body, version = SPRINGWEBSERVICEVERSION, headers): Promise<RestfulResult>{
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
@@ -143,9 +165,10 @@ export function putService(url, body, version = SPRINGWEBSERVICEVERSION): Promis
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'api-version': version
+                'api-version': version,
+                ...headers
             },
-            body: JSON.stringify(body),
+            body: typeof body == 'string' ? body : JSON.stringify(body),
         })
             .then((response) => resolve(response.json()))
             .catch((err) => {
@@ -161,7 +184,22 @@ export function putService(url, body, version = SPRINGWEBSERVICEVERSION): Promis
  * @param {*} body 
  * @param {*} responseType text/plain,application/json 等
  */
-export function deleteService(url, body, version = SPRINGWEBSERVICEVERSION): Promise<RestfulResult> {
+export function deleteService(url, body, version = SPRINGWEBSERVICEVERSION,headers={}): Promise<RestfulResult> {
+    return Promise.race([deletePromise(url,body, version, headers), delay()]).then(obj => {
+        return obj as any;
+    }).catch(err => {
+        if (err.message == "网络超时") {
+            simpleAlert(null, err.message)
+        }
+        else{
+            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            return false
+        }
+    })
+}
+
+
+function deletePromise(url, body, version = SPRINGWEBSERVICEVERSION, headers): Promise<RestfulResult>{
     return new Promise((resolve, reject) => {
 
         const isConnected = networkConnected()
@@ -176,7 +214,8 @@ export function deleteService(url, body, version = SPRINGWEBSERVICEVERSION): Pro
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'api-version': version
+                'api-version': version,
+                ...headers
             },
             body: JSON.stringify(body),
         })
@@ -273,6 +312,10 @@ export function getService(url, version = SPRINGWEBSERVICEVERSION, headers = {})
     }).catch(err => {
         if (err.message == "网络超时") {
             simpleAlert(null, err.message)
+        }
+        else{
+            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            return false
         }
     })//.then(()=>"timeout")
 

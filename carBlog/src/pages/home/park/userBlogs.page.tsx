@@ -104,7 +104,6 @@ export class UserBlogs extends React.Component<Props, State> {
     )
   }
 
-  private
 
 
   private listArticles = async (uid: string) => {

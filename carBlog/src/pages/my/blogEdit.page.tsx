@@ -295,7 +295,6 @@ class BlogEdit extends React.Component<Props, State> {
 
       const rr = await deleteService(deleteArticleUrl(this.article.id), null)
       if (rrnol(rr)) {
-        showNoNetworkAlert()
         return;
       }
 
