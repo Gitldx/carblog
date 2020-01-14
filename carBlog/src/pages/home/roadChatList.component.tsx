@@ -14,35 +14,43 @@ import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
 import { blogList, author1 } from '@src/core/data/articles';
 import { Article, Profile, RoadChat, globalFields } from '@src/core/model';
-import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol, roadChatUrl, roadChatListUrl, postService, setUserCityCodeUrl } from '@src/core/uitls/httpService';
+import { getService, listArticleUrl, RestfulJson, listNearbyArticleUrl, qiniuImgUrl, NOTONLINE, RestfulResult, rj, rrnol, roadChatUrl, roadChatListUrl, postService, setUserCityCodeUrl, metroChatListUrl, metroChatUrl } from '@src/core/uitls/httpService';
 import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty, showNoNetworkAlert } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
 import { imageUri, thumbnailUri } from '@src/assets/images/type';
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
-import { getLastLocationCityCode, saveLastCityCode } from '@src/core/uitls/storage/locationStorage';
+import { getLastLocationCity, saveLastCity, LastCity } from '@src/core/uitls/storage/locationStorage';
 import { networkConnected } from '@src/core/uitls/netStatus';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5'
 import { onlineAccountState } from '@src/core/userAccount/functions';
+import { MetroLine, MetroChat } from '@src/core/model/metro.model';
 
 
 
 declare var global: globalFields
 
-type ListItemElementInfo = ListRenderItemInfo<RoadChat>;
+type chat = RoadChat | MetroChat
+type ListItemElementInfo = ListRenderItemInfo<chat>;
 
 type Props = { tabLabel: string } & ThemedComponentProps & NavigationScreenProps
 
+
+
 interface State {
-    list: RoadChat[],
+    list: chat[],
     sortType: 0 | 1
     /**
      * 0:默认状态，1:正在加载，2:已到末尾
      */
     loading: 0 | 1 | 2,
     currentRoad: string,
-    refreshing: boolean
+    refreshing: boolean,
+    /**
+     * 1:马路，2，地铁
+     */
+    chatType: 1 | 2
 }
 
 export class RoadChatListComponent extends React.Component<Props, State> {
@@ -57,24 +65,20 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         sortType: 1,
         loading: 0,
         currentRoad: "",
-        refreshing: false
+        refreshing: false,
+        chatType: 1
     }
 
 
-    private currentHotPage: number = 0
-    private currentNearPage: number = 0
-
-    private currentLatitude_wgs: number = null
-    private currentLongitude_wgs: number = null
 
     private currentlocation_wgs: { longitude: number, latitude: number }
 
-    private onPressed = (roadChat: RoadChat) => {
-        const ua : UserAccount = {id:roadChat.uid,nickname:roadChat.nickname,image:roadChat.image,carNumber:roadChat.carNumber} as any
+    private onPressed = (chat: chat) => {
+        const ua: UserAccount = { id: chat.uid, nickname: chat.nickname, image: chat.image, carNumber: (chat as any).carNumber } as any
         this.props.navigation.navigate("UserBlog", { ua })
     }
 
-    private renderItemHeader(item: RoadChat): React.ReactElement {
+    private renderItemHeader_roadChat(item: RoadChat): React.ReactElement {//todo:更小的图片
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
@@ -86,6 +90,20 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                 {!isEmpty(item.carNumber) && <LicensePlate carNumber={item.carNumber} category="c1" style={{ marginLeft: 5 }} />}
 
                 {item.role == 2 && <FontAwesome5Icon name="walking" color="#f36c60" size={20} style={{ marginLeft: 5 }} />}
+
+            </View>
+        )
+    }
+
+
+    private renderItemHeader_metroChat(item: MetroChat): React.ReactElement {//todo:更小的图片
+
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
+                {!isEmpty(item.image) ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                    <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
+                }
+                <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
 
             </View>
         )
@@ -153,6 +171,16 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
     private renderItem = (info: ListItemElementInfo): React.ReactElement<ListItemProps> => {
         const { item } = info
+        if (this.state.chatType == 1) {
+            return this.renderItem_roadChat(item as RoadChat)
+        }
+        else {
+            return this.renderItem_metroChat(item as MetroChat)
+        }
+    }
+
+
+    private renderItem_roadChat(item: RoadChat) {
         const d = item.distance
         const { themedStyle } = this.props
         return (
@@ -161,7 +189,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             }}>
 
                 <View style={{ flex: 1 }}>
-                    {this.renderItemHeader(item)}
+                    {this.renderItemHeader_roadChat(item)}
                     <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1, justifyContent: 'center' }}>
                         <Text appearance="default" style={themedStyle.listItemContent}>{item.chat}</Text>
                     </View>
@@ -183,10 +211,38 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
 
+    private renderItem_metroChat(item: MetroChat) {
+        const { themedStyle } = this.props
+        return (
+            <ListItem style={themedStyle.listItem} onPress={() => {
+                this.onPressed(item)
+            }}>
+
+                <View style={{ flex: 1 }}>
+                    {this.renderItemHeader_metroChat(item)}
+                    <View style={{ paddingLeft: 16, paddingBottom: 0, flex: 1, justifyContent: 'center' }}>
+                        <Text appearance="default" style={themedStyle.listItemContent}>{item.chat}</Text>
+                    </View>
+                    <View style={{ paddingLeft: 16, paddingBottom: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "space-between", paddingTop: 5 }}>
+
+                            {/* <View style={{ flexDirection: 'row' }}>
+                                {d && <Text appearance="hint" category="c1">{d >= 1 ? d.toFixed(2) + "公里" : (d * 1000).toFixed(0) + "米"}</Text>}
+                                <Text appearance="hint" category="c1" style={{ marginLeft: 5 }}>{item.road}</Text>
+                            </View> */}
+                            <View style={{ flexDirection: 'row' }}>
+                                <Text appearance="hint" category="c1" style={{ marginRight: 10 }}>{item.time}</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </ListItem>
+        )
+    }
 
 
     private renderHeader = () => {
-        const {themedStyle} = this.props
+        const { themedStyle } = this.props
         const { sortType, currentRoad } = this.state
         // const textStyle0 = sortType == 0 ? { color: "white" } : null
         // const style0 = sortType == 0 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
@@ -195,16 +251,24 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         // const style1 = sortType == 1 ? { backgroundColor: getThemeValue("color-success-default", themes["App Theme"]) } : null
 
         return (
-            
+
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10 }}>
-                <Text appearance="hint" category="p2">{`当前道路:${currentRoad}`}</Text>
+                <Text style={{maxWidth:"60%"}} appearance="hint" category="p2">{`当前道路:${currentRoad}`}</Text>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     {/* <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
-                    <Avatar source={HelicopterImage.imageSource} resizeMode="contain" style={{ height: 35, width: 35 }} />
-                    <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={themedStyle.contentText/* { color: getThemeValue("color-success-default", themes["App Theme"]) } */}>
+                    <Text style={[{ fontSize: 12, marginRight: 10 }, themedStyle.contentText]}>道路漫游</Text>
+
+                    <TouchableOpacity onPress={this.selectRoad}>
+                        <Avatar source={HelicopterImage.imageSource} resizeMode="contain" style={{ height: 35, width: 35 }} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={{ marginHorizontal: 20 }} onPress={this.selectMetroline}>
+                        <MaterialCommunityIcons size={25} name="subway" color={getThemeValue("color-success-default", themes["App Theme"])} />
+                    </TouchableOpacity>
+                    {/* <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={themedStyle.contentText}>
                         道路漫游>>
-                    </Button>
+                    </Button> */}
                 </View>
             </View>
         )
@@ -220,8 +284,26 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
 
+    private selectMetroline = () => {
+        if (!networkConnected()) {
+            showNoNetworkAlert()
+            return
+        }
+        this.props.navigation.navigate("SelectMetroLines", { selectCallback: this.selectMetroLineCallback })
+    }
+
+
     private issueCallback = (road, lng_wgs, lat_wgs) => {
-        this.getList(global.citycode, road, lng_wgs, lat_wgs)
+        this.getList_roadChat(global.lastCity.cityCode, road, lng_wgs, lat_wgs)
+    }
+
+    private currentMetroline: MetroLine & { direction: number } = null
+    private selectMetroLineCallback = async (metroLine: MetroLine, direction: number) => {
+        this.currentPage = 0
+        this.currentMetroline = { ...metroLine, direction }
+
+        this.getList_metroChat(metroLine,direction)
+
     }
 
 
@@ -230,11 +312,20 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             showNoNetworkAlert()
             return
         }
-        this.props.navigation.navigate("IssueChat", { issueCallback: this.issueCallback })
+        const {chatType} = this.state
+        if(chatType == 1){
+            this.props.navigation.navigate("IssueChat", { issueCallback: this.issueCallback})
+        }
+        else if(chatType == 2){
+            const metroLine = this.currentMetroline;
+            const direction = this.currentMetroline.direction;
+            this.props.navigation.navigate("IssueMetroChat", { issueCallback: ()=>{this.getList_metroChat(metroLine,direction)},metroLine,direction})
+        }
+        
     }
 
 
-    private async getCityAndRoad(callback: (oldCitycode: number, newCitycode: number, road: string, lng: number, lat: number) => void) {
+    private async getCityAndRoad(callback: (oldCitycode: number, newCitycode: number, newCityName: string, road: string, lng: number, lat: number) => void) {
 
         if (Platform.OS == "android") {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION, {
@@ -244,7 +335,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             })
 
             if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                callback(null, null, null, null, null)
+                callback(null, null, null, null, null, null)
                 return
             }
         }
@@ -255,11 +346,11 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         let geoAllowed: boolean = false
         setTimeout(() => {
             if (!geoAllowed) {
-                callback(null, null, null, null, null)
+                callback(null, null, null, null, null, null)
             }
         }, 3000);
 
-        const citycode: number = await getLastLocationCityCode()
+        const city: LastCity = await getLastLocationCity()
 
 
         Geolocation.getCurrentPosition(({ coords }) => {
@@ -268,8 +359,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
 
                 geoAllowed = true
-                global.citycode = reGeocode.citycode
-                callback(citycode, reGeocode.citycode, reGeocode.road, longitude, latitude)
+                global.lastCity = { cityCode: reGeocode.citycode, cityName: reGeocode.city }
+                callback(city.cityCode, reGeocode.citycode, reGeocode.city, reGeocode.road, longitude, latitude)
             })
         })
 
@@ -284,21 +375,22 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
     private pressMore = () => {
         this.setState({ loading: 1 })
-
-        this.getMore()
-        // if (this.state.sortType == 0) {
-        //     this.getMore_near()
-        // }
-        // else {
-        //     this.getMore_hot()
-        // }
+        const {chatType} = this.state
+        
+        if(chatType == 1){
+            this.getMore_roadChat()
+        }
+        else if(chatType == 2){
+            this.getMore_metroChat()
+        }
+        
     }
 
 
-    private getMore = async () => {
+    private getMore_roadChat = async () => {
         this.currentPage++;
-        console.warn(this.currentPage)
-        const rr = await getService(roadChatListUrl(global.citycode, this.state.currentRoad, this.currentPage,
+        // console.warn(this.currentPage)
+        const rr = await getService(roadChatListUrl(global.lastCity.cityCode, this.state.currentRoad, this.currentPage,
             this.currentlocation_wgs.longitude, this.currentlocation_wgs.latitude))
         if (rrnol(rr)) {
             this.currentPage--
@@ -315,13 +407,36 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
 
+    private getMore_metroChat = async () => {
+        this.currentPage++;
+        // console.warn(this.currentPage)
+        const rr = await getService(metroChatListUrl(this.currentMetroline.id,this.currentMetroline.direction,this.currentPage))
+        if (rrnol(rr)) {
+            this.currentPage--
+            return;
+        }
+        let lst1: MetroChat[] = rj(rr).data
+        lst1.forEach(c => {
+            c.time = displayIssueTime(new Date(c.time))
+        })
+        const loading = lst1.length > 0 ? 0 : 2
+        const temp = this.state.list.concat(lst1)
+        this.setState({ loading, list: temp })
+
+    }
+
+
 
 
     private selectCallback = (citycode, road, longitude, latitude) => {
         const { lng, lat } = gcj2wgs(longitude, latitude)
-        this.getList(citycode, road, lng, lat)
+        this.getList_roadChat(citycode, road, lng, lat)
     }
 
+
+    private displayDirection = () => {
+        return this.currentMetroline.direction == 12 ? this.currentMetroline.end1 + "->" + this.currentMetroline.end2 : this.currentMetroline.end2 + "->" + this.currentMetroline.end1
+    }
 
 
     private list = () => {
@@ -330,45 +445,51 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         }
         this.setState({ refreshing: true })
         this.listLoaded = true
-        this.getCityAndRoad(async (oldCitycode, newCitycode, road, longitude, latitude) => {
+        if (this.state.chatType == 1) {
+            this.getCityAndRoad(async (oldCitycode, newCitycode, newCityName, road, longitude, latitude) => {
 
-            if (isEmpty(road)) {//没有定位权限
+                if (isEmpty(road)) {//没有定位权限
 
-                this.canUseGeo = false
-                this.setState({ list: [], loading: 2, refreshing: false })
-                return;
-            }
-            else {
-                this.canUseGeo = true
-            }
-
-            const { lng, lat } = gcj2wgs(longitude, latitude)
-            this.currentlocation_wgs = { longitude: lng, latitude: lat }
-
-            
-            if (isEmpty(oldCitycode) || oldCitycode != newCitycode) {
-                console.warn(`roadchatlist.list:${oldCitycode},${newCitycode}`)
-                saveLastCityCode(newCitycode)
-       
-                const _us = onlineAccountState()
-                if (_us == 1 || _us == 2) {
-                    
-                    await postService(setUserCityCodeUrl(UserAccount.getUid(), newCitycode), null)
+                    this.canUseGeo = false
+                    this.setState({ list: [], loading: 2, refreshing: false, chatType: 1 })
+                    return;
+                }
+                else {
+                    this.canUseGeo = true
                 }
 
-            }
+                const { lng, lat } = gcj2wgs(longitude, latitude)
+                this.currentlocation_wgs = { longitude: lng, latitude: lat }
 
-            this.getList(newCitycode, road, lng, lat)
-        })
+
+                if (isEmpty(oldCitycode) || oldCitycode != newCitycode) {
+
+                    saveLastCity({ cityCode: newCitycode, cityName: newCityName })
+
+                    const _us = onlineAccountState()
+                    if (_us == 1 || _us == 2) {
+
+                        await postService(setUserCityCodeUrl(UserAccount.getUid(), newCitycode), null)
+                    }
+
+                }
+
+                this.getList_roadChat(newCitycode, road, lng, lat)
+            })
+        }
+        else if (this.state.chatType == 2) {
+            this.getList_metroChat(this.currentMetroline,this.currentMetroline.direction)
+        }
+
     }
 
     private currentPage = 0
-    private getList = async (citycode, road, lng, lat) => {//note:上线前所有的分页改大一些
+    private getList_roadChat = async (citycode, road, lng, lat) => {//note:上线前所有的分页改大一些
         this.currentPage = 0
         const rr = await getService(roadChatListUrl(citycode, road, 0, lng, lat))
 
         if (rrnol(rr)) {
-            this.setState({ list: [], loading: 2, refreshing: false })
+            this.setState({ list: [], loading: 2, refreshing: false, chatType: 1 })
             return
         }
 
@@ -386,7 +507,25 @@ export class RoadChatListComponent extends React.Component<Props, State> {
             c.time = displayIssueTime(new Date(c.time))
         })
 
-        this.setState({ currentRoad: road, list: lst1, loading: 0, refreshing: false })
+        this.setState({ currentRoad: road, list: lst1, loading: 0, refreshing: false, chatType: 1 })
+    }
+
+    private getList_metroChat = async (metroLine : MetroLine,direction : number) => {
+        this.currentPage = 0
+        const rr = await getService(metroChatListUrl(metroLine.id, direction, 0))
+
+        if (rrnol(rr)) {
+            this.setState({ list: [], loading: 2, refreshing: false, chatType: 2 })
+            return
+        }
+
+        let lst1: MetroChat[] = rj(rr).data || []
+
+        lst1.forEach(c => {
+            c.time = displayIssueTime(new Date(c.time))
+        })
+
+        this.setState({ currentRoad: metroLine.lineName + " " + this.displayDirection(), list: lst1, loading: 0, refreshing: false, chatType: 2 })
     }
 
 
@@ -423,8 +562,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                 <View style={{ paddingHorizontal: 10, marginTop: 250, justifyContent: 'center', alignItems: 'center' }}>
                     {/* <MaterialCommunityIcons name="emoticon-neutral-outline" color="lightgrey" size={30} /> */}
                     {/* <View style={{ paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' }}> */}
-                        <Avatar source={Road2mage.imageSource} shape="square" style={{ height: 50, width: 50}} resizeMode="contain" />
-                        <Text style={{ marginLeft: 10 }}>{hint}</Text>
+                    <Avatar source={Road2mage.imageSource} shape="square" style={{ height: 50, width: 50 }} resizeMode="contain" />
+                    <Text style={{ marginLeft: 10 }}>{hint}</Text>
                     {/* </View> */}
 
                 </View>
@@ -502,7 +641,7 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
     },
     addButton: {
         position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
-        borderWidth : 1,borderColor : "#f4433c",
+        borderWidth: 1, borderColor: "#f4433c",
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         // backgroundColor: "#72d572"//theme["color-danger-400"]
     },
@@ -514,7 +653,7 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
         fontSize: 14,
         color: theme["contentText-primary"]
     },
-    contentText:{
-        color:theme["contentText-primary"]
+    contentText: {
+        color: theme["contentText-primary"]
     }
 }))

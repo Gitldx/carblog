@@ -19,7 +19,7 @@ import { toDate, getTimeDiff, isEmpty } from '@src/core/uitls/common';
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init } from '@src/components/amap/location';
-import { getLastLocationCityCode, saveLastCityCode, removeCityCode } from '@src/core/uitls/storage/locationStorage';
+import { getLastLocationCity, saveLastCity, removeCityCode, LastCity } from '@src/core/uitls/storage/locationStorage';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { thumbnailUri } from '@src/assets/images/type';
 import { networkConnected } from '@src/core/uitls/netStatus';
@@ -191,7 +191,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
     }
 
 
-    private async getcitycode(callback: (oldcode: number, newcode: number) => void) {
+    private async getcitycode(callback: (oldcode: number, newcode: number,newCityName:string) => void) {
 
         if (Platform.OS == "android") {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION, {
@@ -201,7 +201,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
             })
 
             if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                callback(null, null)
+                callback(null, null,null)
                 return
             }
         }
@@ -212,26 +212,26 @@ export class ParkRankComponent extends React.Component<Props, State> {
         let geoAllowed: boolean = false
         setTimeout(() => {
             if (!geoAllowed) {
-                callback(null, null)
+                callback(null, null,null)
             }
         }, 3000);
 
-        const citycode: number = await getLastLocationCityCode()
-        if (!global.citycode) {
+        const city: LastCity = await getLastLocationCity()
+        if (!global.lastCity) {
             Geolocation.getCurrentPosition(({ coords }) => {
                 const { longitude, latitude } = coords
 
                 Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
 
                     geoAllowed = true
-                    global.citycode = reGeocode.citycode
-                    callback(citycode, reGeocode.citycode)
+                    global.lastCity = {cityCode:reGeocode.citycode,cityName:reGeocode.city}
+                    callback(city.cityCode, reGeocode.citycode,reGeocode.city)
                 })
             })
         }
         else {
             geoAllowed = true
-            callback(citycode, global.citycode)
+            callback(city.cityCode, global.lastCity.cityCode,global.lastCity.cityName)
         }
 
 
@@ -250,7 +250,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
         this.setState({ refreshing: true })
 
-        this.getcitycode(async (oldcode, newcode) => {
+        this.getcitycode(async (oldcode, newcode,newCityName) => {
 
             if (isEmpty(newcode)) {//没有定位权限
                 this.canUseGeo = false
@@ -272,9 +272,8 @@ export class ParkRankComponent extends React.Component<Props, State> {
 
 
             this.setState({ list: rj(rankrr).data, loading,refreshing:false })
-            console.warn(`parkrank.rank:${oldcode},${newcode}`)
             if (isEmpty(oldcode) || oldcode != newcode) {
-                saveLastCityCode(newcode)
+                saveLastCity({cityCode:newcode,cityName:newCityName})
 
                 const _us = onlineAccountState()
                 if (_us == 1 || _us == 2) {
@@ -293,8 +292,8 @@ export class ParkRankComponent extends React.Component<Props, State> {
         this.setState({ loading: 1 })
         this.currentPage++;
 
-        const citycode: number = await getLastLocationCityCode()
-        const rankrr = await getService(rankParkUrl(citycode, this.state.rankSort, this.currentPage))
+        const city: LastCity = await getLastLocationCity()
+        const rankrr = await getService(rankParkUrl(city.cityCode, this.state.rankSort, this.currentPage))
         // console.warn(`getMore:${JSON.stringify(rankrr)},currentPage:${this.currentPage}`)
         if (rrnol(rankrr)) {
             this.currentPage--;

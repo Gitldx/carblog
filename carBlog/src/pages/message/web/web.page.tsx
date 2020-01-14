@@ -112,6 +112,12 @@ export class Web extends React.Component<Props, State> {
     this.url = url
   }
 
+  public componentWillUnmount(){
+    if (Platform.OS === 'android') {
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackAndroid);
+    }
+  }
+
 
 
   public render(): React.ReactNode {

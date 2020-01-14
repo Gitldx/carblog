@@ -16,7 +16,7 @@ import {
 
 import { HomePage, MyHomePage } from '@src/pages';
 import { MenuPage } from '@src/pages/menu';
-import { ArticlePage, ProductListPage, ProductDetailsPage, ParkingPage, ShareParkPage, SearchParkPage, ParkDetailPage, UserBlogsPage, SelectRoadPage, IssueChatPage } from '@src/pages/home';
+import { ArticlePage, ProductListPage, ProductDetailsPage, ParkingPage, ShareParkPage, SearchParkPage, ParkDetailPage, UserBlogsPage, SelectRoadPage, IssueChatPage, SelectMetrolLinePage, SelectMetrolCityPage, IssueMetroChatPage } from '@src/pages/home';
 import { getCurrentStateName, getCurrentRouteIndex } from './util';
 import { ImageGallaryPage } from '@src/components/common';
 import { SignInPage, SignUpPage } from '@src/pages/login';
@@ -88,7 +88,10 @@ const HomeNavigator: NavigationContainer = createStackNavigator(
       screen: IssueChatPage,
       navigationOptions: TopNavigationOptions
     },
-
+    ["IssueMetroChat"]: {
+      screen: IssueMetroChatPage,
+      navigationOptions: TopNavigationOptions
+    },
 
   },
   {
@@ -203,6 +206,14 @@ const NavigationMap: NavigationRouteConfigMap = {
   },
   ["SelectRoad"]: {
     screen: SelectRoadPage,
+    navigationOptions: TopNavigationOptions
+  },
+  ["SelectMetroLines"]: {
+    screen: SelectMetrolLinePage,
+    navigationOptions: TopNavigationOptions
+  },
+  ["SelectMetroCity"]: {
+    screen: SelectMetrolCityPage,
     navigationOptions: TopNavigationOptions
   },
   ["SearchPark"]: {

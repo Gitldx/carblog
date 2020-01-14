@@ -26,6 +26,7 @@ import {
 import { SignUpFormData } from './type';
 import { AccountRoleType } from '@src/core/userAccount/type';
 import { isEmpty } from '@src/core/uitls/common';
+import { signUpHint1, signUpHint2 } from '@src/core/uitls/constants';
 
 
 interface ComponentProps {
@@ -132,8 +133,8 @@ class SignUpFormComponent extends React.Component<SignUpForm2Props, State> {
 
 
   private onRadioChecked = (value:AccountRoleType) => {
-    const hint1 = "车主可以写博客，留停车电话,寻找和分享空车位"
-    const hint2 = "行人可以读博客，勾搭车主，分享车位"
+    const hint1 = signUpHint1
+    const hint2 = signUpHint2
     this.setState({ role: value,roleHint : value == 1 ? hint1 : hint2 })
   }
 

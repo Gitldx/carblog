@@ -116,7 +116,7 @@ class IssueChat extends React.Component<Props, State> {
       image : ua.image,
       carNumber: ua.carNumber,
       chat: this.state.content,
-      cityCode: global.citycode,
+      cityCode: global.lastCity.cityCode,
       road: this.state.selectedRoad,
       location: { coordinates: [lng, lat] },
       gcjLocation: [longitude, latitude]
@@ -222,7 +222,7 @@ class IssueChat extends React.Component<Props, State> {
         latitude: latitude,
         longitude: longitude,
       }, (result) => {
-        global.citycode = result.citycode
+        global.lastCity = {cityCode:result.citycode,cityName:result.city}
         this.setState({ selectedRoad: result.road })
       });
 

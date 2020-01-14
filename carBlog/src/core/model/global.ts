@@ -40,7 +40,7 @@ export interface globalFields {
     hasInitLocalSearchParksKey: boolean,
     hasInitLocalThankParksKey: boolean,
     lastBackPressed: number,
-    citycode: number,
+    lastCity: {cityCode:number,cityName:string},
     /**
      * 程序启动时从服务器请求的初始数据
      */

@@ -143,7 +143,7 @@ class MessageComponent extends React.Component<MessageProps> {
             <MaterialCommunityIcons name="email" size={35} color={'white'} />
           </View>
         )
-      case MESSAGETYPE.user_web://todo:测试一下自己网站的情况
+      case MESSAGETYPE.user_web:
         return (
           <View style={[styles.icon, { backgroundColor: '#DDDDDD', justifyContent: 'center', alignItems: 'center' }]}>
             {

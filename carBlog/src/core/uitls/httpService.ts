@@ -954,6 +954,24 @@ function userStatisticUrl(){
 }
 
 
+function getMetroLinesUrl(cityCode:number){
+    return http() + `/road/getMetroLines?cityCode=${cityCode}`
+}
+
+
+function getMetroCitiesUrl(){
+    return http() + "/road/getMetroCities"
+}
+
+function metroChatListUrl(lineId,direction,page){
+    return http() + `/road/metroChatList/${lineId}/${direction}/${page}`
+}
+
+function metroChatUrl(){
+    return http() + "/road/metroChat"
+}
+
+
 export {
     uploadImgUrl, uploadAvatarUrl, uploadRowImgUrl, imgUrl, avatarUrl, bigHeadUrl, qiniuThumbImgUrl, qiniuImgUrl, qiniuDeleteImgUrl, getQiniuTokenUrl, getQiniuAvatarTokenUrl,
     userAccountLoginUrl, appInitUrl,userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl, setUserInfoUrl, setUserCityCodeUrl,
@@ -974,6 +992,6 @@ export {
     writeArticleUrl, updateArticleUrl, deleteArticleUrl, listArticleUrl, getProfileByCarNumberUrl, listNearbyArticleUrl, listMyArticlesUrl,
     readArticleUrl, addArticleVisitCountUrl, commentUrl, likeArticleUrl, likeCommentUrl,
     shopListUrl, shopGetUrl, productListUrl, shopGetByUid, shopEditUrl, productEditUrl, productCloseUrl, productOpenUrl,
-    roadChatUrl,roadChatListUrl,countRoadChatUrl,
+    roadChatUrl,roadChatListUrl,countRoadChatUrl,getMetroLinesUrl,getMetroCitiesUrl,metroChatListUrl,metroChatUrl,
     userStatisticUrl
 }
