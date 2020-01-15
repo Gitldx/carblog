@@ -19,7 +19,7 @@ import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty, truncateText }
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
-import { imageUri, thumbnailUri } from '@src/assets/images/type';
+import { BigThumbnailUri, smallThumbnailUrl } from '@src/assets/images/type';
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { showMessage } from 'react-native-flash-message';
@@ -84,7 +84,7 @@ export class BlogListComponent extends React.Component<Props, State> {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {!isEmpty(item.authorProfile.image) ? <Avatar source={thumbnailUri(item.authorProfile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.authorProfile.image) ? <Avatar source={smallThumbnailUrl(item.authorProfile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.authorProfile.nickname}</Text>
@@ -161,7 +161,7 @@ export class BlogListComponent extends React.Component<Props, State> {
                 </View>
 
                 {!isEmpty(item.image) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-                    <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
+                    <Avatar shape="square" source={BigThumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
                 </View>}
 
             </ListItem>

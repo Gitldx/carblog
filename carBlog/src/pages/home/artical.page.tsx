@@ -24,7 +24,7 @@ import { Toast, DURATION, COLOR } from '@src/components'
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { simpleAlert } from '@src/core/uitls/alertActions';
-import { thumbnailUri } from '@src/assets/images/type';
+import { BigThumbnailUri } from '@src/assets/images/type';
 import { MaterialCommunityIcons } from '@src/assets/icons';
 import debounce from '@src/core/uitls/debounce'
 
@@ -330,7 +330,7 @@ class Article extends React.Component<Props, State> {
         <ArticleContent article={article} />
         <View style={themedStyle.articleAuthorContainer}>
           <TouchableOpacity onPress={this.gotoblogs}>
-            {!isEmpty(this.profile.image) ? <Avatar source={thumbnailUri(this.profile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
+            {!isEmpty(this.profile.image) ? <Avatar source={BigThumbnailUri(this.profile.image)/* (item.authorProfile.image as ImageSource).imageSource */} style={{ width: 30, height: 30 }} /> :
               <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
             }
           </TouchableOpacity>

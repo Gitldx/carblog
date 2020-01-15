@@ -66,7 +66,7 @@ export function postService(url: string, body: {}, version: string = SPRINGWEBSE
             simpleAlert(null, err.message)
         }
         else{
-            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            simpleAlert(null,"服务器出错，请稍后再试")
             return false
         }
     })
@@ -143,7 +143,7 @@ export function putService(url, body, version = SPRINGWEBSERVICEVERSION, headers
             simpleAlert(null, err.message)
         }
         else{
-            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            simpleAlert(null,"服务器出错，请稍后再试")
             return false
         }
     })
@@ -192,7 +192,7 @@ export function deleteService(url, body, version = SPRINGWEBSERVICEVERSION,heade
             simpleAlert(null, err.message)
         }
         else{
-            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            simpleAlert(null,"服务器出错，请稍后再试")
             return false
         }
     })
@@ -314,7 +314,7 @@ export function getService(url, version = SPRINGWEBSERVICEVERSION, headers = {})
             simpleAlert(null, err.message)
         }
         else{
-            simpleAlert(null,"服务器正在维护中，请稍后再试")
+            simpleAlert(null,"服务器出错，请稍后再试")
             return false
         }
     })//.then(()=>"timeout")
@@ -416,27 +416,6 @@ function uploadRowImgUrl() {
 }
 
 
-function imgUrl(path) {
-
-    if (isEmpty(path)) {
-        return ""
-    }
-
-    const arr = path.split("/")
-    return http() + `/kdNum/img/${arr[0]}/${arr[1]}`
-}
-
-
-function bigHeadUrl(kdNumId) {
-
-    if (isEmpty(kdNumId)) {
-        return ""
-    }
-
-    const d = Date.now()
-    return getImgIp() + kdNumId + `?v=${Number(toDate(d, "yyyyMMdd"))}&imageView2/0/w/500/h/500`
-}
-
 
 function avatarUrl(kdNumId) {
 
@@ -449,27 +428,47 @@ function avatarUrl(kdNumId) {
 }
 
 
-function qiniuThumbImgUrl(path) {
+function qiniuBigThumbImgUrl(path) {
 
     if (isEmpty(path)) {
         return ""
     }
 
-    // const arr = path.split("/")
-    // console.warn(`qiniuThumbImgUrl${getImgIp() + arr[0] + "/t_" + arr[1]}`)
-
-    // return getImgIp() + `${arr[0]}/t_${arr[1]}`
     return getImgIp() + `${path}?imageView2/` + "0/w/300/h/300"
 }
 
+
+function qiniuSmallThumbImgUrl(path) {
+
+    if (isEmpty(path)) {
+        return ""
+    }
+    return getImgIp() + `${path}?imageView2/` + "0/w/150/h/150"
+}
+
+
+/**
+ * 
+ * 100%宽度图
+ */
 function qiniuImgUrl(path) {
 
     if (isEmpty(path)) {
         return ""
     }
+    return getImgIp() + `${path}?imageView2/` + "0/w/1120/h/1120"
+}
 
-    // const arr = path.split("/")
-    return getImgIp() + path //`${arr[0]}/${arr[1]}`
+/**
+ * 
+ * 全尺寸图
+ */
+function qiniuFullImgUrl(path) {
+
+    if (isEmpty(path)) {
+        return ""
+    }
+    return getImgIp() + path
 }
 
 
@@ -973,7 +972,7 @@ function metroChatUrl(){
 
 
 export {
-    uploadImgUrl, uploadAvatarUrl, uploadRowImgUrl, imgUrl, avatarUrl, bigHeadUrl, qiniuThumbImgUrl, qiniuImgUrl, qiniuDeleteImgUrl, getQiniuTokenUrl, getQiniuAvatarTokenUrl,
+    uploadImgUrl, uploadAvatarUrl, uploadRowImgUrl, avatarUrl, qiniuBigThumbImgUrl,qiniuSmallThumbImgUrl, qiniuImgUrl,qiniuFullImgUrl, qiniuDeleteImgUrl, getQiniuTokenUrl, getQiniuAvatarTokenUrl,
     userAccountLoginUrl, appInitUrl,userAccountRegisterUrl, getUserAccountUrl, setBasicInfoUrl, setUserInfoUrl, setUserCityCodeUrl,
     getProfilesUrl, getCommentsProfilesUrl, getProfileUrl,
     kdNumRegisterUrl, kdNumEditUrl, sellerConfigUrl, extendServiceUrl, visitKdNumUrl, existsKdNumCodeUrl,

@@ -151,7 +151,7 @@ class IssueMetroChat extends React.Component<Props, State> {
     return (
       <PageView style={themedStyle.container}>
 
-        <Input label={`当前道路：${this.metroLine.lineName + " " + this.displayDirection()}`} placeholder="吐槽，冒泡，打呵欠，广播道路情报。。。" multiline={true} value={content} onChangeText={val => this.setState({ content: val })} />
+        <Input label={`当前路线：${this.metroLine.lineName + " " + this.displayDirection()}`} placeholder="吐槽，冒泡，打呵欠，广播道路情报。。。" multiline={true} value={content} onChangeText={val => this.setState({ content: val })} />
 
         <Text style={{ marginTop: 20 }} appearance="hint">{this.warningText}</Text>
 

@@ -18,8 +18,8 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol, getMetroLinesUrl, getMetroCitiesUrl } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
+import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol, getMetroLinesUrl, getMetroCitiesUrl, postService, commitReportUrl } from '@src/core/uitls/httpService';
+import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation, getDistance } from "@src/components/amap/location";
@@ -30,22 +30,25 @@ import { ParkItem } from './type';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { NEARDEVIATION } from '@src/core/uitls/constants';
 import { saveLastLocation, getLastLocation, LocationStorage, saveLastCity, LastMetroLine, getLastMetroLine, saveLastMetroLine, LastMetroCity, getLastMetroCity, saveLastMetroCity } from '@src/core/uitls/storage/locationStorage';
-import { showMessage } from 'react-native-flash-message';
+import { showMessage, hideMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { MetroLine } from '@src/core/model/metro.model';
+import Dialog from 'react-native-dialog'
+import debounce from '@src/core/uitls/debounce'
 
 
-declare var global: globalFields
+
 
 type Props = ThemedComponentProps & NavigationScreenProps
 
 type city = { cityCode: number, name: string }
 
 type State = {
-    cities: city[]
+    cities: city[],
+
 }
 
 
@@ -60,21 +63,22 @@ class SelectMetrolCity extends React.Component<Props, State> {
 
 
     private selectedPoint: { lat: number, lng: number, citycode: number }
-    private selectCallback: (city:city) => void
+    private selectCallback: (city: city) => void
 
 
     public state: State = {
-        cities: []
+        cities: [],
+
     }
 
- 
+
     public async componentWillMount() {
         this.selectCallback = this.props.navigation.getParam("selectCallback")
         const rr = await getService(getMetroCitiesUrl())
         if (rrnol(rr)) {
             return;
         }
-        const lst:city[] = rj(rr).data
+        const lst: city[] = rj(rr).data
         this.setState({ cities: lst })
 
     }
@@ -89,13 +93,15 @@ class SelectMetrolCity extends React.Component<Props, State> {
 
     private renderItem = (info: ListRenderItemInfo<city>) => {
         const { item } = info
-        
+
         return (
-            <ListItem onPress={()=>this.select(item)} style={{ flexDirection: 'column' ,alignItems:'flex-start'}}>
+            <ListItem onPress={() => this.select(item)} style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 <Text>{item.name}</Text>
             </ListItem>
         )
     }
+
+
 
 
 
@@ -115,7 +121,7 @@ class SelectMetrolCity extends React.Component<Props, State> {
 
 
             <PageView style={themedStyle.container} >
-               
+
                 <List
                     data={this.state.cities}
                     renderItem={this.renderItem}

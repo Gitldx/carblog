@@ -19,7 +19,7 @@ import { toDate, getTimeDiff, gcj2wgs, displayIssueTime, isEmpty, showNoNetworkA
 import EventRegister, { initAppOnlineCompleteEvent } from '@src/core/uitls/eventRegister';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init, Position } from '@src/components/amap/location';
-import { imageUri, thumbnailUri } from '@src/assets/images/type';
+import { BigThumbnailUri, smallThumbnailUrl } from '@src/assets/images/type';
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 import { getLastLocationCity, saveLastCity, LastCity } from '@src/core/uitls/storage/locationStorage';
 import { networkConnected } from '@src/core/uitls/netStatus';
@@ -78,11 +78,11 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         this.props.navigation.navigate("UserBlog", { ua })
     }
 
-    private renderItemHeader_roadChat(item: RoadChat): React.ReactElement {//todo:更小的图片
+    private renderItemHeader_roadChat(item: RoadChat): React.ReactElement {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {!isEmpty(item.image) ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.image) ? <Avatar source={smallThumbnailUrl(item.image)} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
@@ -96,11 +96,11 @@ export class RoadChatListComponent extends React.Component<Props, State> {
     }
 
 
-    private renderItemHeader_metroChat(item: MetroChat): React.ReactElement {//todo:更小的图片
+    private renderItemHeader_metroChat(item: MetroChat): React.ReactElement {
 
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5 }}>
-                {!isEmpty(item.image) ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.image) ? <Avatar source={smallThumbnailUrl(item.image)} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>
@@ -240,6 +240,16 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         )
     }
 
+    private currentRoadText(text:string){
+        const prefix = this.state.chatType == 1 ? "当前道路:" : "当前路线:"
+        if(text.length <=12){
+            return prefix + text
+        }
+        else{
+            return text
+        }
+    }
+
 
     private renderHeader = () => {
         const { themedStyle } = this.props
@@ -253,7 +263,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
         return (
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, paddingLeft: 10 }}>
-                <Text style={{maxWidth:"60%"}} appearance="hint" category="p2">{`当前道路:${currentRoad}`}</Text>
+                <Text style={{maxWidth:"60%"}} appearance="hint" category="p2">{this.currentRoadText(currentRoad)}</Text>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     {/* <MaterialCommunityIcons size={20} name="helicopter" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}

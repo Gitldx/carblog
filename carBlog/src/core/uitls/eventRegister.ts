@@ -12,7 +12,7 @@ const chatReadEvent: string = 'chatReadEvent'
 const upgradeEvent:string="upgradeEvent"
 
 
-class EventRegister {//todo:unmount
+class EventRegister {//note:unmount
 
   static _Listeners = {
     count: 0,

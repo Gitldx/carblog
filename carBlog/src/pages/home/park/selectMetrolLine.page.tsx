@@ -18,8 +18,8 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol, getMetroLinesUrl } from '@src/core/uitls/httpService';
-import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert } from '@src/core/uitls/common';
+import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol, getMetroLinesUrl, postService, commitReportUrl } from '@src/core/uitls/httpService';
+import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
 import { init, Geolocation, getDistance } from "@src/components/amap/location";
@@ -30,12 +30,14 @@ import { ParkItem } from './type';
 import { simpleAlert } from '@src/core/uitls/alertActions';
 import { NEARDEVIATION } from '@src/core/uitls/constants';
 import { saveLastLocation, getLastLocation, LocationStorage, saveLastCity, LastMetroLine, getLastMetroLine, saveLastMetroLine, LastMetroCity, getLastMetroCity } from '@src/core/uitls/storage/locationStorage';
-import { showMessage } from 'react-native-flash-message';
+import { showMessage, hideMessage } from 'react-native-flash-message';
 import { Toast, DURATION, COLOR } from '@src/components'
 import { getSevertimeDiff } from '@src/core/uitls/readParameter';
 import { onlineAccountState } from '@src/core/userAccount/functions';
 import { networkConnected } from '@src/core/uitls/netStatus';
 import { MetroLine } from '@src/core/model/metro.model';
+import Dialog from 'react-native-dialog'
+import debounce from '@src/core/uitls/debounce'
 
 
 declare var global: globalFields
@@ -45,7 +47,9 @@ type Props = ThemedComponentProps & NavigationScreenProps
 type State = {
     lines: MetroLine[],
     currentLineId: string,
-    direction: 12 | 21
+    direction: 12 | 21,
+    dialogVisible: boolean,
+    reportText: string
 }
 
 
@@ -66,7 +70,9 @@ class SelectMetrolLine extends React.Component<Props, State> {
     public state: State = {
         lines: [],
         currentLineId: null,
-        direction: null
+        direction: null,
+        dialogVisible: false,
+        reportText: ""
     }
 
 
@@ -144,6 +150,55 @@ class SelectMetrolLine extends React.Component<Props, State> {
 
         return {}
     }
+
+
+    private commitReport = debounce(() => {
+        showOngoingAlert()
+        this.commitReportAction()
+    }, 3000, true)
+
+    private commitReportAction = () => {
+
+        if (isEmpty(this.state.reportText)) {
+            simpleAlert(null, "请填写一些内容")
+            return;
+        }
+
+        const isconn = networkConnected()
+        if (!isconn) {
+            showNoNetworkAlert()
+            return;
+        }
+
+        const uid = UserAccount.getUid();
+        postService(commitReportUrl(), { uid: uid || "", content: this.state.reportText, type: 3 })
+        .then(b => {
+            hideMessage();
+            this.setState({dialogVisible:false},()=>{
+                setTimeout(() => {
+                    simpleAlert(null, "发送成功")
+                }, 1000);
+            })
+        });
+
+        
+        
+    }
+
+
+    private renderPopup = () => {
+        const { dialogVisible, reportText } = this.state
+        return (
+            <Dialog.Container visible={dialogVisible}>
+                <Dialog.Title>错漏报告</Dialog.Title>
+                <Dialog.Input placeholder='简单描述错漏内容' value={reportText}
+                    onChangeText={(txt) => { this.setState({ reportText: txt }) }} />
+                <Dialog.Button label="取消" onPress={() => { this.setState({ dialogVisible: false }) }} />
+                <Dialog.Button label="发送" onPress={this.commitReport} />
+            </Dialog.Container>
+        )
+    }
+
 
 
     private lastMetroLine: LastMetroLine
@@ -280,7 +335,7 @@ class SelectMetrolLine extends React.Component<Props, State> {
 
             <PageView style={themedStyle.container} >
                 {/* {this.renderSearchBar()} */}
-
+                {this.renderPopup()}
 
                 <View style={{ paddingHorizontal: 16 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
@@ -309,7 +364,7 @@ class SelectMetrolLine extends React.Component<Props, State> {
                     <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
                         <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'center' }}>
                             <Button style={{ backgroundColor: '#2baf2b', borderColor: '#2baf2b', width: 150 }} onPress={this.go}>上车</Button>
-                            <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 0 }}>
+                            <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 0 }} onPress={()=>{this.setState({dialogVisible:true})}}>
                                 <Text style={{ color: '#9e9e9e', fontSize: 13 }}>错漏报告</Text>
                             </TouchableOpacity>
                             {/* <Button appearance="ghost" size="small" textStyle={{color:'#9e9e9e'}} style={{position:'absolute',right:0,bottom:0}}>错漏报告</Button> */}

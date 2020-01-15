@@ -1,5 +1,5 @@
 import { ImageSourcePropType } from 'react-native';
-import { qiniuImgUrl, qiniuThumbImgUrl } from '@src/core/uitls/httpService';
+import { qiniuImgUrl, qiniuBigThumbImgUrl,qiniuSmallThumbImgUrl } from '@src/core/uitls/httpService';
 
 export interface ImageSource {
   imageSource: ImageSourcePropType;
@@ -25,6 +25,11 @@ export function imageUri(path:string){
   return {uri:qiniuImgUrl(path)}
 }
 
-export function thumbnailUri(path:string){
-  return {uri:qiniuThumbImgUrl(path)}
+export function BigThumbnailUri(path:string){
+  return {uri:qiniuBigThumbImgUrl(path)}
+}
+
+
+export function smallThumbnailUrl(path:string){
+  return {uri:qiniuSmallThumbImgUrl(path)}
 }

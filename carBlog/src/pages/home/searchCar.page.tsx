@@ -20,7 +20,7 @@ import { isEmpty, getTimeDiff, displayIssueTime, truncateText } from '@src/core/
 import { RestfulJson, getService, getProfileByCarNumberUrl, rrnol, rj } from '@src/core/uitls/httpService';
 import { author1 } from '@src/core/data/articles';
 import { RemoteImage } from '@src/assets/images';
-import { thumbnailUri } from '@src/assets/images/type';
+import { BigThumbnailUri } from '@src/assets/images/type';
 
 
 
@@ -144,7 +144,7 @@ export class SearchCar extends React.Component<Props, State> {
                 </View>
 
                 {!isEmpty(item.image) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-                    <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80 }} />
+                    <Avatar shape="square" source={BigThumbnailUri(item.image)} style={{ width: 80, height: 80 }} />
                 </View>}
 
       </ListItem>

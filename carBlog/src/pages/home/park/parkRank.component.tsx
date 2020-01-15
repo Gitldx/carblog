@@ -21,7 +21,7 @@ import { UserAccount } from '@src/core/userAccount/userAccount';
 import { Geolocation, init } from '@src/components/amap/location';
 import { getLastLocationCity, saveLastCity, removeCityCode, LastCity } from '@src/core/uitls/storage/locationStorage';
 import { onlineAccountState } from '@src/core/userAccount/functions';
-import { thumbnailUri } from '@src/assets/images/type';
+import { BigThumbnailUri, smallThumbnailUrl } from '@src/assets/images/type';
 import { networkConnected } from '@src/core/uitls/netStatus';
 
 
@@ -58,7 +58,7 @@ export class ParkRankComponent extends React.Component<Props, State> {
     private renderItemHeader(item: UserAccount): React.ReactElement {
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 5, }}>
-                {!isEmpty(item.image) ? <Avatar source={thumbnailUri(item.image)} style={{ width: 30, height: 30 }} /> :
+                {!isEmpty(item.image) ? <Avatar source={smallThumbnailUrl(item.image)} style={{ width: 30, height: 30 }} /> :
                     <MaterialCommunityIcons name="account" color="lightgrey" style={{ height: 30, width: 30, textAlign: 'center', borderRadius: 15, borderColor: 'lightgrey', borderWidth: 1 }} />
                 }
                 <Text category="c2" style={{ marginLeft: 10 }}>{item.nickname}</Text>

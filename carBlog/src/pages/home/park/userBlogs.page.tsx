@@ -17,7 +17,7 @@ import { VisitCounts, CommentsButton, LikeButton } from '@src/components';
 import { author1 } from '@src/core/data/articles';
 import { RemoteImage } from '@src/assets/images';
 import { getTimeDiff, displayIssueTime, isEmpty, truncateText } from '@src/core/uitls/common';
-import { imageUri, thumbnailUri } from '@src/assets/images/type';
+import { BigThumbnailUri } from '@src/assets/images/type';
 
 
 
@@ -89,7 +89,7 @@ export class UserBlogs extends React.Component<Props, State> {
         </View>
 
         {!isEmpty(item.image ) && <View style={{ alignSelf: 'center', paddingHorizontal: 5 }}>
-          <Avatar shape="square" source={thumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
+          <Avatar shape="square" source={BigThumbnailUri(item.image)} style={{ width: 80, height: 80, borderRadius: 5 }} />
         </View>}
 
       </ListItem>
