@@ -39,8 +39,7 @@ type State = {
   mapHeight: number,
   mapShow: boolean,
   initLatitude: number,
-  initLongitude: number,
-  selectedRoad: string,
+  initLongitude: number
   tooltipVisible: boolean,
   limitRegion: any
 }
@@ -65,8 +64,7 @@ class IssueMetroChat extends React.Component<Props, State> {
     mapHeight: 0,
     mapShow: false,
     initLatitude: null,
-    initLongitude: null,
-    selectedRoad: '',
+    initLongitude: null,  
     tooltipVisible: false,
     limitRegion: null
   }
@@ -98,7 +96,7 @@ class IssueMetroChat extends React.Component<Props, State> {
 
     const ua = UserAccount.instance
 
-    const test = await hasOverRoadChat(this.state.selectedRoad)
+    const test = await hasOverRoadChat(this.metroLine.id)
     if (test) {
       simpleAlert(null, this.warningText)
       return;

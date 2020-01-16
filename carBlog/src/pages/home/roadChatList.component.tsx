@@ -8,7 +8,7 @@ import { Button, withStyles, ThemeType, ThemedComponentProps, List, ListItem, Li
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
 import { PageView } from '../pageView';
 import { AvatarContentBox, LicensePlate, LikeButton, VisitCounts } from '@src/components';
-import { MaterialCommunityIcons, MessageCircleIconOutline, RedGreenImage, HelicopterImage, Road2mage } from '@src/assets/icons';
+import { MaterialCommunityIcons, MessageCircleIconOutline, RedGreenImage, HelicopterImage, Road2mage, MetroImage } from '@src/assets/icons';
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
 import { CommentsButton } from '@src/components';
 import { ImageSource, RemoteImage } from '@src/assets/images';
@@ -274,7 +274,8 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={{ marginHorizontal: 20 }} onPress={this.selectMetroline}>
-                        <MaterialCommunityIcons size={25} name="subway" color={getThemeValue("color-success-default", themes["App Theme"])} />
+                    <Avatar source={MetroImage.imageSource} resizeMode="contain" style={{ height: 25, width: 25 }} />
+                        {/* <MaterialCommunityIcons size={25} name="subway" color={getThemeValue("color-success-default", themes["App Theme"])} /> */}
                     </TouchableOpacity>
                     {/* <Button onPress={this.selectRoad} size="small" appearance="ghost" textStyle={themedStyle.contentText}>
                         道路漫游>>
@@ -365,7 +366,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
 
         Geolocation.getCurrentPosition(({ coords }) => {
             const { longitude, latitude } = coords
-
+            
             Geolocation.getReGeoCode({ latitude, longitude }, (reGeocode) => {
 
                 geoAllowed = true
@@ -631,7 +632,7 @@ export class RoadChatListComponent extends React.Component<Props, State> {
                 />
                 <TouchableOpacity style={themedStyle.addButton} onPress={this.issueChat}>
                     {/* <MaterialCommunityIcons name="traffic-light" size={30} color="white" /> */}
-                    <Avatar source={RedGreenImage.imageSource} resizeMode="contain" style={{ height: 45 }} />
+                    <Avatar source={RedGreenImage.imageSource} resizeMode="contain" style={{ height: 50,width:50 }} />
                 </TouchableOpacity>
             </React.Fragment>
             // {/* <View style={themedStyle.bottomPadding}></View> */}
@@ -650,8 +651,8 @@ export const RoadChatList = withStyles(RoadChatListComponent, (theme: ThemeType)
         backgroundColor: theme['background-basic-color-1'],
     },
     addButton: {
-        position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, borderRadius: 25,
-        borderWidth: 1, borderColor: "#f4433c",
+        position: 'absolute', bottom: 50, right: 20, height: 50, width: 50, //borderRadius: 25,
+        // borderWidth: 1, borderColor: "#f4433c",
         justifyContent: 'center', alignItems: 'center', opacity: 0.8,
         // backgroundColor: "#72d572"//theme["color-danger-400"]
     },

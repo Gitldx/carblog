@@ -152,6 +152,11 @@ class SharePark extends React.Component<Props, State> {
 
     private publishAction = async () => {
 
+        if(this.state.parkType == 1 && isEmpty(this.state.parkName)){
+            simpleAlert("温馨提示","请填写停车场名")
+            return;
+        }
+
         if(!networkConnected()){
             showNoNetworkAlert()
             return
