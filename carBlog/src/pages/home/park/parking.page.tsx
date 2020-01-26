@@ -610,6 +610,18 @@ class Parking extends React.Component<Props, State> {
             return;
         }
 
+        if(this.toThankUid == UserAccount.getUid()){
+            showMessage({
+                message: "提示",
+                description: "自己不能感谢自己 ^_^",
+                type: 'info',
+                icon: 'info',
+                // position:'center',
+                floating: true
+            })
+            return;
+        }
+
         const param: ThankDTO = { parkId: this.toThankParkId, senderName: UserAccount.instance.nickname, senderUid: UserAccount.getUid(), uid: this.toThankUid, thankText: isEmpty(this.state.thankText) ? '多亏你提供的车位！' : this.state.thankText }
         const rr = await postService(thankForParkUrl(), param)
         if (rrnol(rr)) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform, Dimensions, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, Platform, Dimensions, TouchableOpacity, Image } from 'react-native'
 import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation';
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
@@ -246,7 +246,7 @@ class SharePark extends React.Component<Props, State> {
             offStreetPark
         }
 
-        const rr = await postService(shareParkUrl(), data) //todo:服务器测试一下为什么offstreetpark id=null会报错
+        const rr = await postService(shareParkUrl(), data)
 
         
 
@@ -447,6 +447,7 @@ class SharePark extends React.Component<Props, State> {
                 onPress={this.onMapPressed}
             >
                 <Amap.Marker color="red"
+                    // icon={()=><Image resizeMode="contain" style={{height:20,width:20}} source={require("@src/assets/icons/car.png")}/>}
                     active={true}
                     image="purplepin"
                     title="定位不准？手点地图"

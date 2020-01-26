@@ -958,6 +958,11 @@ function getMetroLinesUrl(cityCode:number){
 }
 
 
+function countMetroChatsUrl(lineId,direction){
+    return http() + `/road/countMetroChat/${lineId}/${direction}`
+}
+
+
 function getMetroCitiesUrl(){
     return http() + "/road/getMetroCities"
 }
@@ -991,6 +996,7 @@ export {
     writeArticleUrl, updateArticleUrl, deleteArticleUrl, listArticleUrl, getProfileByCarNumberUrl, listNearbyArticleUrl, listMyArticlesUrl,
     readArticleUrl, addArticleVisitCountUrl, commentUrl, likeArticleUrl, likeCommentUrl,
     shopListUrl, shopGetUrl, productListUrl, shopGetByUid, shopEditUrl, productEditUrl, productCloseUrl, productOpenUrl,
-    roadChatUrl,roadChatListUrl,countRoadChatUrl,getMetroLinesUrl,getMetroCitiesUrl,metroChatListUrl,metroChatUrl,
+    roadChatUrl,roadChatListUrl,countRoadChatUrl,getMetroLinesUrl,getMetroCitiesUrl,
+    metroChatListUrl,metroChatUrl,countMetroChatsUrl,
     userStatisticUrl
 }

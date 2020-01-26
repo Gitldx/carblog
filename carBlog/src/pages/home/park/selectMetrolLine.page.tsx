@@ -18,7 +18,7 @@ import { TopNavigationOptions } from '@src/core/navigation/options';
 import { ShopList } from '../shopList.componen';
 import { SearchPlaceholder, FormRow } from '@src/components';
 import { KEY_NAVIGATION_BACK } from '@src/core/navigation/constants';
-import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol, getMetroLinesUrl, postService, commitReportUrl } from '@src/core/uitls/httpService';
+import { parkUrl, getService, shareParkUrl, getNearestPointUrl, rj, countRoadChatUrl, rrnol, getMetroLinesUrl, postService, commitReportUrl, countMetroChatsUrl } from '@src/core/uitls/httpService';
 import { toDate, isEmpty, gcj2wgs, timeDiffInSeconds, showNoAccountOnAlert, showNoNetworkAlert, showOngoingAlert } from '@src/core/uitls/common';
 import Amap from '@src/components/amap'
 import { PermissionsAndroid } from "react-native";
@@ -49,7 +49,8 @@ type State = {
     currentLineId: string,
     direction: 12 | 21,
     dialogVisible: boolean,
-    reportText: string
+    reportText: string,
+    count: number
 }
 
 
@@ -72,7 +73,8 @@ class SelectMetrolLine extends React.Component<Props, State> {
         currentLineId: null,
         direction: null,
         dialogVisible: false,
-        reportText: ""
+        reportText: "",
+        count: 0
     }
 
 
@@ -110,16 +112,6 @@ class SelectMetrolLine extends React.Component<Props, State> {
 
     }
 
-
-    private getCounts = async () => {
-        const rr = await getService(countRoadChatUrl(this.selectedPoint.citycode, this.state.selectedRoad))
-        if (rrnol(rr)) {
-            return
-        }
-        // console.warn(JSON.stringify(rr))
-        const count = rj(rr).data
-        this.setState({ chatCounts: count })
-    }
 
     private displayDirection = () => {
         return this.lastMetroLine.direction == 12 ? this.lastMetroLine.end1 + "->" + this.lastMetroLine.end2 : this.lastMetroLine.end2 + "->" + this.lastMetroLine.end1
@@ -172,17 +164,17 @@ class SelectMetrolLine extends React.Component<Props, State> {
 
         const uid = UserAccount.getUid();
         postService(commitReportUrl(), { uid: uid || "", content: this.state.reportText, type: 3 })
-        .then(b => {
-            hideMessage();
-            this.setState({dialogVisible:false},()=>{
-                setTimeout(() => {
-                    simpleAlert(null, "发送成功")
-                }, 1000);
-            })
-        });
+            .then(b => {
+                hideMessage();
+                this.setState({ dialogVisible: false }, () => {
+                    setTimeout(() => {
+                        simpleAlert(null, "发送成功")
+                    }, 1000);
+                })
+            });
 
-        
-        
+
+
     }
 
 
@@ -209,13 +201,18 @@ class SelectMetrolLine extends React.Component<Props, State> {
         const lastMetroCity: LastMetroCity = await getLastMetroCity()
         if (!isEmpty(lastMetroCity)) {
             this.lastMetroCity = lastMetroCity
-            
+
         }
 
         if (!isEmpty(lastMetroLine)) {
             this.lastMetroLine = lastMetroLine
             this.selectedLine = lastMetroLine
-            this.setState({ currentLineId: lastMetroLine.id, direction: lastMetroLine.direction })
+            const rr = await getService(countMetroChatsUrl(lastMetroLine.id, lastMetroLine.direction))
+            if (rrnol(rr)) {
+                return
+            }
+            const count = rj(rr).data
+            this.setState({ currentLineId: lastMetroLine.id, direction: lastMetroLine.direction, count })
         }
 
         if (this.getLastCity()) {
@@ -263,10 +260,17 @@ class SelectMetrolLine extends React.Component<Props, State> {
     }
 
     private selectedLine: LastMetroLine
-    private select = (line: MetroLine, direction) => {
+    private select = async (line: MetroLine, direction) => {
         this.selectedLine = { ...line, direction }
         // saveLastMetroLine()
-        this.setState({ currentLineId: line.id, direction })
+        const rr = await getService(countMetroChatsUrl(line.id, direction))
+        if (rrnol(rr)) {
+            return
+        }
+
+        const count = rj(rr).data
+
+        this.setState({ currentLineId: line.id, direction, count })
         // this.go(line,direction)
     }
 
@@ -276,7 +280,7 @@ class SelectMetrolLine extends React.Component<Props, State> {
     private renderItem = (info: ListRenderItemInfo<MetroLine>) => {
         const { item } = info
         const { themedStyle } = this.props
-        const { currentLineId, direction } = this.state
+        const { currentLineId, direction, count } = this.state
         let directionStyle1 = themedStyle.direction
         if (currentLineId && item.id == currentLineId && direction == 12) {
             directionStyle1 = themedStyle.selectedDirection
@@ -300,6 +304,13 @@ class SelectMetrolLine extends React.Component<Props, State> {
                         <Text>
                             {item.end2}
                         </Text>
+                        {
+                            currentLineId && item.id == currentLineId && direction == 12 ?
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 12,color:"green" }}>{count.toString()}</Text>
+                                </View>
+                                : null
+                        }
                     </TouchableOpacity>
 
                     <TouchableOpacity style={directionStyle2} onPress={() => this.select(item, 21)}>
@@ -310,7 +321,15 @@ class SelectMetrolLine extends React.Component<Props, State> {
                         <Text>
                             {item.end2}
                         </Text>
+                        {
+                            currentLineId && item.id == currentLineId && direction == 21 ?
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 12,color:'green' }}>{count.toString()}</Text>
+                                </View>
+                                : null
+                        }
                     </TouchableOpacity>
+
                 </View>
             </View>
         )
@@ -364,7 +383,7 @@ class SelectMetrolLine extends React.Component<Props, State> {
                     <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
                         <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'center' }}>
                             <Button style={{ backgroundColor: '#2baf2b', borderColor: '#2baf2b', width: 150 }} onPress={this.go}>上车</Button>
-                            <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 0 }} onPress={()=>{this.setState({dialogVisible:true})}}>
+                            <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 0 }} onPress={() => { this.setState({ dialogVisible: true }) }}>
                                 <Text style={{ color: '#9e9e9e', fontSize: 13 }}>错漏报告</Text>
                             </TouchableOpacity>
                             {/* <Button appearance="ghost" size="small" textStyle={{color:'#9e9e9e'}} style={{position:'absolute',right:0,bottom:0}}>错漏报告</Button> */}

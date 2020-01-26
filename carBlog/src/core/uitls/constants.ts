@@ -28,3 +28,5 @@ export const shareparkhint1 = "路外停车场一般指社会公共停车场，�
 export const issueWarningText = "一个小时内只能同时在三条道路上发言"
 export const signUpHint1 = "车主可以写博客，留停车电话,寻找和分享空车位,和同路人聊天"
 export const signUpHint2 = "行人可以读博客，勾搭车主，分享车位，和同路人聊天"
+export const scoreHint1 = "累计生产车位币 = 分享车位次数 * 0.1 + 车主感谢你的次数 * 1"
+export const scoreHInt2 = "已赠送车位币 = 你感谢其他人的次数"

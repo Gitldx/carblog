@@ -4,7 +4,7 @@ import { NavigationScreenProps, NavigationScreenConfig } from 'react-navigation'
 // import { Layouts } from './layouts.component';
 // import { LayoutsContainerData } from './type';
 // import { routes } from './routes';
-import { Button, Toggle, withStyles, ThemeType, Text as RKText, ThemedComponentProps, Layout, List, Radio, ButtonProps } from 'react-native-ui-kitten';
+import { Button, Toggle, withStyles, ThemeType, Text as RKText, ThemedComponentProps, Layout, List, Radio, ButtonProps, Tooltip } from 'react-native-ui-kitten';
 import { Config } from '@src/core/uitls/config';
 import { ButtonBar, ScrollableAvoidKeyboard } from '@src/components/common';
 import { ThemeContext, ThemeContextType, themes } from '@src/core/themes';
@@ -16,11 +16,13 @@ import { ProfilePhoto } from './profilePhoto.component'
 import { CameraIconFill, PersonIconFill, PersonImage, MaterialCommunityIcons } from '@src/assets/icons';
 import { author1 } from '@src/core/data/articles';
 import { getService, getUserAccountUrl, getProfileUrl, rj } from '@src/core/uitls/httpService';
+import { withErrorBoundary } from '@src/core/uitls/exceptionCatcher';
 import { UserAccount } from '@src/core/userAccount/userAccount';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 import { getThemeValue } from 'react-native-ui-kitten/theme/theme/theme.service';
 import { onlineAccountState } from '@src/core/userAccount/functions';
-import { gamerule1, gamerule2, gamerule3_1, gamerule3_2 } from '@src/core/uitls/constants';
+import { gamerule1, gamerule2, gamerule3_1, gamerule3_2, scoreHint1, scoreHInt2 } from '@src/core/uitls/constants';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 
 
@@ -28,6 +30,8 @@ interface State {
   parkMoney: number
   totolGiftMoney: number
   totalProducedMoney: number
+  tooltipVisible1 : boolean
+  tooltipVisible2 : boolean
 }
 
 
@@ -45,6 +49,8 @@ export class MyScore extends React.Component<Props, State> {
     totalProducedMoney: 0,
     totolGiftMoney: 0,
     parkMoney: 0,
+    tooltipVisible1 : false,
+    tooltipVisible2 : false
   }
 
 
@@ -109,6 +115,12 @@ export class MyScore extends React.Component<Props, State> {
           <View style={{ flexDirection: 'row' }}>
             <MaterialCommunityIcons name="medal" size={18} color="green" />
             <RKText>累计生产车位币</RKText>
+            <Tooltip textStyle={{ fontSize: 12 }} text={scoreHint1} placement="right" style={{ width: 200 }}
+              visible={this.state.tooltipVisible1} onBackdropPress={() => this.setState({ tooltipVisible1: false })}>
+              <TouchableOpacity onPress={() => this.setState({ tooltipVisible1: true })}>
+                <MaterialCommunityIcons name="help-circle" size={18} color={getThemeValue("color-warning-default", themes['App Theme'])} />
+              </TouchableOpacity>
+            </Tooltip>
           </View>
           <Text style={[styles.balanceText, { color: 'green' }]}>{totalProducedMoney}</Text>
         </View>
@@ -116,6 +128,12 @@ export class MyScore extends React.Component<Props, State> {
           <View style={{ flexDirection: 'row' }}>
             <MaterialCommunityIcons name="medal" size={18} color="red" />
             <RKText>已赠送车位币</RKText>
+            <Tooltip textStyle={{ fontSize: 12 }} text={scoreHInt2} placement="right" style={{ width: 220 }}
+              visible={this.state.tooltipVisible2} onBackdropPress={() => this.setState({ tooltipVisible2: false })}>
+              <TouchableOpacity onPress={() => this.setState({ tooltipVisible2: true })}>
+                <MaterialCommunityIcons name="help-circle" size={18} color={getThemeValue("color-warning-default", themes['App Theme'])} />
+              </TouchableOpacity>
+            </Tooltip>
           </View>
           <Text style={[styles.balanceText, { color: 'red' }]}>{totolGiftMoney}</Text>
         </View>
